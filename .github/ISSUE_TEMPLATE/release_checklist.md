@@ -25,11 +25,9 @@ Refer to the [Deployment](https://data-safe-haven.readthedocs.io/en/latest/deplo
 ### For minor releases and above
 
 - [ ] Deploy an SHM from this branch and save a transcript of the deployment logs
-- Using the new image, deploy a tier 2 and a tier 3 SRE
-    - [ ] Save the transcript of your tier 2 SRE deployment
-    - [ ] Save the transcript of your tier 3 SRE deployment
+- [ ] Deploy a tier 2 SRE from this branch and save the transcript of the deployment logs
+- [ ] Deploy a tier 3 SRE from this branch and save the transcript of the deployment logs
 - [ ] Complete the [Security evaluation checklist](https://data-safe-haven.readthedocs.io/en/latest/deployment/security_checklist.html) from the deployment documentation
-- [ ] Add the new versions tag as an active build on [Read The Docs](https://readthedocs.org) (You can add as a hidden build, before release, to preview)
 
 ### For major releases only
 
