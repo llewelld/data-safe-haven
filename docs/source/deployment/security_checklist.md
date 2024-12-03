@@ -559,3 +559,5 @@ To minimise the risk of unauthorised access to the dataset while the ingress vol
 ```
 </details>
 ````
+
+{download}`this file <./security_checklist/security_checklist_template.md>`.
