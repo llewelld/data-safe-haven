@@ -21,6 +21,8 @@ Work your way through the actions described in each section, taking care to noti
 - {{white_check_mark}} This indicates a checklist item for which a screenshot is either not appropriate or difficult
 ```
 
+You can use {download}`this template Markdown file <./security_checklist/security_checklist_template.md>` to complete the checklist.
+
 ## Prerequisites
 
 ### Roles

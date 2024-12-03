@@ -17,26 +17,26 @@ Running on SHM/SREs deployed using commit xxxxxx
 
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check: Users can reset their own password
     - <summary><b>Verify that:</b> User can reset their own password</summary>
-    <img src=""/>
+    <img src="…"/>
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check: non-registered users cannot connect to any SRE workspace
     - <summary> <b>Verify that:</b> User can authenticate but cannot see any workspaces</summary>
-    <img src=""/>
+    <img src="…"/>
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check: registered users can see SRE workspaces
     - <summary> <b>Verify that:</b> User can authenticate and can see workspaces</summary>
-    <img src=""/>
+    <img src="…"/>
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check: Authenticated user can access workspaces
     - <summary> <b>Verify that:</b> You can connect to any workspace</i> </summary>
-    <img src=""/>
+    <img src="…"/>
 
 ### Isolated Network
 
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Fail to connect to the internet from a workspace
     - <summary> <b>Verify that:</b> Browsing to the service fails</summary>
-    <img src=""/>
+    <img src="…"/>
     - <summary> <b>Verify that:</b> You cannot access the service using curl</summary>
-    <img src=""/>
+    <img src="…"/>
     - <summary> <b>Verify:</b> You cannot get the IP address for the service using nslookup</summary>
-    <img src=""/>
+    <img src="…"/>
 
 ### User devices
 
@@ -58,13 +58,12 @@ Running on SHM/SREs deployed using commit xxxxxx
 - Connect to the environment from an IP address that is not allowed but with correct credentials
     - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: <b>Verify that:</b> Connection fails
 
-#### Tiers 2+:
+#### Tiers 2 and above:
 
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Network rules permit access only from allow-listed IP addresses
     - In the Azure portal navigate to the Guacamole application gateway NSG for this SRE shm-<SHM NAME>-sre-<SRE NAME>-nsg-application-gateway
     - <summary> <b>Verify that:</b> the NSG has network rules allowing Inbound access from allowed IP addresses only</summary>
-    <img src=""/>
-
+    <img src="…"/>
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: all other NSGs have an inbound Deny All rule and no higher priority rule allowing inbound connections from outside the Virtual Network
 
 ### Physical security
@@ -72,19 +71,19 @@ Running on SHM/SREs deployed using commit xxxxxx
 #### Tier 3 only
 
 - Attempt to connect to the Tier 3 SRE web client from home using a managed device and the correct VPN connection and credentials.
-    - :fast_forward: <b>Verify that</b>: connection fails.
+    - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: <b>Verify that</b>: connection fails.
 - Attempt to connect from research office using a managed device and the correct VPN connection and credentials.
-    - :fast_forward: <b>Verify that</b>: connection succeeds
-    - :fast_forward: <b>Verify that</b>: the network IP ranges corresponding to the research spaces correspond to those allowed by storage account firewall
-    - :fast_forward: <b>Verify that</b>: physical measures such as screen adaptions or desk partitions are present if risk of visual eavesdropping is high
+    - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: <b>Verify that</b>: connection succeeds
+    - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: <b>Verify that</b>: the network IP ranges corresponding to the research spaces correspond to those allowed by storage account firewall
+    - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: <b>Verify that</b>: physical measures such as screen adaptions or desk partitions are present if risk of visual eavesdropping is high
 
 ### Remote connections
 
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Unable to connect as a user to the remote desktop server via SSH
     - <summary> <b>Verify that:</b> SSH login by fully-qualified domain name fails</summary>
-    <img src=""/>
+    <img src="…"/>
     - <summary> <b>Verify that:</b> SSH login by public IP address fails</summary>
-    <img src=""/>
+    <img src="…"/>
 
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: <b>Verify that:</b> the remote desktop web client application gateway (shm-<SHM ID>-sre-<SRE ID>-ag-entrypoint) and the firewall are the only SRE resources with public IP addresses.
 
@@ -124,14 +123,14 @@ Running on SHM/SREs deployed using commit xxxxxx
 
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Can install any packages
     - <summary> <b>Verify that:</b> pytz can be installed</summary>
-    <img src=""/>
+    <img src="…"/>
     - <summary> <b>Verify that:</b> awscli can be installed</summary>
-    <img src=""/>
+    <img src="…"/>
 
 #### Tier 3:
 
 - :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Can install only allow-listed packages
     - <summary> <b>Verify:</b> pytz can be installed</summary>
-    <img src=""/>
+    <img src="…"/>
     - <summary> <b>Verify:</b> awscli cannot be installed</summary>
-    <img src=""/>
+    <img src="…"/>
