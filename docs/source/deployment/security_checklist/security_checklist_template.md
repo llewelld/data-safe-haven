@@ -1,163 +1,139 @@
 # Security checklist
 
-Running on SHM/SREs deployed using commit XXXXXXX
+Running on SHM/SREs deployed using commit <abc>
 
 ## Summary
 
-- :white_check_mark: N tests passed
-- :partly_sunny: N tests partially passed (see below for more details)
-- :fast_forward: N tests skipped (see below for more details)
-- :x: N tests failed (see below for more details)
+- :white_check_mark: <x> tests passed
+- :partly_sunny: <x> tests partially passed (see below for more details)
+- :fast_forward: <x> tests skipped (see below for more details)
+- :x: <x> tests failed (see below for more details)
 
 ## Details
 
-Some security checks were skipped since:
+Some security checks were skipped because:
 
-- No managed device was available
-- No access to a physical space with its own dedicated network was possible
+- …
+- …
 
 ### Multifactor Authentication and Password strength
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check that the SRE standard user cannot access the apps
-  - <details><summary>:camera: <b>Verify before adding to group:</b> Microsoft Remote Desktop: Login works but apps cannot be viewed</summary>
-    <img src=""/>
-    </details>
-  - <details><summary>:camera: <b>Verify before adding to group:</b> Guacamole: User is prompted to setup MFA</summary>
-    <img src=""/>
-    </details>
-
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x:  Check that adding the **SRE standard user** to the SRE group on the domain controller does not give them access
-  - <details><summary>:camera: <b>Verify after adding to group:</b> Microsoft Remote Desktop: Login works and apps can be viewed</summary>
-    <img src=""/>
-    </details>
-  - <details><summary>:camera: <b>Verify after adding to group:</b> Microsoft Remote Desktop: attempt to login to DSVM Main (Desktop) fails</summary>
-    <img src=""/>
-    </details>
-  - <details><summary>:camera: <b>Verify before adding to group:</b> Guacamole: User is prompted to setup MFA</summary>
-    <img src=""/>
-    </details>
-
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check that the **SRE standard user** is able to successfully set up MFA
-  - <details><summary>:camera: <b>Verify:</b> successfully set up MFA</summary>
-    <img src=""/>
-    </details>
-
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check that the **SRE standard user** can authenticate with MFA
-  - <details><summary>:camera: <b>Verify:</b> Guacamole: respond to the MFA prompt</summary>
-    <img src=""/>122043131-47bc8080-cddb-11eb-8578-e45ab3efaef0.png">
-    </details>
-  - <details><summary>:camera: <b>Verify:</b> Microsoft Remote Desktop: attempt to log in to DSVM Main (Desktop) and respond to the MFA prompt</summary>
-    <img src=""/>122043131-47bc8080-cddb-11eb-8578-e45ab3efaef0.png">
-    </details>
-
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check that the **SRE standard user** can access the DSVM desktop
-  - <details><summary>:camera: <b>Verify:</b> Microsoft Remote Desktop: connect to <i>DSVM Main (Desktop)</i></summary>
-    <img src=""/>
-    </details>
-  - <details><summary>:camera: <b>Verify:</b> Guacamole: connect to <i>Desktop: Ubuntu0</i> </summary>
-    <img src=""/>
-    </details>
+- :white_check_mark: Check: Users can reset their own password
+- <summary><b>Verify that:</b> User can reset their own password</summary>
+    <img src="…"/>
+    <img src="…"/>
+- :white_check_mark: Check: non-registered users cannot connect to any SRE workspace
+  - <summary> <b>Verify that:</b> User can authenticate but cannot see any workspaces</summary>
+    <img src="…"/>
+- :white_check_mark: Check: registered users can see SRE workspaces
+  - <summary> <b>Verify that:</b> User can authenticate and can see workspaces</summary>
+    <img src="…"/>
+- :white_check_mark: Check: Authenticated user can access workspaces
+  - <summary> <b>Verify that:</b> You can connect to any workspace</i> </summary>
+    <img src="…"/>
 
 ### Isolated Network
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Connect to the SHM DC and NPS if connected to the SHM VPN
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Fail to connect to the SHM DC and NPS if not connected to the SHM VPN
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Fail to connect to the internet from within a DSVM on the SRE network.
-  - <details><summary>:camera: <b>Verify:</b> Connection fails</summary>
-    <img src=""/>122045859-8142bb00-cdde-11eb-920c-3a162a180647.png">
-    </details>
-  - <details><summary>:camera: <b>Verify:</b> that you cannot access a website using curl</summary>
-    <img src=""/>
-    </details>
-  - <details><summary>:camera: <b>Verify:</b> that you cannot get the IP address for a website using nslookup</summary>
-    <img src=""/>
-    </details>
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check that users cannot connect between two SREs within the same SHM, even if they have access to both SREs
-  - <details><summary>:camera: <b>Verify:</b> SSH connection fails</summary>
-    <img src=""/>
-    </details>
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Network rules are set appropriately to block outgoing traffic
-  - <details><summary>:camera: <b>Verify:</b> access rules</summary>
-    <img src=""/>
-    </details>
+- :white_check_mark: Fail to connect to the internet from a workspace
+  - <summary> <b>Verify that:</b> Browsing to the service fails</summary>
+    <img src="…"/>
+  - <summary> <b>Verify that:</b> You cannot access the service using curl</summary>
+    <img src="…"/>
+  - <summary> <b>Verify:</b> You cannot get the IP address for the service using nslookup</summary>
+    <img src="…"/>
 
 ### User devices
 
-#### Tier 2:
+#### Tier 2
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Connection succeeds from a personal device with an allow-listed IP address
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: No managed device available to check connection
+- Connect to the environment using an allowed IP address and credentials
+  - :white_check_mark: <b>Verify that:</b> Connection succeeds
+- Connect to the environment from an IP address that is not allowed but with correct credentials
+  - :white_check_mark: <b>Verify that:</b> Connection fails
 
-#### Tier 3:
+#### Tier 3
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: No managed device available to check user lacks root access
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Connection succeeds from a personal device with an allow-listed IP address
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: No managed device available to check connection with an allow-listed IP address
+- All managed devices should be provided by a known IT team at an approved organisation.
+  - :fast_forward: <b>Verify that:</b> the IT team of the approved organisation take responsibility for managing the device.
+  - :fast_forward: <b>Verify that:</b> the user does not have administrator permissions on the device.
+  - :fast_forward: <b>Verify that:</b> allowed IP addresses are exclusive to managed devices.
+- Connect to the environment using an allowed IP address and credentials
+  - :fast_forward: <b>Verify that:</b> Connection succeeds
+- Connect to the environment from an IP address that is not allowed but with correct credentials
+  - :fast_forward: <b>Verify that:</b> Connection fails
 
-#### Tiers 2+:
+#### Tiers 2 and above
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Network rules permit access only from allow-listed IP addresses
-  - <details><summary>:camera: <b>Verify:</b> access rules</summary>
-    <img src=""/>
-    </details>
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: All non-deployment NSGs have rules denying inbound connections from outside the Virtual Network
+- :white_check_mark: Network rules permit access only from allow-listed IP addresses
+  - In the Azure portal navigate to the Guacamole application gateway NSG for this SRE shm-<SHM NAME>-sre-<SRE NAME>-nsg-application-gateway
+  - <summary> <b>Verify that:</b> the NSG has network rules allowing Inbound access from allowed IP addresses only</summary>
+    <img src="…"/>
+- :white_check_mark: all other NSGs have an inbound Deny All rule and no higher priority rule allowing inbound connections from outside the Virtual Network
 
 ### Physical security
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: No secure physical space available so connection from outside was not tested
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: No secure physical space available so connection from inside was not tested
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Check the network IP ranges corresponding to the research spaces and compare against the IPs accepted by the firewall.
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: No secure physical space available so confirmation of physical measures was not tested
+#### Tier 3 only
+
+- Attempt to connect to the Tier 3 SRE web client from home using a managed device and the correct VPN connection and credentials.
+  - :fast_forward: <b>Verify that</b>: connection fails.
+- Attempt to connect from research office using a managed device and the correct VPN connection and credentials.
+  - :fast_forward: <b>Verify that</b>: connection succeeds
+  - :fast_forward: <b>Verify that</b>: the network IP ranges corresponding to the research spaces correspond to those allowed by storage account firewall
+  - :fast_forward: <b>Verify that</b>: physical measures such as screen adaptions or desk partitions are present if risk of visual eavesdropping is high
 
 ### Remote connections
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Unable to connect as a user to the remote desktop server via SSH
-  - <details><summary>:camera: <b>Verify:</b> SSH connection by FQDN fails</summary>
-    <img src=""/>
-    </details>
-  - <details><summary>:camera: <b>Verify:</b> SSH connection by public IP address fails</summary>
-    <img src=""/>
-    </details>
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: The remote desktop server is the only SRE resource with a public IP address
+- :white_check_mark: Unable to connect as a user to the remote desktop server via SSH
+  - <summary> <b>Verify that:</b> SSH login by fully-qualified domain name fails</summary>
+    <img src="…"/>
+  - <summary> <b>Verify that:</b> SSH login by public IP address fails</summary>
+    <img src="…"/>
+- :white_check_mark: <b>Verify that:</b> the remote desktop web client application gateway (shm-<SHM ID>-sre-<SRE ID>-ag-entrypoint) and the firewall are the only SRE resources with public IP addresses.
 
 ### Copy-and-paste
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Unable to paste local text into a DSVM
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Unable to copy text from a DSVM
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Copy between VMs in an SRE succeeds
+- Unable to paste text from a local device into a workspace
+  - :white_check_mark: <b>Verify that:</b> paste fails
+- Unable to copy text from a workspace to a local device
+  - :white_check_mark: <b>Verify that:</b> paste fails
 
 ### Data ingress
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **System administrator:** secure upload token successfully created with write-only permissions
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **System administrator:** token was sent using a secure, out-of-band communication channel (e.g. secure email)
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **Data Provider:** uploading a file from an allow-listed IP address succeeds
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **Data Provider:** downloading a file from an allow-listed IP address fails
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **Data Provider:** uploading a file from an non-allowed IP address fails
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **Data Provider:** connection during lifetime of short-duration token succeeds
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **Data Provider:** connection after lifetime of short-duration token fails
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **Data Provider:** uploading different file types succeeds
+- Check that the **System Manager** can send an upload token to the **Dataset Provider Representative**
+  - :white_check_mark: <b>Verify that:</b> the upload token is successfully created.
+  - :white_check_mark: <b>Verify that:</b> you are able to send this token using a secure mechanism.
+- Ensure that data ingress works only for connections from the accepted IP address range
+  - :white_check_mark: <b>Verify that:</b> writing succeeds by uploading a file
+  - :white_check_mark: <b>Verify that:</b> attempting to open or download any of the files results in the following error: "Failed to start transfer: Insufficient credentials" under the Activities pane at the bottom of the MS Azure Storage Explorer window.
+  - :white_check_mark: <b>Verify that:</b> the access token fails when using a device with a non-allowed IP address
+- Check that the upload fails if the token has expired
+  - :white_check_mark: <b>Verify that:</b> you can connect and write with the token during the duration
+  - :white_check_mark: <b>Verify that:</b> you cannot connect and write with the token after the duration has expired
+  - :white_check_mark: <b>Verify that:</b>the data ingress process works by uploading different kinds of files, e.g. data, images, scripts (if appropriate)
 
-### Storage volumes and egress
+### Data egress
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **SRE standard user** can read and write to the `/output` volume
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **SRE standard user** can only read from the `/data` volume
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **SRE standard user** can read and write to their directory in `/home`
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **SRE standard user** can read and write to the `/shared` volume
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **System administrator:** can see the files ready for egress
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: **System administrator:** can download egress-ready files
+- Confirm that a non-privileged user is able to read the different storage volumes and write to output
+  - :white_check_mark: <b>Verify that:</b> the `/mnt/output` volume exists and can be written to
+  - :white_check_mark: <b>Verify that:</b> the permissions of other storage volumes match that described in the user guide
+- Confirm that <b>System Manager</b> can see and download files from output
+  - :white_check_mark: <b>Verify that:</b> you can see the files written to the `/mnt/output` storage volume.
+  - :white_check_mark: <b>Verify that:</b> a written file can be taken out of the environment via download
 
-### Package mirrors
+### Software package repositories
 
-#### Tier 2:
+#### Tier 2
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Can install any packages
-  - <details><summary>:camera: <b>Verify:</b> botocore can be installed</summary>
-    <img src=""/>
-    </details>
+- :white_check_mark: Can install any packages
+  - <summary> <b>Verify that:</b> pytz can be installed</summary>
+    <img src="…"/>
+  - <summary> <b>Verify that:</b> awscli can be installed</summary>
+    <img src="…"/>
 
-#### Tier 3:
+#### Tier 3
 
-- :white_check_mark:/:partly_sunny:/:fast_forward:/:x: Can install only allow-listed packages
-  - <details><summary>:camera: <b>Verify:</b> aero-calc can be installed; botocore cannot be installed</summary>
-    <img src=""/>
-    </details>
+- :white_check_mark: Can install only allow-listed packages
+  - <summary> <b>Verify:</b> pytz can be installed</summary>
+    <img src="…"/>
+  - <summary> <b>Verify:</b> awscli cannot be installed</summary>
+    <img src="…"/>
