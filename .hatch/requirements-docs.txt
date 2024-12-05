@@ -91,7 +91,7 @@ typing-extensions==4.12.2
     # via pydata-sphinx-theme
 urllib3==2.2.3
     # via requests
-wheel==0.45.0
+wheel==0.45.1
     # via sphinx-togglebutton
 
 # The following packages are considered to be unsafe in a requirements file:
