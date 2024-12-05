@@ -8,6 +8,7 @@ Organisations are responsible for making their own decisions about the suitabili
 ```
 
 In this check list we aim to evaluate our deployment against the {ref}`security configuration <design_turing_security_configuration>` that we apply at the Alan Turing Institute.
+A copy of this template in Markdown format is {download}`available for download <security_checklist/security_checklist_template.md>`.
 The security checklist currently focuses on checks that can evaluate these security requirements for {ref}`policy_tier_2` (or greater) SREs (with some steps noted as specific to a tier):
 
 ## How to use this checklist
