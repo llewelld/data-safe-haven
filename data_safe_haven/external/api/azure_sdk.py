@@ -60,6 +60,7 @@ from azure.mgmt.storage.v2021_08_01.models import (
 )
 from azure.storage.blob import BlobClient, BlobServiceClient
 from azure.storage.filedatalake import DataLakeServiceClient
+from azure.storage.fileshare import ShareClient, ShareServiceClient
 
 from data_safe_haven.exceptions import (
     DataSafeHavenAzureAPIAuthenticationError,
@@ -161,6 +162,80 @@ class AzureSdk:
             f"File [green]{blob_name}[/] {response} in blob storage.",
         )
         return exists
+
+    def list_shares(
+        self,
+        resource_group_name: str,
+        storage_account_name: str,
+    ) -> list[str]:
+        """List all shares with a given prefix in a container
+
+        Returns:
+            List[str]: The list of blob names
+        """
+
+        share_client = self.share_service_client(
+            resource_group_name=resource_group_name,
+            storage_account_name=storage_account_name,
+        )
+        share_list = share_client.list_shares()
+        return list(share_list)
+
+    def share_client(
+        self, resource_group_name: str, storage_account_name: str, file_share_name: str
+    ) -> ShareClient:
+
+        share_service_client = self.share_service_client(
+            resource_group_name, storage_account_name
+        )
+        share_client = share_service_client.get_share_client(share=file_share_name)
+        return share_client
+
+    def share_service_client(
+        self, resource_group_name: str, storage_account_name: str
+    ) -> ShareServiceClient:
+        storage_account_keys = self.get_storage_account_keys(
+            resource_group_name, storage_account_name
+        )
+
+        share_service_client = ShareServiceClient(
+            account_url=f"https://{storage_account_name}.file.core.windows.net",
+            credential=storage_account_keys[0].value,
+        )
+        return share_service_client
+
+    def download_share_file(
+        self,
+        file_name: str,
+        resource_group_name: str,
+        storage_account_name: str,
+        storage_share_name: str,
+    ) -> str:
+        """Download a share file from Azure storage
+
+        Returns:
+            str: The contents of the share
+
+        Raises:
+            DataSafeHavenAzureError if the share could not be downloaded
+        """
+        try:
+            # Get the share client
+            share_client = self.share_client(
+                resource_group_name,
+                storage_account_name,
+                storage_share_name,
+            )
+            share_file_client = share_client.get_file_client(file_name)
+            # Download the requested file
+            share_content = share_file_client.download_file(encoding="utf-8").readall()
+            self.logger.debug(
+                f"Downloaded file [green]{file_name}[/] from share storage.",
+            )
+            return str(share_content)
+        except (AzureError, DataSafeHavenAzureStorageError) as exc:
+            msg = f"Share file '{file_name}' could not be downloaded from '{storage_account_name}'."
+            raise DataSafeHavenAzureError(msg) from exc
 
     def blob_service_client(
         self,
