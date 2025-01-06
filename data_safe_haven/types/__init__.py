@@ -14,6 +14,7 @@ from .annotated_types import (
     UniqueList,
 )
 from .enums import (
+    AllowlistRepository,
     AzureDnsZoneNames,
     AzureSdkCredentialScope,
     AzureServiceTag,
@@ -27,7 +28,6 @@ from .enums import (
     PermittedDomains,
     Ports,
     SoftwarePackageCategory,
-    AllowlistRepository,
 )
 from .types import PathType
 

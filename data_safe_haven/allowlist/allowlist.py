@@ -5,7 +5,7 @@ from data_safe_haven.external import AzureSdk
 from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.serialisers import ContextBase
 
-T = TypeVar("T", bound="Allowlist")
+T = TypeVar("T", bound="SREAllowlist")
 
 
 class SREAllowlist:

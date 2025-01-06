@@ -78,7 +78,7 @@ def upload(
         typer.Argument(help="Path to the allowlist file to upload."),
     ],
     repository: Annotated[
-        str,  # noqa: UP007
+        AllowlistRepository,
         typer.Argument(help="Name of the repository to upload the allowlist for."),
     ] = None,
 ) -> None:
