@@ -38,7 +38,7 @@ class SREAllowlist:
         # Get the file share name
         file_share_name = "software-repositories-nexus-allowlists"
         if repository:
-            file_share_file = f"{repository}.allowlist"
+            file_share_file = f"{repository.value}.allowlist"
 
         # Get the allowlist file from the file share
         share_file = azure_sdk.download_share_file(
