@@ -1,5 +1,6 @@
 """Command group for managing package allowlists"""
 
+from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
@@ -52,7 +53,7 @@ def show(
         raise typer.Exit(1)
 
     try:
-        allow_list = SREAllowlist().from_remote(
+        allow_list = SREAllowlist.from_remote(
             context=context,
             pulumi_config=pulumi_config,
             repository=repository,
@@ -73,8 +74,12 @@ def show(
 
 @allowlist_command_group.command()
 def upload(
-    file: Annotated[
+    sre: Annotated[
         str,
+        typer.Argument(help="Name of SRE to upload the allowlist for."),
+    ],
+    file: Annotated[
+        Path,
         typer.Argument(help="Path to the allowlist file to upload."),
     ],
     repository: Annotated[
@@ -83,4 +88,30 @@ def upload(
     ] = None,
 ) -> None:
     """Upload a package allowlist"""
+    context = ContextManager.from_file().assert_context()
+    logger = get_logger()
+
+    if file.is_file():
+        with open(file) as allow_list:
+            allow_list = allow_list.read()
+    else:
+        logger.critical(f"Configuration file '{file}' not found.")
+        raise typer.Exit(1)
+    sre_config = SREConfig.from_remote_by_name(context, sre)
+
+    # Load Pulumi config
+    pulumi_config = DSHPulumiConfig.from_remote(context)
+
+    if sre_config.name not in pulumi_config.project_names:
+        msg = f"Could not load Pulumi settings for '{sre_config.name}'. Have you deployed the SRE?"
+        logger.error(msg)
+        raise typer.Exit(1)
+
+    if SREAllowlist.remote_exists(
+        context=context,
+        sre_config=sre_config,
+        pulumi_config=pulumi_config,
+        repository=repository,
+    ):
+        logger.info("Allowlist already exists")
     pass
