@@ -27,10 +27,12 @@ from .enums import (
     PermittedDomains,
     Ports,
     SoftwarePackageCategory,
+    AllowlistRepository,
 )
 from .types import PathType
 
 __all__ = [
+    "AllowlistRepository",
     "AzureDnsZoneNames",
     "AzureLocation",
     "AzurePremiumFileShareSize",
