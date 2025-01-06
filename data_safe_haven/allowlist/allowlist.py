@@ -82,6 +82,7 @@ class SREAllowlist:
         )
         return share_list
 
+    @classmethod
     def upload(
         cls: type[T],
         context: ContextBase,
@@ -93,5 +94,6 @@ class SREAllowlist:
     ) -> None:
         # Get the Azure SDK
         azure_sdk = AzureSdk(subscription_name=context.subscription_name)
-
+        file_share_name = "software-repositories-nexus-allowlists"
+        file_name = f"{repository.value}.allowlist"
         pass
