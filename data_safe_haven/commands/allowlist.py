@@ -9,6 +9,7 @@ from data_safe_haven.allowlist import SREAllowlist
 from data_safe_haven.config import ContextManager, DSHPulumiConfig, SREConfig
 from data_safe_haven.exceptions import DataSafeHavenConfigError, DataSafeHavenError
 from data_safe_haven.logging import get_logger
+from data_safe_haven.types import AllowlistRepository
 
 allowlist_command_group = typer.Typer()
 
@@ -20,7 +21,7 @@ def show(
         typer.Argument(help="Name of SRE to show allowlist for."),
     ],
     repository: Annotated[
-        str,
+        AllowlistRepository,
         typer.Argument(help="Name of the repository to show the allowlist for."),
     ],
     file: Annotated[
@@ -71,25 +72,14 @@ def show(
 
 
 @allowlist_command_group.command()
-def template(
-    file: Annotated[
-        Optional[str],  # noqa: UP007
-        typer.Option(help="File path to write the allowlist template to."),
-    ] = None,
-) -> None:
-    """Print a template for creating a package allowlist"""
-    pass
-
-
-@allowlist_command_group.command()
 def upload(
     file: Annotated[
         str,
         typer.Argument(help="Path to the allowlist file to upload."),
     ],
     repository: Annotated[
-        Optional[str],  # noqa: UP007
-        typer.Option(help="Name of the repository to upload the allowlist for."),
+        str,  # noqa: UP007
+        typer.Argument(help="Name of the repository to upload the allowlist for."),
     ] = None,
 ) -> None:
     """Upload a package allowlist"""
