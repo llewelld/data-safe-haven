@@ -209,7 +209,7 @@ class AzureSdk:
         file_name: str,
         resource_group_name: str,
         storage_account_name: str,
-        storage_share_name: str,
+        file_share_name: str,
     ) -> str:
         """Download a share file from Azure storage
 
@@ -224,7 +224,7 @@ class AzureSdk:
             share_client = self.share_client(
                 resource_group_name,
                 storage_account_name,
-                storage_share_name,
+                file_share_name,
             )
             share_file_client = share_client.get_file_client(file_name)
             # Download the requested file
@@ -1489,4 +1489,40 @@ class AzureSdk:
             )
         except (AzureError, DataSafeHavenAzureStorageError) as exc:
             msg = f"Blob file '{blob_name}' could not be uploaded to '{storage_account_name}'."
+            raise DataSafeHavenAzureError(msg) from exc
+
+    def upload_file_share(
+        self,
+        file_data: str,
+        file_name: str,
+        resource_group_name: str,
+        storage_account_name: str,
+        file_share_name: str,
+    ) -> None:
+        """Upload a file to Azure file share
+
+        Returns:
+            None
+
+        Raises:
+            DataSafeHavenAzureError if the file could not be uploaded
+        """
+        try:
+            # Get the share client
+            share_client = self.share_client(
+                resource_group_name,
+                storage_account_name,
+                file_share_name,
+            )
+            share_file_client = share_client.get_file_client(file_name)
+            # Upload the created file
+            share_file_client.upload_file(file_data,
+                                          )
+            self.logger.debug(
+                f"Uploaded file [green]{file_name}[/] to file share.",
+            )
+        except (AzureError, DataSafeHavenAzureStorageError) as exc:
+            msg = (
+                f"File '{file_name}' could not be uploaded to '{storage_account_name}'."
+            )
             raise DataSafeHavenAzureError(msg) from exc
