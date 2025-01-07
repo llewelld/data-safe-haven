@@ -1,9 +1,8 @@
 from typing import TypeVar
 
-from data_safe_haven.config import DSHPulumiConfig, SREConfig
+from data_safe_haven.config import Context, DSHPulumiConfig, SREConfig
 from data_safe_haven.external import AzureSdk
 from data_safe_haven.infrastructure import SREProjectManager
-from data_safe_haven.serialisers import ContextBase
 from data_safe_haven.types import AllowlistRepository
 
 T = TypeVar("T", bound="SREAllowlist")
@@ -15,7 +14,7 @@ class SREAllowlist:
     @classmethod
     def from_remote(
         cls: type[T],
-        context: ContextBase,
+        context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
         repository: AllowlistRepository,
@@ -54,7 +53,7 @@ class SREAllowlist:
     @classmethod
     def remote_exists(
         cls: type[T],
-        context: ContextBase,
+        context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
         sre_config: SREConfig,
@@ -85,7 +84,7 @@ class SREAllowlist:
     @classmethod
     def upload(
         cls: type[T],
-        context: ContextBase,
+        context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
         sre_config: SREConfig,
