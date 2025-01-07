@@ -59,7 +59,7 @@ class SREAllowlist:
         pulumi_config: DSHPulumiConfig,
         sre_config: SREConfig,
         repository: AllowlistRepository,
-    ):
+    ) -> bool:
         # Get the Azure SDK
         azure_sdk = AzureSdk(subscription_name=context.subscription_name)
 
