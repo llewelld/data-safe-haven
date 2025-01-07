@@ -92,8 +92,8 @@ def upload(
     logger = get_logger()
 
     if file.is_file():
-        with open(file) as allow_list:
-            allowlist = allow_list.read()
+        with open(file) as f:
+            allowlist = f.read()
     else:
         logger.critical(f"Configuration file '{file}' not found.")
         raise typer.Exit(1)
@@ -113,8 +113,11 @@ def upload(
         pulumi_config=pulumi_config,
         repository=repository,
     ):
-        logger.info("Allowlist already exists")
-        raise typer.Exit(0)
+        if not console.confirm(
+            f"An allowlist already exists for {repository.name}. Do you want to overwrite it?",
+            default_to_yes=True,
+        ):
+            raise typer.Exit()
     try:
         SREAllowlist.upload(
             context=context,
