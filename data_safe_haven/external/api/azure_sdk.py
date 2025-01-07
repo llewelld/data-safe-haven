@@ -1516,8 +1516,9 @@ class AzureSdk:
             )
             share_file_client = share_client.get_file_client(file_name)
             # Upload the created file
-            share_file_client.upload_file(file_data,
-                                          )
+            share_file_client.upload_file(
+                file_data,
+            )
             self.logger.debug(
                 f"Uploaded file [green]{file_name}[/] to file share.",
             )
