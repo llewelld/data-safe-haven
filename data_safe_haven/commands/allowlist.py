@@ -86,10 +86,10 @@ def upload(
         AllowlistRepository,
         typer.Argument(help="Name of the repository to upload the allowlist for."),
     ] = None,
-        force: Annotated[  # noqa: FBT002
+    force: Annotated[  # noqa: FBT002
         bool,
         typer.Option(
-            help="Skip validation and difference calculation of remote configuration."
+            help="Skip check for existing remote allowlist."
         ),
     ] = False,
 ) -> None:
