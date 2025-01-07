@@ -90,10 +90,27 @@ class SREAllowlist:
         pulumi_config: DSHPulumiConfig,
         sre_config: SREConfig,
         repository: AllowlistRepository,
-        file: str,
+        allowlist: str,
     ) -> None:
         # Get the Azure SDK
         azure_sdk = AzureSdk(subscription_name=context.subscription_name)
         file_share_name = "software-repositories-nexus-allowlists"
-        file_name = f"{repository.value}.allowlist"
-        pass
+        file_name = f"{repository.value}.allowlist.test"
+
+        sre_stack = SREProjectManager(
+            context=context,
+            config=sre_config,
+            pulumi_config=pulumi_config,
+        )
+
+        storage_account_name = sre_stack.output("data")[
+            "storage_account_data_configuration_name"
+        ]
+        sre_resource_group = f"{sre_stack.stack_name}-rg"
+        azure_sdk.upload_file_share(
+            allowlist,
+            file_name,
+            sre_resource_group,
+            storage_account_name,
+            file_share_name,
+        )
