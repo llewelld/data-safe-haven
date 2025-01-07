@@ -88,9 +88,7 @@ def upload(
     ] = None,
     force: Annotated[  # noqa: FBT002
         bool,
-        typer.Option(
-            help="Skip check for existing remote allowlist."
-        ),
+        typer.Option(help="Skip check for existing remote allowlist."),
     ] = False,
 ) -> None:
     """Upload a package allowlist"""
