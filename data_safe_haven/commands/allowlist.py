@@ -86,6 +86,12 @@ def upload(
         AllowlistRepository,
         typer.Argument(help="Name of the repository to upload the allowlist for."),
     ] = None,
+        force: Annotated[  # noqa: FBT002
+        bool,
+        typer.Option(
+            help="Skip validation and difference calculation of remote configuration."
+        ),
+    ] = False,
 ) -> None:
     """Upload a package allowlist"""
     context = ContextManager.from_file().assert_context()
@@ -95,7 +101,7 @@ def upload(
         with open(file) as f:
             allowlist = f.read()
     else:
-        logger.critical(f"Configuration file '{file}' not found.")
+        logger.critical(f"Allowlist file '{file}' not found.")
         raise typer.Exit(1)
     sre_config = SREConfig.from_remote_by_name(context, sre)
 
@@ -107,7 +113,7 @@ def upload(
         logger.error(msg)
         raise typer.Exit(1)
 
-    if SREAllowlist.remote_exists(
+    if not force and SREAllowlist.remote_exists(
         context=context,
         sre_config=sre_config,
         pulumi_config=pulumi_config,
@@ -118,6 +124,7 @@ def upload(
             default_to_yes=True,
         ):
             raise typer.Exit()
+
     try:
         SREAllowlist.upload(
             context=context,
