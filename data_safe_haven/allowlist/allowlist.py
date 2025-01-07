@@ -95,7 +95,7 @@ class SREAllowlist:
         # Get the Azure SDK
         azure_sdk = AzureSdk(subscription_name=context.subscription_name)
         file_share_name = "software-repositories-nexus-allowlists"
-        file_name = f"{repository.value}.allowlist.test"
+        file_name = f"{repository.value}.allowlist"
 
         sre_stack = SREProjectManager(
             context=context,
