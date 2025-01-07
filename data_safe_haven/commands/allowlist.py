@@ -61,7 +61,7 @@ def show(
         )
     except DataSafeHavenError as exc:
         logger.critical(
-            "No allowlist is configured. Use `dsh allowlist add` to create one."
+            "No allowlist is configured. Use `dsh allowlist upload` to create one."
         )
         raise typer.Exit(1) from exc
 
@@ -93,7 +93,7 @@ def upload(
 
     if file.is_file():
         with open(file) as allow_list:
-            allow_list = allow_list.read()
+            allowlist = allow_list.read()
     else:
         logger.critical(f"Configuration file '{file}' not found.")
         raise typer.Exit(1)
@@ -114,4 +114,15 @@ def upload(
         repository=repository,
     ):
         logger.info("Allowlist already exists")
-    pass
+        raise typer.Exit(0)
+    try:
+        SREAllowlist.upload(
+            context=context,
+            sre_config=sre_config,
+            pulumi_config=pulumi_config,
+            repository=repository,
+            allowlist=allowlist,
+        )
+    except DataSafeHavenError as exc:
+        logger.error(f"Failed to upload allowlist: {exc}")
+        raise typer.Exit(1) from exc
