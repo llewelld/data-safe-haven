@@ -150,9 +150,6 @@ class SREAllowlist:
             file_share_name,
         )
 
-        # Get the local allowlist
-        allowlist = allowlist
-
         # Get the diff
         diff = list(
             unified_diff(
