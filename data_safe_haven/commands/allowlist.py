@@ -117,6 +117,15 @@ def upload(
         pulumi_config=pulumi_config,
         repository=repository,
     ):
+        diff = SREAllowlist.remote_diff(
+            context=context,
+            sre_config=sre_config,
+            pulumi_config=pulumi_config,
+            repository=repository,
+            allowlist=allowlist,
+        )
+        for line in "\n".join(diff).splitlines():
+            logger.info(line)
         if not console.confirm(
             f"An allowlist already exists for {repository.name}. Do you want to overwrite it?",
             default_to_yes=True,
@@ -124,6 +133,7 @@ def upload(
             raise typer.Exit()
 
     try:
+        logger.info(f"Uploading allowlist for {repository.name} to {sre_config.name}")
         SREAllowlist.upload(
             context=context,
             sre_config=sre_config,
