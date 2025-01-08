@@ -1,3 +1,4 @@
+from difflib import unified_diff
 from typing import TypeVar
 
 from data_safe_haven.config import Context, DSHPulumiConfig, SREConfig
@@ -113,3 +114,52 @@ class SREAllowlist:
             storage_account_name,
             file_share_name,
         )
+
+    @classmethod
+    def remote_diff(
+        cls: type[T],
+        context: Context,
+        *,
+        pulumi_config: DSHPulumiConfig,
+        sre_config: SREConfig,
+        repository: AllowlistRepository,
+        allowlist: str,
+    ) -> None:
+        # Get the Azure SDK
+        azure_sdk = AzureSdk(subscription_name=context.subscription_name)
+
+        sre_stack = SREProjectManager(
+            context=context,
+            config=sre_config,
+            pulumi_config=pulumi_config,
+        )
+
+        # Get the storage account name
+        storage_account_name = sre_stack.output("data")[
+            "storage_account_data_configuration_name"
+        ]
+        sre_resource_group = f"{sre_stack.stack_name}-rg"
+        # Get the file share name
+        file_share_name = "software-repositories-nexus-allowlists"
+        file_name = f"{repository.value}.allowlist"
+
+        remote_allowlist = azure_sdk.download_share_file(
+            file_name,
+            sre_resource_group,
+            storage_account_name,
+            file_share_name,
+        )
+
+        # Get the local allowlist
+        allowlist = allowlist
+
+        # Get the diff
+        diff = list(
+            unified_diff(
+                remote_allowlist.splitlines(),
+                allowlist.splitlines(),
+                fromfile="remote",
+                tofile="local",
+            )
+        )
+        return diff
