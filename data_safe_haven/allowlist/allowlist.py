@@ -124,7 +124,7 @@ class SREAllowlist:
         sre_config: SREConfig,
         repository: AllowlistRepository,
         allowlist: str,
-    ) -> None:
+    ) -> list[str]:
         # Get the Azure SDK
         azure_sdk = AzureSdk(subscription_name=context.subscription_name)
 
