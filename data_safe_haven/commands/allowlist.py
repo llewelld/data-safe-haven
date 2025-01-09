@@ -17,7 +17,7 @@ allowlist_command_group = typer.Typer()
 
 @allowlist_command_group.command()
 def show(
-    sre: Annotated[
+    name: Annotated[
         str,
         typer.Argument(help="Name of SRE to show allowlist for."),
     ],
@@ -42,7 +42,7 @@ def show(
         )
         raise typer.Exit(1) from exc
 
-    sre_config = SREConfig.from_remote_by_name(context, sre)
+    sre_config = SREConfig.from_remote_by_name(context, name)
 
     # Load Pulumi config
     pulumi_config = DSHPulumiConfig.from_remote(context)
@@ -73,8 +73,37 @@ def show(
 
 
 @allowlist_command_group.command()
+def template(
+    repository: Annotated[
+        AllowlistRepository,
+        typer.Argument(help="Name of the repository to show the allowlist for."),
+    ],
+    file: Annotated[
+        Optional[Path],  # noqa: UP007
+        typer.Option(help="File path to write allowlist template to."),
+    ] = None,
+) -> None:
+    """Print a template for the package allowlist"""
+
+    template_path = Path(
+        "data_safe_haven/resources",
+        "software_repositories",
+        "allowlists",
+        f"{repository.value}.allowlist",
+    )
+    with open(template_path) as f:
+        example_allowlist = f.read()
+    if file:
+        with open(file, "w") as f:
+            f.write(example_allowlist)
+        raise typer.Exit()
+    else:
+        console.print(example_allowlist)
+
+
+@allowlist_command_group.command()
 def upload(
-    sre: Annotated[
+    name: Annotated[
         str,
         typer.Argument(help="Name of SRE to upload the allowlist for."),
     ],
@@ -101,7 +130,7 @@ def upload(
     else:
         logger.critical(f"Allowlist file '{file}' not found.")
         raise typer.Exit(1)
-    sre_config = SREConfig.from_remote_by_name(context, sre)
+    sre_config = SREConfig.from_remote_by_name(context, name)
 
     # Load Pulumi config
     pulumi_config = DSHPulumiConfig.from_remote(context)
