@@ -16,6 +16,8 @@ Refer to the [Deployment](https://data-safe-haven.readthedocs.io/en/latest/deplo
 
 - [ ] Consult the `data-safe-haven/VERSIONING.md` guide and determine the version number of the new release. Record it in the title of this issue
 - [ ] Create a release branch called e.g. `release-v0.0.1`
+    - If this is a hotfix release then this branch should be based off `latest`
+    - In all other cases it should be based off `develop`
 - [ ] Draft a changelog for the release similar to our [previous releases](https://github.com/alan-turing-institute/data-safe-haven/releases)
 
 ### For patch releases only
