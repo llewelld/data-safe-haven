@@ -52,6 +52,7 @@ Refer to the [Deployment](https://data-safe-haven.readthedocs.io/en/latest/deplo
 - [ ] Ensure docs for the latest version are built and deployed on ReadTheDocs
 - [ ] Push a build to PyPI
 - [ ] Announce release on communications channels
+- [ ] Create a PR from `latest` into `develop` to ensure that release-specific changes are not lost
 
 ## :deciduous_tree: Deployment problems
 
