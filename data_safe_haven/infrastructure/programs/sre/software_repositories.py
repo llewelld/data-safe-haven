@@ -124,15 +124,12 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
         )
 
         # Upload Nexus allowlists
-        cran_reader = FileReader(
-            resources_path / "software_repositories" / "allowlists" / "cran.allowlist"
-        )
         FileShareFile(
             f"{self._name}_file_share_cran_allowlist",
             FileShareFileProps(
-                destination_path=cran_reader.name,
+                destination_path= "cran.allowlist",
                 share_name=file_share_nexus_allowlists.name,
-                file_contents=cran_reader.file_contents(),
+                file_contents= "",
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
             ),
@@ -140,15 +137,12 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 child_opts, ResourceOptions(parent=file_share_nexus)
             ),
         )
-        pypi_reader = FileReader(
-            resources_path / "software_repositories" / "allowlists" / "pypi.allowlist"
-        )
         FileShareFile(
             f"{self._name}_file_share_pypi_allowlist",
             FileShareFileProps(
-                destination_path=pypi_reader.name,
+                destination_path="pypi.allowlist",
                 share_name=file_share_nexus_allowlists.name,
-                file_contents=pypi_reader.file_contents(),
+                file_contents="",
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
             ),
