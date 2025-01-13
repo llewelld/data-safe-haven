@@ -6,8 +6,8 @@
 # - black==24.10.0
 # - mypy==1.14.1
 # - pandas-stubs==2.2.3.241126
-# - pydantic==2.10.4
-# - ruff==0.8.6
+# - pydantic==2.10.5
+# - ruff==0.9.1
 # - types-appdirs==1.4.3.5
 # - types-chevron==0.14.2.20250103
 # - types-pytz==2024.2.0.20241221
@@ -178,11 +178,11 @@ ptyprocess==0.7.0
     # via pexpect
 pycparser==2.22
     # via cffi
-pydantic==2.10.4
+pydantic==2.10.5
     # via hatch.envs.lint
 pydantic-core==2.27.2
     # via pydantic
-pygments==2.19.0
+pygments==2.19.1
     # via rich
 pyproject-api==1.8.0
     # via tox
@@ -199,7 +199,7 @@ pytest-xdist==3.6.1
     # via tox-ansible
 python-daemon==3.1.2
     # via ansible-runner
-python-gnupg==0.5.3
+python-gnupg==0.5.4
     # via ansible-sign
 pyyaml==6.0.2
     # via
@@ -228,11 +228,11 @@ rpds-py==0.22.3
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.9
+ruamel-yaml==0.18.10
     # via ansible-lint
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-ruff==0.8.6
+ruff==0.9.1
     # via hatch.envs.lint
 subprocess-tee==0.4.2
     # via
