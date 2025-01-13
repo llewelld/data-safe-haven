@@ -22,11 +22,11 @@
 # - cryptography==44.0.0
 # - fqdn==1.5.1
 # - psycopg[binary]==3.1.19
-# - pulumi-azure-native==2.80.0
+# - pulumi-azure-native==2.82.0
 # - pulumi-azuread==6.0.2
 # - pulumi-random==4.16.8
-# - pulumi==3.144.1
-# - pydantic==2.10.4
+# - pulumi==3.145.0
+# - pydantic==2.10.5
 # - pyjwt[crypto]==2.10.1
 # - pytz==2024.2
 # - pyyaml==6.0.2
@@ -192,13 +192,13 @@ psycopg==3.1.19
     # via hatch.envs.default
 psycopg-binary==3.1.19
     # via psycopg
-pulumi==3.144.1
+pulumi==3.145.0
     # via
     #   hatch.envs.default
     #   pulumi-azure-native
     #   pulumi-azuread
     #   pulumi-random
-pulumi-azure-native==2.80.0
+pulumi-azure-native==2.82.0
     # via hatch.envs.default
 pulumi-azuread==6.0.2
     # via hatch.envs.default
@@ -206,17 +206,17 @@ pulumi-random==4.16.8
     # via hatch.envs.default
 pycparser==2.22
     # via cffi
-pydantic==2.10.4
+pydantic==2.10.5
     # via hatch.envs.default
 pydantic-core==2.27.2
     # via pydantic
-pygments==2.19.0
+pygments==2.19.1
     # via rich
 pyjwt==2.10.1
     # via
     #   hatch.envs.default
     #   msal
-pyopenssl==24.3.0
+pyopenssl==25.0.0
     # via
     #   acme
     #   josepy
@@ -276,6 +276,7 @@ typing-extensions==4.12.2
     #   psycopg
     #   pydantic
     #   pydantic-core
+    #   pyopenssl
     #   typer
 urllib3==2.3.0
     # via requests
@@ -285,4 +286,5 @@ websocket-client==1.8.0
     # via hatch.envs.default
 
 # The following packages are considered to be unsafe in a requirements file:
+# pip
 # setuptools
