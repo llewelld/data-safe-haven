@@ -243,6 +243,9 @@ ignore = [
   "PLR0915",  # ignore too-many-statements
 ]
 
+[tool.ruff.lint.flake8-builtins]
+builtins-allowed-modules = ["types"]
+
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
 
