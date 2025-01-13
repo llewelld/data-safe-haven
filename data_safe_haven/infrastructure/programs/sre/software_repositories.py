@@ -127,9 +127,9 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
         FileShareFile(
             f"{self._name}_file_share_cran_allowlist",
             FileShareFileProps(
-                destination_path= "cran.allowlist",
+                destination_path="cran.allowlist",
                 share_name=file_share_nexus_allowlists.name,
-                file_contents= "",
+                file_contents="",
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
             ),
