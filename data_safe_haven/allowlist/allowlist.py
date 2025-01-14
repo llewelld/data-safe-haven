@@ -1,12 +1,10 @@
 from difflib import unified_diff
-from typing import TypeVar
+from typing import Self
 
 from data_safe_haven.config import Context, DSHPulumiConfig, SREConfig
 from data_safe_haven.external import AzureSdk
 from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.types import AllowlistRepository
-
-T = TypeVar("T", bound="Allowlist")
 
 
 class Allowlist:
@@ -14,7 +12,7 @@ class Allowlist:
 
     @classmethod
     def from_remote(
-        cls: type[T],
+        cls: Self,
         context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
@@ -53,7 +51,7 @@ class Allowlist:
 
     @classmethod
     def remote_exists(
-        cls: type[T],
+        cls: Self,
         context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
@@ -84,7 +82,7 @@ class Allowlist:
 
     @classmethod
     def upload(
-        cls: type[T],
+        cls: Self,
         context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
@@ -117,7 +115,7 @@ class Allowlist:
 
     @classmethod
     def remote_diff(
-        cls: type[T],
+        cls: Self,
         context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
