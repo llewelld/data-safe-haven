@@ -45,11 +45,11 @@ dependencies = [
   "cryptography==44.0.0",
   "fqdn==1.5.1",
   "psycopg[binary]==3.1.19", # needed for installation on older MacOS versions
-  "pulumi-azure-native==2.80.0",
+  "pulumi-azure-native==2.82.0",
   "pulumi-azuread==6.0.2",
   "pulumi-random==4.16.8",
-  "pulumi==3.144.1",
-  "pydantic==2.10.4",
+  "pulumi==3.145.0",
+  "pydantic==2.10.5",
   "pyjwt[crypto]==2.10.1",
   "pytz==2024.2",
   "pyyaml==6.0.2",
@@ -79,8 +79,8 @@ lint = [
   "black==24.10.0",
   "mypy==1.14.1",
   "pandas-stubs==2.2.3.241126",
-  "pydantic==2.10.4",
-  "ruff==0.8.6",
+  "pydantic==2.10.5",
+  "ruff==0.9.1",
   "types-appdirs==1.4.3.5",
   "types-chevron==0.14.2.20250103",
   "types-pytz==2024.2.0.20241221",
@@ -242,6 +242,9 @@ ignore = [
   "PLR0913",  # ignore too-many-arguments
   "PLR0915",  # ignore too-many-statements
 ]
+
+[tool.ruff.lint.flake8-builtins]
+builtins-allowed-modules = ["types"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
