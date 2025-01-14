@@ -323,6 +323,15 @@ def mock_storage_exists(mocker):
 
 
 @fixture
+def mock_file_share_exists(mocker):
+    return mocker.patch.object(
+        AzureSdk,
+        "file_share_exists",
+        return_value=True,
+    )
+
+
+@fixture
 def offline_pulumi_account(monkeypatch):
     """Overwrite PulumiAccount so that it runs locally"""
     monkeypatch.setattr(
