@@ -37,9 +37,7 @@ class TestAllowlist:
             "pypi",
         ],
     )
-    def test_template(self,
-                      runner,
-                      repository) -> None:
+    def test_template(self, runner, repository) -> None:
 
         result = runner.invoke(
             allowlist_command_group,
