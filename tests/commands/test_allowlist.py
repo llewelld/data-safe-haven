@@ -1,4 +1,4 @@
-from pytest import fixture
+from pytest import fixture, mark
 
 from data_safe_haven.allowlist import SREAllowlist
 from data_safe_haven.commands.allowlist import allowlist_command_group
@@ -29,3 +29,24 @@ class TestAllowlist:
         )
         assert result.exit_code == 0
         assert "tidyverse\ndplyr\nnumpy" in result.output
+
+    @mark.parametrize(
+        "repository",
+        [
+            "cran",
+            "pypi",
+        ],
+    )
+    def test_template(self,
+                      runner,
+                      repository) -> None:
+
+        result = runner.invoke(
+            allowlist_command_group,
+            ["template", repository],
+        )
+        assert result.exit_code == 0
+        if repository == "cran":
+            assert "DBI\nMASS" in result.output
+        elif repository == "pypi":
+            assert "numpy\npackaging" in result.output
