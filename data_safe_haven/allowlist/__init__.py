@@ -1,3 +1,3 @@
-from .allowlist import SREAllowlist
+from .allowlist import Allowlist
 
-__all__ = ["SREAllowlist"]
+__all__ = ["Allowlist"]

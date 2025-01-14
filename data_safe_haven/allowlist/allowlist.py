@@ -6,10 +6,10 @@ from data_safe_haven.external import AzureSdk
 from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.types import AllowlistRepository
 
-T = TypeVar("T", bound="SREAllowlist")
+T = TypeVar("T", bound="Allowlist")
 
 
-class SREAllowlist:
+class Allowlist:
     """Allowlist for packages"""
 
     @classmethod

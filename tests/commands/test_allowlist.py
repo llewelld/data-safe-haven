@@ -1,6 +1,6 @@
 from pytest import fixture, mark
 
-from data_safe_haven.allowlist import SREAllowlist
+from data_safe_haven.allowlist import Allowlist
 from data_safe_haven.commands.allowlist import allowlist_command_group
 
 
@@ -22,7 +22,7 @@ class TestAllowlist:
     ) -> None:
         sre_name = "sandbox"
         repository = "cran"
-        mocker.patch.object(SREAllowlist, "from_remote", return_value=test_allowlist)
+        mocker.patch.object(Allowlist, "from_remote", return_value=test_allowlist)
         result = runner.invoke(
             allowlist_command_group,
             ["show", sre_name, repository],

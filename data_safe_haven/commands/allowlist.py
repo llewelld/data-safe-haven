@@ -6,7 +6,7 @@ from typing import Annotated, Optional
 import typer
 
 from data_safe_haven import console
-from data_safe_haven.allowlist import SREAllowlist
+from data_safe_haven.allowlist import Allowlist
 from data_safe_haven.config import ContextManager, DSHPulumiConfig, SREConfig
 from data_safe_haven.exceptions import DataSafeHavenConfigError, DataSafeHavenError
 from data_safe_haven.logging import get_logger
@@ -53,7 +53,7 @@ def show(
         raise typer.Exit(1)
 
     try:
-        allow_list = SREAllowlist.from_remote(
+        allow_list = Allowlist.from_remote(
             context=context,
             pulumi_config=pulumi_config,
             repository=repository,
@@ -140,13 +140,13 @@ def upload(
         logger.error(msg)
         raise typer.Exit(1)
 
-    if not force and SREAllowlist.remote_exists(
+    if not force and Allowlist.remote_exists(
         context=context,
         sre_config=sre_config,
         pulumi_config=pulumi_config,
         repository=repository,
     ):
-        if diff := SREAllowlist.remote_diff(
+        if diff := Allowlist.remote_diff(
             context=context,
             sre_config=sre_config,
             pulumi_config=pulumi_config,
@@ -165,7 +165,7 @@ def upload(
             raise typer.Exit()
     try:
         logger.info(f"Uploading allowlist for {repository.name} to {sre_config.name}")
-        SREAllowlist.upload(
+        Allowlist.upload(
             context=context,
             sre_config=sre_config,
             pulumi_config=pulumi_config,
