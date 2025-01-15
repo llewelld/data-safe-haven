@@ -10,7 +10,7 @@ def test_allowlist():
     return allowlist
 
 
-class TestAllowlist:
+class TestShowAllowlist:
     def test_show(
         self,
         mocker,
@@ -30,6 +30,7 @@ class TestAllowlist:
         assert result.exit_code == 0
         assert "tidyverse\ndplyr\nnumpy" in result.output
 
+class TestTemplateAllowlist:
     @mark.parametrize(
         "repository",
         [
