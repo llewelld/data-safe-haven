@@ -30,6 +30,7 @@ class TestShowAllowlist:
         assert result.exit_code == 0
         assert "tidyverse\ndplyr\nnumpy" in result.output
 
+
 class TestTemplateAllowlist:
     @mark.parametrize(
         "repository",
