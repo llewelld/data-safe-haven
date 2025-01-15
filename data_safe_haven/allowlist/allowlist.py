@@ -12,7 +12,7 @@ class Allowlist:
 
     @classmethod
     def from_remote(
-        cls: Self,
+        cls: type[Self],
         context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
@@ -51,7 +51,7 @@ class Allowlist:
 
     @classmethod
     def remote_exists(
-        cls: Self,
+        cls: type[Self],
         context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
@@ -82,7 +82,7 @@ class Allowlist:
 
     @classmethod
     def upload(
-        cls: Self,
+        cls: type[Self],
         context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
@@ -115,7 +115,7 @@ class Allowlist:
 
     @classmethod
     def remote_diff(
-        cls: Self,
+        cls: type[Self],
         context: Context,
         *,
         pulumi_config: DSHPulumiConfig,
