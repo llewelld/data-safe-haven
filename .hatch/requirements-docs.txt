@@ -23,9 +23,9 @@
 # - fqdn==1.5.1
 # - psycopg[binary]==3.1.19
 # - pulumi-azure-native==2.82.0
-# - pulumi-azuread==6.0.2
-# - pulumi-random==4.16.8
-# - pulumi==3.145.0
+# - pulumi-azuread==6.1.0
+# - pulumi-random==4.17.0
+# - pulumi==3.146.0
 # - pydantic==2.10.5
 # - pyjwt[crypto]==2.10.1
 # - pytz==2024.2
@@ -34,7 +34,7 @@
 # - simple-acme-dns==3.2.0
 # - typer==0.15.1
 # - websocket-client==1.8.0
-# - emoji==2.14.0
+# - emoji==2.14.1
 # - myst-parser==4.0.0
 # - pydata-sphinx-theme==0.16.1
 # - sphinx-togglebutton==0.3.2
@@ -152,7 +152,7 @@ cryptography==44.0.0
     #   msal
     #   pyjwt
     #   pyopenssl
-debugpy==1.8.11
+debugpy==1.8.12
     # via pulumi
 dill==0.3.9
     # via pulumi
@@ -164,7 +164,7 @@ docutils==0.21.2
     #   pydata-sphinx-theme
     #   sphinx
     #   sphinx-togglebutton
-emoji==2.14.0
+emoji==2.14.1
     # via hatch.envs.docs
 fqdn==1.5.1
     # via hatch.envs.docs
@@ -235,7 +235,7 @@ psycopg==3.1.19
     # via hatch.envs.docs
 psycopg-binary==3.1.19
     # via psycopg
-pulumi==3.145.0
+pulumi==3.146.0
     # via
     #   hatch.envs.docs
     #   pulumi-azure-native
@@ -243,9 +243,9 @@ pulumi==3.145.0
     #   pulumi-random
 pulumi-azure-native==2.82.0
     # via hatch.envs.docs
-pulumi-azuread==6.0.2
+pulumi-azuread==6.1.0
     # via hatch.envs.docs
-pulumi-random==4.16.8
+pulumi-random==4.17.0
     # via hatch.envs.docs
 pycparser==2.22
     # via cffi
