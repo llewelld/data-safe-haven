@@ -7,7 +7,6 @@ from data_safe_haven.external import AzureIPv4Range
 from data_safe_haven.infrastructure.components.wrapped import (
     WrappedLogAnalyticsWorkspace,
 )
-from data_safe_haven.types import AzureServiceTag
 
 
 class NFSV3StorageAccountProps:
@@ -15,7 +14,6 @@ class NFSV3StorageAccountProps:
         self,
         account_name: Input[str],
         allowed_ip_addresses: Input[Sequence[str]] | None,
-        allowed_service_tag: AzureServiceTag | None,
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         resource_group_name: Input[str],
@@ -23,7 +21,6 @@ class NFSV3StorageAccountProps:
     ):
         self.account_name = account_name
         self.allowed_ip_addresses = allowed_ip_addresses
-        self.allowed_service_tag = allowed_service_tag
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
         self.resource_group_name = resource_group_name
@@ -54,21 +51,16 @@ class NFSV3StorageAccountComponent(ComponentResource):
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
         child_tags = {"component": "data"} | (tags if tags else {})
 
-        if props.allowed_service_tag == AzureServiceTag.INTERNET:
-            default_action = storage.DefaultAction.ALLOW
-            ip_rules = []
-        else:
-            default_action = storage.DefaultAction.DENY
-            ip_rules = Output.from_input(props.allowed_ip_addresses).apply(
-                lambda ip_ranges: [
-                    storage.IPRuleArgs(
-                        action=storage.Action.ALLOW,
-                        i_p_address_or_range=str(ip_address),
-                    )
-                    for ip_range in sorted(ip_ranges)
-                    for ip_address in AzureIPv4Range.from_cidr(ip_range).all_ips()
-                ]
-            )
+        ip_rules = Output.from_input(props.allowed_ip_addresses).apply(
+            lambda ip_ranges: [
+                storage.IPRuleArgs(
+                    action=storage.Action.ALLOW,
+                    i_p_address_or_range=str(ip_address),
+                )
+                for ip_range in sorted(ip_ranges)
+                for ip_address in AzureIPv4Range.from_cidr(ip_range).all_ips()
+            ]
+        )
 
         # Deploy storage account
         self.storage_account = storage.StorageAccount(
@@ -84,7 +76,7 @@ class NFSV3StorageAccountComponent(ComponentResource):
             minimum_tls_version=storage.MinimumTlsVersion.TLS1_2,
             network_rule_set=storage.NetworkRuleSetArgs(
                 bypass=storage.Bypass.AZURE_SERVICES,
-                default_action=default_action,
+                default_action=storage.DefaultAction.DENY,
                 ip_rules=ip_rules,
                 virtual_network_rules=[
                     storage.VirtualNetworkRuleArgs(

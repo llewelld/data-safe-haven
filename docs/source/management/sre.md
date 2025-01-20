@@ -2,13 +2,13 @@
 
 ## List available SRE configurations and deployment status
 
-- Run the following if you want to check what SRE configurations are available in the current context, and whether those SREs are deployed
+- Use {typer}`dsh config available` to check what SRE configurations are available in the current context, and whether those SREs are deployed.
 
 ```{code} shell
 $ dsh config available
 ```
 
-which will give output like the following
+will give output like the following
 
 ```{code} shell
 Available SRE configurations for context 'green':
@@ -23,7 +23,7 @@ Available SRE configurations for context 'green':
 
 ## Remove a deployed Data Safe Haven
 
-- Run the following if you want to teardown a deployed SRE:
+- Use {typer}`dsh sre teardown` to teardown a deployed SRE:
 
 ```{code} shell
 $ dsh sre teardown YOUR_SRE_NAME
@@ -37,7 +37,7 @@ Ensure that any desired outputs have been extracted before deleting the SRE.
 The user groups for the SRE on Microsoft Entra ID will also be deleted.
 ::::
 
-- Run the following if you want to teardown the deployed SHM:
+- Use {typer}`dsh shm teardown` if you want to teardown the deployed SHM:
 
 ```{code} shell
 $ dsh shm teardown
@@ -54,7 +54,7 @@ All SREs associated with the SHM should be torn down before the SHM is torn down
 
 SREs are modified by updating the configuration then running the deploy command.
 
-- The existing configuration for the SRE can be shown using the following:
+- The existing configuration for the SRE can be shown using {typer}`dsh config show`:
 
 ```{code} shell
 $ dsh config show YOUR_SRE_NAME
@@ -66,14 +66,14 @@ $ dsh config show YOUR_SRE_NAME
 $ dsh config show YOUR_SRE_NAME --file YOUR_SRE_NAME.yaml
 ```
 
-- Edit the configuration file locally, and upload the new version:
+- Edit the configuration file locally, and upload the new version using {typer}`dsh config upload`:
 
 ```{code} shell
 $ dsh config upload YOUR_SRE_NAME.yaml
 ```
 
 - You will be shown the differences between the existing configuration and the new configuration and asked to confirm that they are correct.
-- Finally, deploy your SRE to apply any changes:
+- Finally, deploy your SRE using {typer}`dsh sre deploy` to apply any changes:
 
 ```{code} shell
 $ dsh sre deploy YOUR_SRE_NAME

@@ -21,6 +21,7 @@ $ az provider register --name Microsoft.Network
 Each project will have its own dedicated SRE.
 
 - Create a configuration file (optionally starting from one of our standard {ref}`policy_classification_sensitivity_tiers`)
+- The {typer}`dsh-config-template` command provides template configuration files
 
 ::::{admonition} EITHER start from a blank template
 :class: dropdown note
@@ -57,6 +58,7 @@ name: # A name for your SRE deployment containing only letters, numbers, hyphens
 sre:
   admin_email_address: # Email address shared by all administrators
   admin_ip_addresses: # List of IP addresses belonging to administrators
+  allow_workspace_internet: # True/False: whether to allow outbound internet access from workspaces. WARNING setting this to True will allow data to be moved out of the SRE WITHOUT OVERSIGHT OR APPROVAL
   data_provider_ip_addresses: # List of IP addresses belonging to data providers
   databases: # List of database systems to deploy
   remote_desktop:
@@ -254,7 +256,7 @@ If you want to make changes to the config, edit this file and then run `dsh conf
 
 ## Deployment
 
-- Deploy each SRE individually [approx 30 minutes]:
+- Deploy each SRE individually using {typer}`dsh sre deploy` [approx 30 minutes]:
 
 :::{code} shell
 $ dsh sre deploy YOUR_SRE_NAME

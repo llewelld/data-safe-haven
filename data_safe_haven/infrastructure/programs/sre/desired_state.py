@@ -113,7 +113,6 @@ class SREDesiredStateComponent(ComponentResource):
                     f"{''.join(truncate_tokens(stack_name.split('-'), 11))}desiredstate{sha256hash(self._name)}"
                 )[:24],
                 allowed_ip_addresses=props.admin_ip_addresses,
-                allowed_service_tag=None,
                 location=props.location,
                 log_analytics_workspace=props.log_analytics_workspace,
                 resource_group_name=props.resource_group_name,
