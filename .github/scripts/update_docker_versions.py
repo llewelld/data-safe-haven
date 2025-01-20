@@ -3,11 +3,13 @@
 import pathlib
 import re
 from contextlib import suppress
+from functools import cache
 
 import requests
 from packaging import version
 
 
+@cache
 def get_dockerhub_versions(image_details: str) -> tuple[str, str, list[str]]:
     """Get versions for DockerHub images (via API)"""
     image_name, version = image_details.split(":")
@@ -23,6 +25,7 @@ def get_dockerhub_versions(image_details: str) -> tuple[str, str, list[str]]:
     return (image_name, version, versions)
 
 
+@cache
 def get_github_versions(image_details: str) -> tuple[str, str, list[str]]:
     """Get versions for GitHub images (via manual scraping)"""
     _, organisation, image_name, version = re.split("[:/]", image_details)
@@ -38,6 +41,7 @@ def get_github_versions(image_details: str) -> tuple[str, str, list[str]]:
     return (image_name, version, versions)
 
 
+@cache
 def get_quayio_versions(image_details: str) -> tuple[str, str, list[str]]:
     """Get versions for Quay.IO images (via API)"""
     _, organisation, image_name, version = re.split("[:/]", image_details)
