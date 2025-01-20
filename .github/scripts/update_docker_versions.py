@@ -86,7 +86,7 @@ for filename in (pathlib.Path("data_safe_haven") / "infrastructure").glob("**/*.
                 else:
                     image, v_current, available = get_dockerhub_versions(image_details)
                 # Consider only stable versions unless there are none available
-                if not (candidate_versions := [v for v in annotate(available, stable_only=True)]):
+                if not (candidate_versions := annotate(available, stable_only=True)):
                     print(f"No stable releases identified for {image}!")
                     v_latest = v_current
                 else:
