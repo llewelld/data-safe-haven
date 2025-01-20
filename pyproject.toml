@@ -142,13 +142,13 @@ all = [
 ]
 ansible = "ansible-lint {args:data_safe_haven/resources/workspace/ansible/}"
 fmt = [
-  "black {args:data_safe_haven tests}",
-  "ruff check --fix {args:data_safe_haven tests}",
+  "black {args:data_safe_haven tests .github}",
+  "ruff check --fix {args:data_safe_haven tests .github}",
   "style",
 ]
 style = [
-  "ruff check {args:data_safe_haven tests}",
-  "black --check --diff {args:data_safe_haven tests}",
+  "ruff check {args:data_safe_haven tests .github}",
+  "black --check --diff {args:data_safe_haven tests .github}",
 ]
 typing = "mypy {args:data_safe_haven}"
 

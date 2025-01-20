@@ -87,16 +87,20 @@ for filename in (pathlib.Path("data_safe_haven") / "infrastructure").glob("**/*.
                     image, v_current, available = get_dockerhub_versions(image_details)
                 # Consider only stable versions unless there are none available
                 if not (candidate_versions := annotate(available, stable_only=True)):
-                    print(f"No stable releases identified for {image}!")
+                    print(f"No stable releases identified for {image}!")  # noqa: T201
                     v_latest = v_current
                 else:
                     v_latest = candidate_versions[0][0]
                 if v_current != v_latest:
-                    print(f"Updating {image} from {v_current} to {v_latest} in {filename}")  # noqa: T201
+                    print(  # noqa: T201
+                        f"Updating {image} from {v_current} to {v_latest} in {filename}"
+                    )
                     needs_replacement = True
                     output = line.replace(v_current, v_latest)
                 else:
-                    print(f"Leaving {image} at {v_current} (latest version) in {filename}")  # noqa: T201
+                    print(  # noqa: T201
+                        f"Leaving {image} at {v_current} (latest version) in {filename}"
+                    )
             lines += output
 
     if needs_replacement:
