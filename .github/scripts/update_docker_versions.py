@@ -68,7 +68,7 @@ def annotate(
             ):
                 continue
             annotated.append((version_str, version_))
-    return annotated
+    return sorted(annotated, key=lambda v: v[1], reverse=True)
 
 
 for filename in (pathlib.Path("data_safe_haven") / "infrastructure").glob("**/*.py"):
@@ -90,7 +90,7 @@ for filename in (pathlib.Path("data_safe_haven") / "infrastructure").glob("**/*.
                     print(f"No stable releases identified for {image}!")
                     v_latest = v_current
                 else:
-                    v_latest = sorted(candidate_versions, key=lambda v: v[1], reverse=True)[0][0]
+                    v_latest = candidate_versions[0][0]
                 if v_current != v_latest:
                     print(f"Updating {image} from {v_current} to {v_latest} in {filename}")  # noqa: T201
                     needs_replacement = True
