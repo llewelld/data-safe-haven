@@ -85,8 +85,12 @@ for filename in (pathlib.Path("data_safe_haven") / "infrastructure").glob("**/*.
                     image, v_current, available = get_quayio_versions(image_details)
                 else:
                     image, v_current, available = get_dockerhub_versions(image_details)
-                stable_versions = [v for v in annotate(available, stable_only=True)]
-                v_latest = sorted(stable_versions, key=lambda v: v[1], reverse=True)[0][0]
+                # Consider only stable versions unless there are none available
+                if not (candidate_versions := [v for v in annotate(available, stable_only=True)]):
+                    print(f"No stable releases identified for {image}!")
+                    v_latest = v_current
+                else:
+                    v_latest = sorted(candidate_versions, key=lambda v: v[1], reverse=True)[0][0]
                 if v_current != v_latest:
                     print(f"Updating {image} from {v_current} to {v_latest} in {filename}")  # noqa: T201
                     needs_replacement = True
