@@ -168,10 +168,10 @@ class AzureSdk:
         resource_group_name: str,
         storage_account_name: str,
     ) -> list[str]:
-        """List all shares with a given prefix in a container
+        """List all shares in a container
 
         Returns:
-            List[str]: The list of blob names
+            List[str]: The list of share names
         """
 
         share_client = self.share_service_client(
