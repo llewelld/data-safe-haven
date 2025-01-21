@@ -26,3 +26,25 @@ class TestAllowlist:
             sre_config=sre_config,
         )
         assert "dplyr" in result
+
+    def test_remote_exists(
+        self, mocker, context, sre_config, pulumi_config_no_key
+    ) -> None:
+        mocker.patch.object(
+            AzureSdk,
+            "file_share_exists",
+            return_value=True,
+        )
+        mocker.patch.object(
+            SREProjectManager,
+            "output",
+            return_value={"storage_account_data_configuration_name": "test"},
+        )
+
+        exists = Allowlist.remote_exists(
+            context,
+            pulumi_config=pulumi_config_no_key,
+            repository=AllowlistRepository.CRAN,
+            sre_config=sre_config,
+        )
+        assert exists
