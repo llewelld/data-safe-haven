@@ -57,14 +57,8 @@ def mock_blob_client(monkeypatch):
 
 @fixture
 def mock_share_client(monkeypatch):
-    class MockShareClient:
-        def __init__(
-            self,
-            resource_group_name,  # noqa: ARG002
-            storage_account_name,  # noqa: ARG002
-            file_share_name,  # noqa: ARG002
-            file_name,
-        ):
+    class MockShareFileClient:
+        def __init__(self, file_name):
             self.file_name = file_name
 
         def exists(self):
@@ -73,24 +67,57 @@ def mock_share_client(monkeypatch):
             else:
                 return False
 
+    class MockShareClient:
+        def __init__(
+            self,
+            resource_group_name,
+            storage_account_name,
+            file_share_name,
+        ):
+            self.resource_group_name = resource_group_name
+            self.storage_account_name = storage_account_name
+            self.file_share_name = file_share_name
+
+        def get_file_client(self, file_name):
+            return MockShareFileClient(
+                file_name,
+            )
+        def list_shares(self, resource_group_name, storage_account_name):
+            return ["file_share_name", "file_share_name2"]
+
     def mock_share_client(
         self,  # noqa: ARG001
         resource_group_name,
         storage_account_name,
         file_share_name,
-        file_name,
     ):
         return MockShareClient(
             resource_group_name,
             storage_account_name,
             file_share_name,
-            file_name,
         )
 
     monkeypatch.setattr(
         data_safe_haven.external.api.azure_sdk.AzureSdk,
         "share_client",
         mock_share_client,
+    )
+
+
+@fixture
+def mock_share_service_client(monkeypatch):
+    class MockShareServiceClient:
+        def __init__(self, resource_group_name, storage_account_name):
+            self.resource_group_name = resource_group_name
+            self.storage_account_name = storage_account_name
+
+        def list_shares(self):
+            return ["file_share_name", "file_share_name2"]
+
+    monkeypatch.setattr(
+        data_safe_haven.external.api.azure_sdk.AzureSdk,
+        "share_service_client",
+        MockShareServiceClient,
     )
 
 
@@ -276,18 +303,23 @@ class TestAzureSdk:
         )
 
     def test_file_share_exists(
-        self, mock_share_client, mock_file_share_exists  # noqa: ARG002
+        self, mock_share_client, mock_storage_exists  # noqa: ARG002
     ):
         sdk = AzureSdk("subscription name")
         exists = sdk.file_share_exists(
-            "file_name", "resource_group", "storage_account", "file_share_name"
+            "exists", "resource_group", "storage_account", "file_share_name"
         )
         assert isinstance(exists, bool)
         assert exists
 
-        mock_file_share_exists.assert_called_once_with(
-            "file_name", "resource_group", "storage_account", "file_share_name"
+        mock_storage_exists.assert_called_once_with(
+            "storage_account",
         )
+
+    def test_file_share_list(self, mock_share_service_client):
+        sdk = AzureSdk("subscription name")
+        shares = sdk.list_shares("resource_group", "storage_account")
+        assert shares == ["file_share_name", "file_share_name2"]
 
     def test_get_keyvault_key(self, mock_key_client):  # noqa: ARG002
         sdk = AzureSdk("subscription name")
