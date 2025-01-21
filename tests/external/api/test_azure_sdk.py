@@ -82,8 +82,6 @@ def mock_share_client(monkeypatch):
             return MockShareFileClient(
                 file_name,
             )
-        def list_shares(self, resource_group_name, storage_account_name):
-            return ["file_share_name", "file_share_name2"]
 
     def mock_share_client(
         self,  # noqa: ARG001
@@ -316,7 +314,7 @@ class TestAzureSdk:
             "storage_account",
         )
 
-    def test_file_share_list(self, mock_share_service_client):
+    def test_file_share_list(self, mock_share_service_client):  # noqa: ARG002
         sdk = AzureSdk("subscription name")
         shares = sdk.list_shares("resource_group", "storage_account")
         assert shares == ["file_share_name", "file_share_name2"]
