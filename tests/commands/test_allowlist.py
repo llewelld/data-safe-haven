@@ -2,13 +2,21 @@ from pytest import fixture, mark
 
 from data_safe_haven.allowlist import Allowlist
 from data_safe_haven.commands.allowlist import allowlist_command_group
-
+from data_safe_haven.config import SREConfig
+from data_safe_haven.external import AzureSdk
+from data_safe_haven.infrastructure import SREProjectManager
 
 @fixture
 def test_allowlist():
     allowlist = """tidyverse\ndplyr\nnumpy"""
     return allowlist
 
+@fixture
+def allowlist_file(test_allowlist, tmp_path):
+    allowlist_file_path = tmp_path / "allowlist.txt"
+    with open(allowlist_file_path, "w") as f:
+        f.write(test_allowlist)
+    return allowlist_file_path
 
 class TestShowAllowlist:
     def test_show(
@@ -50,3 +58,37 @@ class TestTemplateAllowlist:
             assert "DBI\nMASS" in result.output
         elif repository == "pypi":
             assert "numpy\npackaging" in result.output
+
+class TestUploadAllowlist:
+    @mark.parametrize(
+        "repository",
+        [
+            "cran",
+            "pypi",
+        ],
+    )
+    def test_upload(
+        self,
+        mocker,
+        runner,
+        repository,
+        allowlist_file,
+        mock_azuresdk_get_subscription,  # noqa: ARG002
+        mock_pulumi_config_no_key_from_remote,  # noqa: ARG002
+        mock_sre_config_from_remote,  # noqa: ARG002
+        mock_azuresdk_get_credential,  # noqa: ARG002
+    ) -> None:
+        sre_name = "sandbox"
+        mocker.patch.object(
+            SREProjectManager,
+            "output",
+            return_value={"storage_account_data_configuration_name": "test"},
+        )
+        mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
+        mocker.patch.object(Allowlist, "remote_exists", return_value=False)
+
+        result = runner.invoke(
+            allowlist_command_group,
+            ["upload", sre_name, str(allowlist_file), repository],
+        )
+        assert result.exit_code == 0
