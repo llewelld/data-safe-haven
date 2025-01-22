@@ -6,7 +6,9 @@ from data_safe_haven.types import AllowlistRepository
 
 class TestAllowlist:
     def test_from_remote(
-        self, mocker, context, sre_config, pulumi_config_no_key
+        self,
+        mocker,
+        context,
     ) -> None:
 
         mocker.patch.object(
@@ -21,9 +23,9 @@ class TestAllowlist:
         )
         result = Allowlist.from_remote(
             context,
-            pulumi_config=pulumi_config_no_key,
+            sre_resource_group="test-rg",
             repository=AllowlistRepository.CRAN,
-            sre_config=sre_config,
+            storage_account_name="test",
         )
         assert "dplyr" in result
 
@@ -31,8 +33,6 @@ class TestAllowlist:
         self,
         mocker,
         context,
-        sre_config,
-        pulumi_config_no_key,
     ) -> None:
         mocker.patch.object(
             AzureSdk,
@@ -47,9 +47,9 @@ class TestAllowlist:
 
         exists = Allowlist.remote_exists(
             context,
-            pulumi_config=pulumi_config_no_key,
+            sre_resource_group="test-rg",
             repository=AllowlistRepository.CRAN,
-            sre_config=sre_config,
+            storage_account_name="test",
         )
 
         assert isinstance(exists, bool)
@@ -59,8 +59,6 @@ class TestAllowlist:
         self,
         mocker,
         context,
-        sre_config,
-        pulumi_config_no_key,
     ) -> None:
         mocker.patch.object(
             SREProjectManager,
@@ -73,9 +71,9 @@ class TestAllowlist:
         local_allowlist = "tidyverse\ndplyr\nnumpy\npandas"
         diff = Allowlist.remote_diff(
             context=context,
-            pulumi_config=pulumi_config_no_key,
+            sre_resource_group="test-rg",
             repository=AllowlistRepository.CRAN,
-            sre_config=sre_config,
+            storage_account_name="test",
             allowlist=local_allowlist,
         )
 
@@ -86,8 +84,6 @@ class TestAllowlist:
         self,
         mocker,
         context,
-        sre_config,
-        pulumi_config_no_key,
     ) -> None:
         mocker.patch.object(
             SREProjectManager,
@@ -100,9 +96,9 @@ class TestAllowlist:
         local_allowlist = "tidyverse\ndplyr\nnumpy"
         diff = Allowlist.remote_diff(
             context=context,
-            pulumi_config=pulumi_config_no_key,
+            sre_resource_group="test-rg",
             repository=AllowlistRepository.CRAN,
-            sre_config=sre_config,
+            storage_account_name="test",
             allowlist=local_allowlist,
         )
 
