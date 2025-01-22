@@ -28,7 +28,12 @@ class TestAllowlist:
         assert "dplyr" in result
 
     def test_remote_exists(
-        self, mocker, context, sre_config, pulumi_config_no_key
+        self,
+        mocker,
+        context,
+        sre_config,
+        pulumi_config_no_key,
+        mock_azuresdk_get_subscription,
     ) -> None:
         mocker.patch.object(
             AzureSdk,
@@ -47,4 +52,60 @@ class TestAllowlist:
             repository=AllowlistRepository.CRAN,
             sre_config=sre_config,
         )
+
+        assert isinstance(exists, bool)
         assert exists
+
+    def test_remote_diff(
+        self,
+        mocker,
+        context,
+        sre_config,
+        pulumi_config_no_key,
+    ) -> None:
+        mocker.patch.object(
+            SREProjectManager,
+            "output",
+            return_value={"storage_account_data_configuration_name": "test"},
+        )
+        mocker.patch.object(
+            AzureSdk, "download_share_file", return_value="tidyverse\ndplyr\nnumpy"
+        )
+        local_allowlist = "tidyverse\ndplyr\nnumpy\npandas"
+        diff = Allowlist.remote_diff(
+            context=context,
+            pulumi_config=pulumi_config_no_key,
+            repository=AllowlistRepository.CRAN,
+            sre_config=sre_config,
+            allowlist=local_allowlist,
+        )
+
+        assert isinstance(diff, list)
+        assert "+pandas" in diff
+
+    def test_remote_diff_no_change(
+        self,
+        mocker,
+        context,
+        sre_config,
+        pulumi_config_no_key,
+    ) -> None:
+        mocker.patch.object(
+            SREProjectManager,
+            "output",
+            return_value={"storage_account_data_configuration_name": "test"},
+        )
+        mocker.patch.object(
+            AzureSdk, "download_share_file", return_value="tidyverse\ndplyr\nnumpy"
+        )
+        local_allowlist = "tidyverse\ndplyr\nnumpy"
+        diff = Allowlist.remote_diff(
+            context=context,
+            pulumi_config=pulumi_config_no_key,
+            repository=AllowlistRepository.CRAN,
+            sre_config=sre_config,
+            allowlist=local_allowlist,
+        )
+
+        assert isinstance(diff, list)
+        assert not diff
