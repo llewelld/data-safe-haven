@@ -8,8 +8,7 @@ from data_safe_haven.infrastructure import SREProjectManager
 
 @fixture
 def test_allowlist():
-    allowlist = """tidyverse\ndplyr\nnumpy"""
-    return allowlist
+    return "tidyverse\ndplyr\nnumpy"
 
 
 @fixture
@@ -28,7 +27,7 @@ class TestShowAllowlist:
         mock_azuresdk_get_credential,  # noqa: ARG002
         mock_azuresdk_get_subscription,  # noqa: ARG002
         mock_sre_config_from_remote,  # noqa: ARG002
-        mock_pulumi_config_no_key_from_remote,  # noqa: ARG002
+        mock_pulumi_config_no_key_from_remote,  # noqa: ARG002,
         test_allowlist,
     ) -> None:
         sre_name = "sandbox"
@@ -109,7 +108,7 @@ class TestUploadAllowlist:
             "pypi",
         ],
     )
-    def test_upload_remote_exists(
+    def test_upload_remote_exists_no_diff(
         self,
         mocker,
         runner,
@@ -136,3 +135,37 @@ class TestUploadAllowlist:
         )
         assert result.exit_code == 0
         assert "No changes, won't upload allowlist." in result.output
+
+    def test_upload_remote_exists_with_diff(
+        self,
+        mocker,
+        runner,
+        allowlist_file,
+        mock_azuresdk_get_subscription,  # noqa: ARG002
+        mock_pulumi_config_no_key_from_remote,  # noqa: ARG002
+        mock_sre_config_from_remote,  # noqa: ARG002
+        mock_azuresdk_get_credential,  # noqa: ARG002
+    ) -> None:
+        sre_name = "sandbox"
+        repository = "cran"
+        mocker.patch.object(
+            SREProjectManager,
+            "output",
+            return_value={"storage_account_data_configuration_name": "test"},
+        )
+        mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
+        mocker.patch.object(Allowlist, "remote_exists", return_value=True)
+        mocker.patch.object(
+            Allowlist, "remote_diff", return_value=["-numpy", "+pandas"]
+        )
+
+        result = runner.invoke(
+            allowlist_command_group,
+            ["upload", sre_name, str(allowlist_file), repository],
+            input="y\n",
+        )
+
+        assert "-numpy" in result.output
+        assert result.exit_code == 0
+        assert "An allowlist already exists" in result.output
+        assert "Uploading allowlist for CRAN to sandbox" in result.output
