@@ -26,6 +26,7 @@ class TestShowAllowlist:
         mocker,
         runner,
         mock_azuresdk_get_credential,  # noqa: ARG002
+        mock_azuresdk_get_subscription,  # noqa: ARG002
         mock_sre_config_from_remote,  # noqa: ARG002
         mock_pulumi_config_no_key_from_remote,  # noqa: ARG002
         test_allowlist,
@@ -33,6 +34,11 @@ class TestShowAllowlist:
         sre_name = "sandbox"
         repository = "cran"
         mocker.patch.object(Allowlist, "from_remote", return_value=test_allowlist)
+        mocker.patch.object(
+            SREProjectManager,
+            "output",
+            return_value={"storage_account_data_configuration_name": "test"},
+        )
         result = runner.invoke(
             allowlist_command_group,
             ["show", sre_name, repository],
@@ -70,7 +76,7 @@ class TestUploadAllowlist:
             "pypi",
         ],
     )
-    def test_upload(
+    def test_upload_no_remote(
         self,
         mocker,
         runner,
@@ -95,3 +101,38 @@ class TestUploadAllowlist:
             ["upload", sre_name, str(allowlist_file), repository],
         )
         assert result.exit_code == 0
+
+    @mark.parametrize(
+        "repository",
+        [
+            "cran",
+            "pypi",
+        ],
+    )
+    def test_upload_remote_exists(
+        self,
+        mocker,
+        runner,
+        repository,
+        allowlist_file,
+        mock_azuresdk_get_subscription,  # noqa: ARG002
+        mock_pulumi_config_no_key_from_remote,  # noqa: ARG002
+        mock_sre_config_from_remote,  # noqa: ARG002
+        mock_azuresdk_get_credential,  # noqa: ARG002
+    ) -> None:
+        sre_name = "sandbox"
+        mocker.patch.object(
+            SREProjectManager,
+            "output",
+            return_value={"storage_account_data_configuration_name": "test"},
+        )
+        mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
+        mocker.patch.object(Allowlist, "remote_exists", return_value=True)
+        mocker.patch.object(Allowlist, "remote_diff", return_value=[])
+
+        result = runner.invoke(
+            allowlist_command_group,
+            ["upload", sre_name, str(allowlist_file), repository],
+        )
+        assert result.exit_code == 0
+        assert "No changes, won't upload allowlist." in result.output
