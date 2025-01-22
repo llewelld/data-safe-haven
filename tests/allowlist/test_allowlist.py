@@ -33,7 +33,6 @@ class TestAllowlist:
         context,
         sre_config,
         pulumi_config_no_key,
-        mock_azuresdk_get_subscription,
     ) -> None:
         mocker.patch.object(
             AzureSdk,
