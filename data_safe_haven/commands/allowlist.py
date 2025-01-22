@@ -9,6 +9,7 @@ from data_safe_haven import console
 from data_safe_haven.allowlist import Allowlist
 from data_safe_haven.config import ContextManager, DSHPulumiConfig, SREConfig
 from data_safe_haven.exceptions import DataSafeHavenConfigError, DataSafeHavenError
+from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.logging import get_logger
 from data_safe_haven.types import AllowlistRepository
 
@@ -52,12 +53,22 @@ def show(
         logger.error(msg)
         raise typer.Exit(1)
 
+    sre_stack = SREProjectManager(
+        context=context,
+        config=sre_config,
+        pulumi_config=pulumi_config,
+    )
+
+    allowlist_storage_account = sre_stack.output("data")[
+        "storage_account_data_configuration_name"
+    ]
+
     try:
         allow_list = Allowlist.from_remote(
             context=context,
-            pulumi_config=pulumi_config,
             repository=repository,
-            sre_config=sre_config,
+            storage_account_name=allowlist_storage_account,
+            sre_resource_group=f"{sre_stack.stack_name}-rg",
         )
     except DataSafeHavenError as exc:
         logger.critical(
@@ -140,16 +151,27 @@ def upload(
         logger.error(msg)
         raise typer.Exit(1)
 
+    sre_stack = SREProjectManager(
+        context=context,
+        config=sre_config,
+        pulumi_config=pulumi_config,
+    )
+
+    sre_resource_group = f"{sre_stack.stack_name}-rg"
+    allowlist_storage_account = sre_stack.output("data")[
+        "storage_account_data_configuration_name"
+    ]
+
     if not force and Allowlist.remote_exists(
         context=context,
-        sre_config=sre_config,
-        pulumi_config=pulumi_config,
+        sre_resource_group=sre_resource_group,
+        storage_account_name=allowlist_storage_account,
         repository=repository,
     ):
         if diff := Allowlist.remote_diff(
             context=context,
-            sre_config=sre_config,
-            pulumi_config=pulumi_config,
+            sre_resource_group=sre_resource_group,
+            storage_account_name=allowlist_storage_account,
             repository=repository,
             allowlist=allowlist,
         ):
@@ -167,8 +189,8 @@ def upload(
         logger.info(f"Uploading allowlist for {repository.name} to {sre_config.name}")
         Allowlist.upload(
             context=context,
-            sre_config=sre_config,
-            pulumi_config=pulumi_config,
+            sre_resource_group=sre_resource_group,
+            storage_account_name=allowlist_storage_account,
             repository=repository,
             allowlist=allowlist,
         )
