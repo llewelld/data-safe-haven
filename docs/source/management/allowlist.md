@@ -1,7 +1,7 @@
 # Managing allowlists
 
-For Tier 3 SREs, the Python and R software packages that users are allowed to download from the PyPi and CRAN repositories are restricted.
-Connection to PyPi and CRAN is achieved using [Sonatype Nexus Repository](https://www.sonatype.com/products/sonatype-nexus-repository).
+For Tier 3 SREs, the Python and R software packages that users are allowed to download from the PyPI and CRAN repositories are restricted.
+Connection to PyPI and CRAN is achieved using [Sonatype Nexus Repository](https://www.sonatype.com/products/sonatype-nexus-repository).
 
 Packages must be explicitly added to the allowlist for the relevant repository before the users can download the package.
 Packages not on the allowlist are blocked.
