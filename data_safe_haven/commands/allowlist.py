@@ -68,7 +68,7 @@ def show(
             context=context,
             repository=repository,
             storage_account_name=allowlist_storage_account,
-            sre_resource_group=f"{sre_stack.stack_name}-rg",
+            sre_resource_group=sre_stack.output("sre_resource_group"),
         )
     except DataSafeHavenError as exc:
         logger.critical(
@@ -124,7 +124,7 @@ def upload(
     ],
     repository: Annotated[
         AllowlistRepository,
-        typer.Argument(help="Name of the repository to upload the allowlist for."),
+        typer.Argument(help="Repository type of the allowlist."),
     ],
     force: Annotated[  # noqa: FBT002
         bool,
@@ -157,7 +157,7 @@ def upload(
         pulumi_config=pulumi_config,
     )
 
-    sre_resource_group = f"{sre_stack.stack_name}-rg"
+    sre_resource_group = sre_stack.output("sre_resource_group")
     allowlist_storage_account = sre_stack.output("data")[
         "storage_account_data_configuration_name"
     ]
