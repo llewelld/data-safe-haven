@@ -42,8 +42,6 @@ class Allowlist:
         cls: type[Self],
         context: Context,
         *,
-        # pulumi_config: DSHPulumiConfig,
-        # sre_config: SREConfig,
         sre_resource_group: str,
         repository: AllowlistRepository,
         storage_account_name: str,
