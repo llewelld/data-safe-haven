@@ -87,8 +87,6 @@ class Allowlist:
         *,
         sre_resource_group: str,
         storage_account_name: str,
-        # pulumi_config: DSHPulumiConfig,
-        # sre_config: SREConfig,
         repository: AllowlistRepository,
         allowlist: str,
     ) -> list[str]:
