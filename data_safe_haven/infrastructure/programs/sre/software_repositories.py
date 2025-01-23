@@ -134,9 +134,11 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 storage_account_name=props.storage_account_name,
             ),
             opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(
-                parent=file_share_nexus,
-                ignore_changes=["file_contents"],
+                child_opts,
+                ResourceOptions(
+                    parent=file_share_nexus,
+                    ignore_changes=["file_contents"],
+                ),
             ),
         )
         FileShareFile(
@@ -149,7 +151,11 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 storage_account_name=props.storage_account_name,
             ),
             opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=file_share_nexus)
+                child_opts,
+                ResourceOptions(
+                    parent=file_share_nexus,
+                    ignore_changes=["file_contents"],
+                ),
             ),
         )
 
