@@ -26,11 +26,11 @@ class Allowlist:
         ]
         self.share_name = sre_stack.output("allowlist_share_name")
         self.filename = sre_stack.output("allowlist_share_filenames")[repository.value]
-        self.allowlist = allowlist
+        self.allowlist = str(allowlist) if allowlist else ""
 
     @classmethod
     def from_remote(
-        cls=type[Self],
+        cls: type[Self],
         *,
         context: Context,
         repository: AllowlistRepository,
