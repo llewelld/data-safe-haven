@@ -4,20 +4,38 @@ from data_safe_haven.allowlist import Allowlist
 from data_safe_haven.commands.allowlist import allowlist_command_group
 from data_safe_haven.external import AzureSdk
 from data_safe_haven.infrastructure import SREProjectManager
+from data_safe_haven.types import AllowlistRepository
 
 
 @fixture
-def test_allowlist():
-    return "tidyverse\ndplyr\nnumpy"
-
+def mock_allowlist(mocker, sre_project_manager, mock_project_output) -> Allowlist:
+    mocker.patch.object(
+        SREProjectManager,
+        "output",
+        wraps=mock_project_output,
+    )
+    allow = Allowlist(repository=AllowlistRepository.CRAN, sre_stack=sre_project_manager)
+    allow.allowlist = "tidyverse\ndplyr\nnumpy"
+    return allow
 
 @fixture
-def allowlist_file(test_allowlist, tmp_path):
+def allowlist_file(mock_allowlist, tmp_path):
     allowlist_file_path = tmp_path / "allowlist.txt"
     with open(allowlist_file_path, "w") as f:
-        f.write(test_allowlist)
+        f.write(mock_allowlist)
     return allowlist_file_path
 
+@fixture
+def mock_project_output(request):
+    if request == "allowlist_share_filenames":
+        return {
+            "cran": "cran.allowlist",
+            "pypi": "pypi.allowlist",
+        }
+    elif request == "data":
+        return {"storage_account_data_configuration_name": "test"}
+    elif request == "sre_resource_group":
+        return "test"
 
 class TestShowAllowlist:
     def test_show(
@@ -28,16 +46,11 @@ class TestShowAllowlist:
         mock_azuresdk_get_subscription,  # noqa: ARG002
         mock_sre_config_from_remote,  # noqa: ARG002
         mock_pulumi_config_no_key_from_remote,  # noqa: ARG002,
-        test_allowlist,
+        mock_allowlist,
     ) -> None:
         sre_name = "sandbox"
         repository = "cran"
-        mocker.patch.object(Allowlist, "from_remote", return_value=test_allowlist)
-        mocker.patch.object(
-            SREProjectManager,
-            "output",
-            return_value={"storage_account_data_configuration_name": "test"},
-        )
+        mocker.patch.object(Allowlist, "from_remote", return_value=mock_allowlist)
         result = runner.invoke(
             allowlist_command_group,
             ["show", sre_name, repository],
