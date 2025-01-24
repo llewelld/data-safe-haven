@@ -2,6 +2,7 @@
 
 import time
 from contextlib import suppress
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from acme.errors import ValidationError
@@ -118,6 +119,7 @@ class SSLCertificateProvider(DshResourceProvider):
                 certificate_contents=pfx_bytes,
                 key_vault_name=props["key_vault_name"],
             )
+            outs["expiry_date"] = (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()
             outs["secret_id"] = kvcert.secret_id
         except Exception as exc:
             cert_name = f"[green]{props['certificate_secret_name']}[/]"
@@ -161,7 +163,15 @@ class SSLCertificateProvider(DshResourceProvider):
         """Calculate diff between old and new state"""
         # Use `id` as a no-op to avoid ARG002 while maintaining function signature
         id(id_)
-        return self.partial_diff(old_props, new_props, [])
+        partial = self.partial_diff(old_props, new_props, [])
+        expiry_date = datetime.fromisoformat(old_props.get("expiry_date", "0001-01-01T00:00:00+00:00"))
+        needs_renewal = (datetime.now(timezone.utc) + timedelta(days=30) > expiry_date)
+        return DiffResult(
+            changes=partial.changes or needs_renewal,
+            replaces=partial.replaces,
+            stables=partial.stables,
+            delete_before_replace=True,
+        )
 
     def refresh(self, props: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -183,6 +193,7 @@ class SSLCertificateProvider(DshResourceProvider):
 
 class SSLCertificate(Resource):
     _resource_type_name = "dsh:common:SSLCertificate"  # set resource type
+    expiry_date: Output[str]
     secret_id: Output[str]
 
     def __init__(
@@ -194,6 +205,6 @@ class SSLCertificate(Resource):
         super().__init__(
             SSLCertificateProvider(),
             name,
-            {"secret_id": None, **vars(props)},
+            {"expiry_date": None, "secret_id": None, **vars(props)},
             opts,
         )
