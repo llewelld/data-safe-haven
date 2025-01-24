@@ -59,16 +59,9 @@ def show(
         pulumi_config=pulumi_config,
     )
 
-    allowlist_storage_account = sre_stack.output("data")[
-        "storage_account_data_configuration_name"
-    ]
-
     try:
-        allow_list = Allowlist.from_remote(
-            context=context,
-            repository=repository,
-            storage_account_name=allowlist_storage_account,
-            sre_resource_group=sre_stack.output("sre_resource_group"),
+        allowlist = Allowlist.from_remote(
+            context=context, repository=repository, sre_stack=sre_stack
         )
     except DataSafeHavenError as exc:
         logger.critical(
@@ -78,9 +71,9 @@ def show(
 
     if file:
         with open(file, "w") as f:
-            f.write(allow_list)
+            f.write(allowlist.allowlist)
     else:
-        console.print(allow_list)
+        console.print(allowlist.allowlist)
 
 
 @allowlist_command_group.command()
@@ -157,22 +150,15 @@ def upload(
         pulumi_config=pulumi_config,
     )
 
-    sre_resource_group = sre_stack.output("sre_resource_group")
-    allowlist_storage_account = sre_stack.output("data")[
-        "storage_account_data_configuration_name"
-    ]
-
     if not force and Allowlist.remote_exists(
         context=context,
-        sre_resource_group=sre_resource_group,
-        storage_account_name=allowlist_storage_account,
         repository=repository,
+        sre_stack=sre_stack,
     ):
         if diff := Allowlist.remote_diff(
             context=context,
-            sre_resource_group=sre_resource_group,
-            storage_account_name=allowlist_storage_account,
             repository=repository,
+            sre_stack=sre_stack,
             allowlist=allowlist,
         ):
             for line in list(filter(None, "\n".join(diff).splitlines())):
@@ -187,11 +173,11 @@ def upload(
             raise typer.Exit()
     try:
         logger.info(f"Uploading allowlist for {repository.name} to {sre_config.name}")
-        Allowlist.upload(
+        local_allowlist = Allowlist(
+            repository=repository, sre_stack=sre_stack, allowlist=allowlist
+        )
+        local_allowlist.upload(
             context=context,
-            sre_resource_group=sre_resource_group,
-            storage_account_name=allowlist_storage_account,
-            repository=repository,
             allowlist=allowlist,
         )
     except DataSafeHavenError as exc:
