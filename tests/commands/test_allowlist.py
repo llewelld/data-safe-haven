@@ -14,9 +14,12 @@ def mock_allowlist(mocker, sre_project_manager, mock_project_output) -> Allowlis
         "output",
         wraps=mock_project_output,
     )
-    allow = Allowlist(repository=AllowlistRepository.CRAN, sre_stack=sre_project_manager)
+    allow = Allowlist(
+        repository=AllowlistRepository.CRAN, sre_stack=sre_project_manager
+    )
     allow.allowlist = "tidyverse\ndplyr\nnumpy"
     return allow
+
 
 @fixture
 def allowlist_file(mock_allowlist, tmp_path):
@@ -24,6 +27,7 @@ def allowlist_file(mock_allowlist, tmp_path):
     with open(allowlist_file_path, "w") as f:
         f.write(mock_allowlist)
     return allowlist_file_path
+
 
 @fixture
 def mock_project_output(request):
@@ -36,6 +40,7 @@ def mock_project_output(request):
         return {"storage_account_data_configuration_name": "test"}
     elif request == "sre_resource_group":
         return "test"
+
 
 class TestShowAllowlist:
     def test_show(
