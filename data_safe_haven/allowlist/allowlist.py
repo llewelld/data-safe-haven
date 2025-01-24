@@ -1,83 +1,93 @@
+from __future__ import annotations
+
 from difflib import unified_diff
 from typing import Self
 
 from data_safe_haven.config import Context
+from data_safe_haven.exceptions import DataSafeHavenAzureStorageError
 from data_safe_haven.external import AzureSdk
+from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.types import AllowlistRepository
 
 
 class Allowlist:
-    """Allowlist for packages"""
+    """Allowlist for packages."""
+
+    def __init__(
+        self,
+        repository: AllowlistRepository,
+        sre_stack: SREProjectManager,
+        allowlist: str | None = None,
+    ):
+        self.repository = repository
+        self.sre_resource_group = sre_stack.output("sre_resource_group")
+        self.storage_account_name = sre_stack.output("data")[
+            "storage_account_data_configuration_name"
+        ]
+        self.share_name = sre_stack.output("allowlist_share_name")
+        self.filename = sre_stack.output("allowlist_share_filenames")[repository.value]
+        self.allowlist = allowlist
 
     @classmethod
     def from_remote(
-        cls: type[Self],
-        context: Context,
+        cls=type[Self],
         *,
+        context: Context,
         repository: AllowlistRepository,
-        sre_resource_group: str,
-        storage_account_name: str,
-    ) -> str:
-        """Get the current package allowlist"""
-
-        # Get the Azure SDK
+        sre_stack: SREProjectManager,
+    ) -> Self:
         azure_sdk = AzureSdk(subscription_name=context.subscription_name)
-
-        # Get the file share name
-        file_share_name = "software-repositories-nexus-allowlists"
-        if repository:
-            file_share_file = f"{repository.value}.allowlist"
-
-        # Get the allowlist file from the file share
-        share_file = azure_sdk.download_share_file(
-            file_share_file,
-            sre_resource_group,
-            storage_account_name,
-            file_share_name,
-        )
-        return share_file
+        allowlist = cls(repository=repository, sre_stack=sre_stack)
+        try:
+            share_file = azure_sdk.download_share_file(
+                allowlist.filename,
+                allowlist.sre_resource_group,
+                allowlist.storage_account_name,
+                allowlist.share_name,
+            )
+            allowlist.allowlist = share_file
+            return allowlist
+        except DataSafeHavenAzureStorageError as exc:
+            msg = f"Storage account '{cls.storage_account_name}' does not exist."
+            raise DataSafeHavenAzureStorageError(msg) from exc
 
     @classmethod
     def remote_exists(
         cls: type[Self],
         context: Context,
         *,
-        sre_resource_group: str,
         repository: AllowlistRepository,
-        storage_account_name: str,
+        sre_stack: SREProjectManager,
     ) -> bool:
         # Get the Azure SDK
         azure_sdk = AzureSdk(subscription_name=context.subscription_name)
 
-        # Get the file share name
-        file_share_name = "software-repositories-nexus-allowlists"
-        file_name = f"{repository.value}.allowlist"
-        share_list = azure_sdk.file_share_exists(
-            file_name, sre_resource_group, storage_account_name, file_share_name
-        )
-        return share_list
+        allowlist = cls(repository=repository, sre_stack=sre_stack)
 
-    @classmethod
+        # Get the file share name
+        share_list_exists = azure_sdk.file_share_exists(
+            allowlist.filename,
+            allowlist.sre_resource_group,
+            allowlist.storage_account_name,
+            allowlist.share_name,
+        )
+        return share_list_exists
+
     def upload(
-        cls: type[Self],
+        self,
         context: Context,
         *,
-        storage_account_name: str,
-        sre_resource_group: str,
-        repository: AllowlistRepository,
         allowlist: str,
     ) -> None:
         # Get the Azure SDK
         azure_sdk = AzureSdk(subscription_name=context.subscription_name)
-        file_share_name = "software-repositories-nexus-allowlists"
-        file_name = f"{repository.value}.allowlist"
 
         azure_sdk.upload_file_share(
             allowlist,
-            file_name,
-            sre_resource_group,
-            storage_account_name,
-            file_share_name,
+            self.filename,
+            self.sre_resource_group,
+            self.storage_account_name,
+            self.share_name,
         )
 
     @classmethod
@@ -85,24 +95,16 @@ class Allowlist:
         cls: type[Self],
         context: Context,
         *,
-        sre_resource_group: str,
-        storage_account_name: str,
+        sre_stack: SREProjectManager,
         repository: AllowlistRepository,
         allowlist: str,
     ) -> list[str]:
-        # Get the Azure SDK
-        azure_sdk = AzureSdk(subscription_name=context.subscription_name)
-
-        # Get the file share name
-        file_share_name = "software-repositories-nexus-allowlists"
-        file_name = f"{repository.value}.allowlist"
-
-        remote_allowlist = azure_sdk.download_share_file(
-            file_name,
-            sre_resource_group,
-            storage_account_name,
-            file_share_name,
-        )
+        # Get the remote allowlist
+        remote_allowlist = cls.from_remote(
+            context=context,
+            repository=repository,
+            sre_stack=sre_stack,
+        ).allowlist
 
         # Get the diff
         diff = list(
