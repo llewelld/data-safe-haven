@@ -121,7 +121,8 @@ class SSLCertificateProvider(DshResourceProvider):
             )
             with suppress(AttributeError):
                 outs["expiry_date"] = kvcert.properties.expires_on.isoformat()
-            outs["secret_id"] = kvcert.secret_id
+            with suppress(AttributeError):
+                outs["secret_id"] = "/".join(kvcert.secret_id.split("/")[:-1])
         except Exception as exc:
             cert_name = f"[green]{props['certificate_secret_name']}[/]"
             domain_name = f"[green]{props['domain_name']}[/]"
