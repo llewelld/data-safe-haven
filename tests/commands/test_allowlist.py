@@ -25,7 +25,7 @@ def mock_allowlist(mocker, sre_project_manager, mock_project_output) -> Allowlis
 def allowlist_file(mock_allowlist, tmp_path):
     allowlist_file_path = tmp_path / "allowlist.txt"
     with open(allowlist_file_path, "w") as f:
-        f.write(mock_allowlist)
+        f.write(mock_allowlist.allowlist)
     return allowlist_file_path
 
 
@@ -103,12 +103,13 @@ class TestUploadAllowlist:
         mock_pulumi_config_no_key_from_remote,  # noqa: ARG002
         mock_sre_config_from_remote,  # noqa: ARG002
         mock_azuresdk_get_credential,  # noqa: ARG002
+        mock_project_output,
     ) -> None:
         sre_name = "sandbox"
         mocker.patch.object(
             SREProjectManager,
             "output",
-            return_value={"storage_account_data_configuration_name": "test"},
+            wraps=mock_project_output,
         )
         mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
         mocker.patch.object(Allowlist, "remote_exists", return_value=False)
@@ -163,13 +164,14 @@ class TestUploadAllowlist:
         mock_pulumi_config_no_key_from_remote,  # noqa: ARG002
         mock_sre_config_from_remote,  # noqa: ARG002
         mock_azuresdk_get_credential,  # noqa: ARG002
+        mock_project_output,
     ) -> None:
         sre_name = "sandbox"
         repository = "cran"
         mocker.patch.object(
             SREProjectManager,
             "output",
-            return_value={"storage_account_data_configuration_name": "test"},
+            wraps=mock_project_output,
         )
         mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
         mocker.patch.object(Allowlist, "remote_exists", return_value=True)
