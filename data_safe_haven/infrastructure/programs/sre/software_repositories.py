@@ -124,7 +124,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
         )
 
         # Upload Nexus allowlists
-        FileShareFile(
+        cran_allowlist = FileShareFile(
             f"{self._name}_file_share_cran_allowlist",
             FileShareFileProps(
                 destination_path="cran.allowlist",
@@ -141,7 +141,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 ),
             ),
         )
-        FileShareFile(
+        pypi_allowlist = FileShareFile(
             f"{self._name}_file_share_pypi_allowlist",
             FileShareFileProps(
                 destination_path="pypi.allowlist",
@@ -346,3 +346,8 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
 
         # Register outputs
         self.hostname = hostname
+        self.allowlist_file_share_name = file_share_nexus_allowlists.name
+        self.allowlist_file_names = {
+            "cran": cran_allowlist.destination_path,
+            "pypi": pypi_allowlist.destination_path,
+        }
