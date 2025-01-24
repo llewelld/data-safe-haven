@@ -119,7 +119,8 @@ class SSLCertificateProvider(DshResourceProvider):
                 certificate_contents=pfx_bytes,
                 key_vault_name=props["key_vault_name"],
             )
-            outs["expiry_date"] = (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()
+            with suppress(AttributeError):
+                outs["expiry_date"] = kvcert.properties.expires_on.isoformat()
             outs["secret_id"] = kvcert.secret_id
         except Exception as exc:
             cert_name = f"[green]{props['certificate_secret_name']}[/]"
