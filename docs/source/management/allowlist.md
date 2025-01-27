@@ -12,8 +12,7 @@ An allowlist is a plain text file, with the name of each allowed package on its 
 The user must also be able to download any dependencies of any package on the allowlist.
 You should ensure that any such dependencies are also added to the allowlist.
 
-::::{admonition} Example CRAN allowlist
-For example, a minimal CRAN allowlist that permits the user to install the packages `data.table`, `DBI`, and `RPostgres` would be as below with dependencies are included.
+For example, a minimal CRAN allowlist that permits the user to install the packages `data.table`, `DBI`, and `RPostgres` would be as below.
 
 :::{code} text
 bit64
@@ -25,7 +24,8 @@ lubridate
 RPostgres
 withr
 :::
-::::
+
+This includes the requested packages and their dependencies.
 ```
 
 ## Viewing allowlists
