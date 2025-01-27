@@ -84,13 +84,19 @@ class TestAllowlist:
         mocker.patch.object(
             AzureSdk, "download_share_file", return_value="tidyverse\ndplyr\nnumpy"
         )
-        local_allowlist = "tidyverse\ndplyr\nnumpy\npandas"
-        diff = Allowlist.remote_diff(
+
+        local_allowlist = Allowlist(
+            sre_stack=sre_project_manager,
+            repository=AllowlistRepository.CRAN,
+            allowlist="tidyverse\ndplyr\nnumpy\npandas",
+        )
+        remote_allowlist = Allowlist.from_remote(
             context=context,
             sre_stack=sre_project_manager,
             repository=AllowlistRepository.CRAN,
-            allowlist=local_allowlist,
         )
+
+        diff = remote_allowlist.diff(local_allowlist)
 
         assert isinstance(diff, list)
         assert "+pandas" in diff
@@ -110,13 +116,18 @@ class TestAllowlist:
         mocker.patch.object(
             AzureSdk, "download_share_file", return_value="tidyverse\ndplyr\nnumpy"
         )
-        local_allowlist = "tidyverse\ndplyr\nnumpy"
-        diff = Allowlist.remote_diff(
+        local_allowlist = Allowlist(
+            sre_stack=sre_project_manager,
+            repository=AllowlistRepository.CRAN,
+            allowlist="tidyverse\ndplyr\nnumpy",
+        )
+        remote_allowlist = Allowlist.from_remote(
             context=context,
             sre_stack=sre_project_manager,
             repository=AllowlistRepository.CRAN,
-            allowlist=local_allowlist,
         )
+
+        diff = remote_allowlist.diff(local_allowlist)
 
         assert isinstance(diff, list)
         assert not diff

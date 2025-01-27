@@ -15,9 +15,10 @@ def mock_allowlist(mocker, sre_project_manager, mock_project_output) -> Allowlis
         wraps=mock_project_output,
     )
     allow = Allowlist(
-        repository=AllowlistRepository.CRAN, sre_stack=sre_project_manager
+        repository=AllowlistRepository.CRAN,
+        sre_stack=sre_project_manager,
+        allowlist="tidyverse\ndplyr\nnumpy",
     )
-    allow.allowlist = "tidyverse\ndplyr\nnumpy"
     return allow
 
 
@@ -111,8 +112,9 @@ class TestUploadAllowlist:
             "output",
             wraps=mock_project_output,
         )
-        mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
+
         mocker.patch.object(Allowlist, "remote_exists", return_value=False)
+        mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
 
         result = runner.invoke(
             allowlist_command_group,
@@ -133,7 +135,9 @@ class TestUploadAllowlist:
         runner,
         repository,
         allowlist_file,
+        mock_allowlist,
         mock_azuresdk_get_subscription,  # noqa: ARG002
+        mock_project_output,
         mock_pulumi_config_no_key_from_remote,  # noqa: ARG002
         mock_sre_config_from_remote,  # noqa: ARG002
         mock_azuresdk_get_credential,  # noqa: ARG002
@@ -142,11 +146,11 @@ class TestUploadAllowlist:
         mocker.patch.object(
             SREProjectManager,
             "output",
-            return_value={"storage_account_data_configuration_name": "test"},
+            wraps=mock_project_output,
         )
-        mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
         mocker.patch.object(Allowlist, "remote_exists", return_value=True)
-        mocker.patch.object(Allowlist, "remote_diff", return_value=[])
+        mocker.patch.object(Allowlist, "from_remote", return_value=mock_allowlist)
+        mocker.patch.object(Allowlist, "diff", return_value=[])
 
         result = runner.invoke(
             allowlist_command_group,
@@ -160,6 +164,7 @@ class TestUploadAllowlist:
         mocker,
         runner,
         allowlist_file,
+        mock_allowlist,
         mock_azuresdk_get_subscription,  # noqa: ARG002
         mock_pulumi_config_no_key_from_remote,  # noqa: ARG002
         mock_sre_config_from_remote,  # noqa: ARG002
@@ -175,9 +180,8 @@ class TestUploadAllowlist:
         )
         mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
         mocker.patch.object(Allowlist, "remote_exists", return_value=True)
-        mocker.patch.object(
-            Allowlist, "remote_diff", return_value=["-numpy", "+pandas"]
-        )
+        mocker.patch.object(Allowlist, "from_remote", return_value=mock_allowlist)
+        mocker.patch.object(Allowlist, "diff", return_value=["-numpy", "+pandas"])
 
         result = runner.invoke(
             allowlist_command_group,
