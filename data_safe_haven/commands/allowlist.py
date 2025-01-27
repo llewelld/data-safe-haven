@@ -150,18 +150,22 @@ def upload(
         pulumi_config=pulumi_config,
     )
 
+    local_allowlist = Allowlist(
+        repository=repository, sre_stack=sre_stack, allowlist=allowlist
+    )
+
     if not force and Allowlist.remote_exists(
         context=context,
         repository=repository,
         sre_stack=sre_stack,
     ):
-        if diff := Allowlist.remote_diff(
+        remote_allowlist = Allowlist.from_remote(
             context=context,
             repository=repository,
             sre_stack=sre_stack,
-            allowlist=allowlist,
-        ):
-            for line in list(filter(None, "\n".join(diff).splitlines())):
+        )
+        if allow_diff := remote_allowlist.diff(local_allowlist):
+            for line in list(filter(None, "\n".join(allow_diff).splitlines())):
                 logger.info(line)
             if not console.confirm(
                 f"An allowlist already exists for {repository.name}. Do you want to overwrite it?",
@@ -173,13 +177,7 @@ def upload(
             raise typer.Exit()
     try:
         logger.info(f"Uploading allowlist for {repository.name} to {sre_config.name}")
-        local_allowlist = Allowlist(
-            repository=repository, sre_stack=sre_stack, allowlist=allowlist
-        )
-        local_allowlist.upload(
-            context=context,
-            allowlist=allowlist,
-        )
+        local_allowlist.upload(context=context)
     except DataSafeHavenError as exc:
         logger.error(f"Failed to upload allowlist: {exc}")
         raise typer.Exit(1) from exc
