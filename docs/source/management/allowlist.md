@@ -48,7 +48,7 @@ The local allowlist file does not need to have a specific name.
 
 ## Example allowlists
 
-Example allowlists for PyPi and CRAN can be generated using {typer}`dsh allowlist template`
+Example allowlists for PyPI and CRAN can be generated using {typer}`dsh allowlist template`
 
 ```{code} shell
 dsh allowlist template REPOSITORY_NAME
