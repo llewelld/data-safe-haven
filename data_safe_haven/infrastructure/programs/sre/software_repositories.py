@@ -136,7 +136,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    parent=file_share_nexus,
+                    parent=file_share_nexus_allowlists,
                     ignore_changes=["file_contents"],
                 ),
             ),
@@ -153,7 +153,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    parent=file_share_nexus,
+                    parent=file_share_nexus_allowlists,
                     ignore_changes=["file_contents"],
                 ),
             ),
