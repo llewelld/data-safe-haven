@@ -27,7 +27,7 @@ The subcommands can be used to manage various aspects of a Data Safe Haven deplo
 For further detail on each subcommand, navigate to the relevant page.
 
 [Allowlist](allowlist.md)
-: Management of the package allowlists for Tier 2 and Tier 3 SREs
+: Management of the package allowlists for Tier 3 SREs
 
 [Config](config.md)
 : Management of the configuration files used to define SHMs and SREs
