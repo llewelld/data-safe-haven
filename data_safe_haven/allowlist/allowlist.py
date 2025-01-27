@@ -76,41 +76,23 @@ class Allowlist:
     def upload(
         self,
         context: Context,
-        *,
-        allowlist: str,
     ) -> None:
         # Get the Azure SDK
         azure_sdk = AzureSdk(subscription_name=context.subscription_name)
 
         azure_sdk.upload_file_share(
-            allowlist,
+            self.allowlist,
             self.filename,
             self.sre_resource_group,
             self.storage_account_name,
             self.share_name,
         )
 
-    @classmethod
-    def remote_diff(
-        cls: type[Self],
-        context: Context,
-        *,
-        sre_stack: SREProjectManager,
-        repository: AllowlistRepository,
-        allowlist: str,
-    ) -> list[str]:
-        # Get the remote allowlist
-        remote_allowlist = cls.from_remote(
-            context=context,
-            repository=repository,
-            sre_stack=sre_stack,
-        ).allowlist
-
-        # Get the diff
+    def diff(self, other: Allowlist) -> list[str]:
         diff = list(
             unified_diff(
-                remote_allowlist.splitlines(),
-                allowlist.splitlines(),
+                self.allowlist.splitlines(),
+                other.allowlist.splitlines(),
                 fromfile="remote",
                 tofile="local",
             )
