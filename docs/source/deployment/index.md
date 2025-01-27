@@ -46,7 +46,7 @@ See [the instructions here](https://docs.docker.com/security/for-developers/acce
 $ pipx install data-safe-haven
 :::
 
-- Or install a specific version with
+- Or install a specific version with (for instance)
 
 :::{code} shell
 $ pipx install data-safe-haven==5.0.0
