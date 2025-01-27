@@ -2,7 +2,7 @@
 
 import time
 from contextlib import suppress
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any, override
 
 from acme.errors import ValidationError
@@ -162,18 +162,20 @@ class SSLCertificateProvider(DshResourceProvider):
             msg = f"Failed to delete SSL certificate {cert_name} for {domain_name}."
             raise DataSafeHavenSSLError(msg) from exc
 
+    @override
     def diff(
         self,
         id_: str,
         old_props: dict[str, Any],
         new_props: dict[str, Any],
     ) -> DiffResult:
-        """Calculate diff between old and new state"""
         # Use `id` as a no-op to avoid ARG002 while maintaining function signature
         id(id_)
         partial = self.partial_diff(old_props, new_props, [])
-        expiry_date = datetime.fromisoformat(old_props.get("expiry_date", "0001-01-01T00:00:00+00:00"))
-        needs_renewal = (datetime.now(timezone.utc) + timedelta(days=30) > expiry_date)
+        expiry_date = datetime.fromisoformat(
+            old_props.get("expiry_date", "0001-01-01T00:00:00+00:00")
+        )
+        needs_renewal = datetime.now(UTC) + timedelta(days=30) > expiry_date
         return DiffResult(
             changes=partial.changes or needs_renewal,
             replaces=partial.replaces,
