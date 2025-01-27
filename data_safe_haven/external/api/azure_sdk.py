@@ -641,10 +641,10 @@ class AzureSdk:
         """Read a certificate from the KeyVault
 
         Returns:
-            KeyVaultCertificate: The certificate
+            The KeyVaultCertificate
 
         Raises:
-            DataSafeHavenAzureError if the secret could not be read
+            DataSafeHavenAzureError if the certificate could not be read
         """
         # Connect to Azure clients
         certificate_client = CertificateClient(

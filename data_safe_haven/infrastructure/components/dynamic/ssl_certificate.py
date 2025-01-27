@@ -183,22 +183,19 @@ class SSLCertificateProvider(DshResourceProvider):
             delete_before_replace=True,
         )
 
+    @override
     def refresh(self, props: dict[str, Any]) -> dict[str, Any]:
-        try:
-            outs = dict(**props)
-            with suppress(DataSafeHavenAzureError, KeyError):
-                azure_sdk = AzureSdk(outs["subscription_name"], disable_logging=True)
-                certificate = azure_sdk.get_keyvault_certificate(
-                    outs["certificate_secret_name"], outs["key_vault_name"]
-                )
-                if certificate.secret_id:
-                    outs["secret_id"] = certificate.secret_id
-            return outs
-        except Exception as exc:
-            cert_name = f"[green]{props['certificate_secret_name']}[/]"
-            domain_name = f"[green]{props['domain_name']}[/]"
-            msg = f"Failed to refresh SSL certificate {cert_name} for {domain_name}."
-            raise DataSafeHavenSSLError(msg) from exc
+        outs = dict(**props)
+        with suppress(DataSafeHavenAzureError, KeyError):
+            azure_sdk = AzureSdk(outs["subscription_name"], disable_logging=True)
+            kvcert = azure_sdk.get_keyvault_certificate(
+                outs["certificate_secret_name"], outs["key_vault_name"]
+            )
+            if kvcert.secret_id:
+                outs["secret_id"] = kvcert.secret_id
+            if kvcert.properties and kvcert.properties.expires_on:
+                outs["expiry_date"] = kvcert.properties.expires_on.isoformat()
+        return outs
 
 
 class SSLCertificate(Resource):
