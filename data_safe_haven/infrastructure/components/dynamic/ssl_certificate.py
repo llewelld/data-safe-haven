@@ -3,7 +3,7 @@
 import time
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, override
 
 from acme.errors import ValidationError
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
@@ -16,6 +16,7 @@ from cryptography.x509 import load_pem_x509_certificate
 from pulumi import Input, Output, ResourceOptions
 from pulumi.dynamic import CreateResult, DiffResult, Resource
 from simple_acme_dns import ACMEClient
+from simple_acme_dns.errors import InvalidKeyType
 
 from data_safe_haven.exceptions import DataSafeHavenAzureError, DataSafeHavenSSLError
 from data_safe_haven.external import AzureSdk
@@ -44,8 +45,8 @@ class SSLCertificateProps:
 
 
 class SSLCertificateProvider(DshResourceProvider):
+    @override
     def create(self, props: dict[str, Any]) -> CreateResult:
-        """Create new SSL certificate."""
         outs = dict(**props)
         try:
             client = ACMEClient(
@@ -61,8 +62,8 @@ class SSLCertificateProvider(DshResourceProvider):
             private_key_bytes = client.generate_private_key(key_type="rsa2048")
             client.generate_csr()
             # Request DNS verification tokens and add them to the DNS record
-            azure_sdk = AzureSdk(props["subscription_name"], disable_logging=True)
             verification_tokens = client.request_verification_tokens().items()
+            azure_sdk = AzureSdk(props["subscription_name"], disable_logging=True)
             for record_name, record_values in verification_tokens:
                 record_set = azure_sdk.ensure_dns_txt_record(
                     record_name=record_name.replace(f".{props['domain_name']}", ""),
@@ -97,7 +98,7 @@ class SSLCertificateProvider(DshResourceProvider):
             private_key = load_pem_private_key(private_key_bytes, None)
             if not isinstance(private_key, RSAPrivateKey):
                 msg = f"Private key is of type {type(private_key)} not RSAPrivateKey."
-                raise TypeError(msg)
+                raise DataSafeHavenSSLError(msg)
             all_certs = [
                 load_pem_x509_certificate(data)
                 for data in certificate_bytes.split(b"\n\n")
@@ -119,11 +120,16 @@ class SSLCertificateProvider(DshResourceProvider):
                 certificate_contents=pfx_bytes,
                 key_vault_name=props["key_vault_name"],
             )
-            with suppress(AttributeError):
-                outs["expiry_date"] = kvcert.properties.expires_on.isoformat()
-            with suppress(AttributeError):
-                outs["secret_id"] = "/".join(kvcert.secret_id.split("/")[:-1])
-        except Exception as exc:
+            # Failures here will raise an exception that will be caught below
+            outs["expiry_date"] = kvcert.properties.expires_on.isoformat()
+            outs["secret_id"] = "/".join(kvcert.secret_id.split("/")[:-1])
+        except (
+            AttributeError,
+            DataSafeHavenAzureError,
+            IndexError,
+            InvalidKeyType,
+            StopIteration,
+        ) as exc:
             cert_name = f"[green]{props['certificate_secret_name']}[/]"
             domain_name = f"[green]{props['domain_name']}[/]"
             msg = f"Failed to create SSL certificate {cert_name} for {domain_name}."
