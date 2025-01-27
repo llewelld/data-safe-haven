@@ -139,8 +139,8 @@ class SSLCertificateProvider(DshResourceProvider):
             outs=outs,
         )
 
+    @override
     def delete(self, id_: str, props: dict[str, Any]) -> None:
-        """Delete an SSL certificate."""
         # Use `id` as a no-op to avoid ARG002 while maintaining function signature
         id(id_)
         try:
@@ -156,7 +156,7 @@ class SSLCertificateProvider(DshResourceProvider):
                 certificate_name=props["certificate_secret_name"],
                 key_vault_name=props["key_vault_name"],
             )
-        except Exception as exc:
+        except DataSafeHavenAzureError as exc:
             cert_name = f"[green]{props['certificate_secret_name']}[/]"
             domain_name = f"[green]{props['domain_name']}[/]"
             msg = f"Failed to delete SSL certificate {cert_name} for {domain_name}."
