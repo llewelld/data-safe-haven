@@ -49,7 +49,7 @@ $ pipx install data-safe-haven
 - Or install a specific version with (for instance)
 
 :::{code} shell
-$ pipx install data-safe-haven==5.0.0
+$ pipx install data-safe-haven==5.3.1
 :::
 
 ::::{admonition} [Advanced] install into a virtual environment
