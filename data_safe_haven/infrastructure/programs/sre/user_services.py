@@ -24,6 +24,7 @@ class SREUserServicesProps:
 
     def __init__(
         self,
+        allow_workspace_internet: Input[bool],
         database_service_admin_password: Input[str],
         databases: list[DatabaseSystem],  # this must *not* be passed as an Input[T]
         dns_server_ip: Input[str],
@@ -48,6 +49,7 @@ class SREUserServicesProps:
         subnet_databases: Input[network.GetSubnetResult],
         subnet_software_repositories: Input[network.GetSubnetResult],
     ) -> None:
+        self.allow_workspace_internet = allow_workspace_internet
         self.database_service_admin_password = database_service_admin_password
         self.databases = databases
         self.dns_server_ip = dns_server_ip

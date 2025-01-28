@@ -335,6 +335,7 @@ class DeclarativeSRE:
             "sre_user_services",
             self.stack_name,
             SREUserServicesProps(
+                allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 database_service_admin_password=data.password_database_service_admin,
                 databases=self.config.sre.databases,
                 dns_server_ip=dns.ip_address,
@@ -368,6 +369,7 @@ class DeclarativeSRE:
             self.stack_name,
             SREDesiredStateProps(
                 admin_ip_addresses=self.config.sre.admin_ip_addresses,
+                allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 clamav_mirror_hostname=clamav_mirror.hostname,
                 database_service_admin_password=data.password_database_service_admin,
                 dns_private_zones=dns.private_zones,
