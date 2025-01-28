@@ -749,10 +749,10 @@ class AzureSdk:
         """Read a certificate from the KeyVault
 
         Returns:
-            KeyVaultCertificate: The certificate
+            The KeyVaultCertificate
 
         Raises:
-            DataSafeHavenAzureError if the secret could not be read
+            DataSafeHavenAzureError if the certificate could not be read
         """
         # Connect to Azure clients
         certificate_client = CertificateClient(
@@ -935,7 +935,9 @@ class AzureSdk:
                     )
                     break
                 except ResourceExistsError:
-                    # Purge any existing deleted certificate with the same name
+                    # Delete any certificate with the same name
+                    self.remove_keyvault_certificate(certificate_name, key_vault_name)
+                    # Purge any existing deleted certificate
                     self.purge_keyvault_certificate(certificate_name, key_vault_name)
             self.logger.info(
                 f"Imported certificate [green]{certificate_name}[/].",
@@ -1202,8 +1204,8 @@ class AzureSdk:
             self.logger.debug(
                 f"Waiting for deletion to complete for certificate [green]{certificate_name}[/]..."
             )
-            while True:
-                # Keep polling until deleted certificate is available
+            # Keep polling until deleted certificate is available or 2 minutes have elapsed
+            for _ in range(12):
                 with suppress(ResourceNotFoundError):
                     if certificate_client.get_deleted_certificate(certificate_name):
                         break
