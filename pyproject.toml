@@ -111,6 +111,16 @@ omit= [
   "data_safe_haven/resources/*",
 ]
 
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "docs/",      # documentation source
+  "tests/",     # package tests
+  "typings/",   # mypy configuration
+  ".*",         # configuration dotfiles
+  "CODEOWNERS", # GitHub configuration
+  "*.md",       # GitHub configuration
+]
+
 [tool.hatch.env]
 requires = ["hatch-pip-compile"]
 
