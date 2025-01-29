@@ -112,13 +112,13 @@ omit= [
 ]
 
 [tool.hatch.build.targets.sdist]
-exclude = [
-  "docs/",      # documentation source
-  "tests/",     # package tests
-  "typings/",   # mypy configuration
-  ".*",         # configuration dotfiles
-  "CODEOWNERS", # GitHub configuration
-  "*.md",       # GitHub configuration
+include = [
+  "data_safe_haven",  # source code
+  "README.md",        # README
+  "CITATION.cff",     # citation
+  "DISCLAIMER.md",    # disclaimer
+  "LICENSE",          # licence
+  "SECURITY.md",      # security information
 ]
 
 [tool.hatch.env]
