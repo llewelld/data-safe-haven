@@ -137,6 +137,7 @@ class DeclarativeSRE:
             "sre_networking",
             self.stack_name,
             SRENetworkingProps(
+                allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 dns_private_zones=dns.private_zones,
                 dns_server_ip=dns.ip_address,
                 dns_virtual_network=dns.virtual_network,
@@ -384,7 +385,7 @@ class DeclarativeSRE:
                 location=self.config.azure.location,
                 log_analytics_workspace=monitoring.log_analytics,
                 resource_group=resource_group,
-                software_repository_hostname=user_services.software_repositories.hostname,
+                software_repository_hostname=user_services.software_repositories.hostname if not self.config.sre.allow_workspace_internet else "",
                 subnet_desired_state=networking.subnet_desired_state,
                 subscription_name=sre_subscription_name,
             ),
@@ -429,14 +430,15 @@ class DeclarativeSRE:
         )
 
         # Export values for later use
-        pulumi.export(
-            "allowlist_share_name",
-            user_services.software_repositories.allowlist_file_share_name,
-        )
-        pulumi.export(
-            "allowlist_share_filenames",
-            user_services.software_repositories.allowlist_file_names,
-        )
+        if not self.config.sre.allow_workspace_internet:
+            pulumi.export(
+                "allowlist_share_name",
+                user_services.software_repositories.allowlist_file_share_name,
+            )
+            pulumi.export(
+                "allowlist_share_filenames",
+                user_services.software_repositories.allowlist_file_names,
+            )
         pulumi.export("data", data.exports)
         pulumi.export("ldap", ldap_group_names)
         pulumi.export("remote_desktop", remote_desktop.exports)
