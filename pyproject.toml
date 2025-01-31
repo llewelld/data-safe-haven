@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.26.1"]
 build-backend = "hatchling.build"
 
 [project]
@@ -109,6 +109,16 @@ relative_files = true
 omit= [
   "tests/*",
   "data_safe_haven/resources/*",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "data_safe_haven",  # source code
+  "README.md",        # README
+  "CITATION.cff",     # citation
+  "DISCLAIMER.md",    # disclaimer
+  "LICENSE",          # licence
+  "SECURITY.md",      # security information
 ]
 
 [tool.hatch.env]
