@@ -385,7 +385,11 @@ class DeclarativeSRE:
                 location=self.config.azure.location,
                 log_analytics_workspace=monitoring.log_analytics,
                 resource_group=resource_group,
-                software_repository_hostname=user_services.software_repositories.hostname if not self.config.sre.allow_workspace_internet else "",
+                software_repository_hostname=(
+                    user_services.software_repositories.hostname
+                    if not self.config.sre.allow_workspace_internet
+                    else ""
+                ),
                 subnet_desired_state=networking.subnet_desired_state,
                 subscription_name=sre_subscription_name,
             ),
