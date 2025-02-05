@@ -172,8 +172,6 @@ class SREUserServicesComponent(ComponentResource):
                 opts=child_opts,
                 tags=child_tags,
             )
-        else:
-            self.software_repositories = None
 
         # Deploy whichever database systems are selected
         for database in props.databases:
