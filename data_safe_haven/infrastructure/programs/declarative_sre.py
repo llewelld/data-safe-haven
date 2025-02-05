@@ -401,6 +401,7 @@ class DeclarativeSRE:
             self.stack_name,
             SREWorkspacesProps(
                 admin_password=data.password_workspace_admin,
+                allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 apt_proxy_server_hostname=apt_proxy_server.hostname,
                 data_collection_rule_id=monitoring.data_collection_rule_vms.id,
                 data_collection_endpoint_id=monitoring.data_collection_endpoint.id,
