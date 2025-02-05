@@ -207,39 +207,6 @@ class SREFirewallComponent(ComponentResource):
                     ),
                 ],
             ),
-            network.AzureFirewallApplicationRuleCollectionArgs(
-                action=network.AzureFirewallRCActionArgs(
-                    type=network.AzureFirewallRCActionType.ALLOW
-                ),
-                name="software-repositories-allow",
-                priority=FirewallPriorities.SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
-                rules=[
-                    network.AzureFirewallApplicationRuleArgs(
-                        description="Allow external CRAN package requests",
-                        name="AllowCRANPackageDownload",
-                        protocols=[
-                            network.AzureFirewallApplicationRuleProtocolArgs(
-                                port=int(Ports.HTTPS),
-                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
-                            )
-                        ],
-                        source_addresses=props.subnet_user_services_software_repositories_prefixes,
-                        target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_R,
-                    ),
-                    network.AzureFirewallApplicationRuleArgs(
-                        description="Allow external PyPI package requests",
-                        name="AllowPyPIPackageDownload",
-                        protocols=[
-                            network.AzureFirewallApplicationRuleProtocolArgs(
-                                port=int(Ports.HTTPS),
-                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
-                            )
-                        ],
-                        source_addresses=props.subnet_user_services_software_repositories_prefixes,
-                        target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_PYTHON,
-                    ),
-                ],
-            ),
         ]
 
         if props.allow_workspace_internet:
@@ -310,6 +277,39 @@ class SREFirewallComponent(ComponentResource):
                             ],
                             source_addresses=props.subnet_workspaces_prefixes,
                             target_fqdns=PermittedDomains.RSTUDIO_DEB,
+                        ),
+                    ],
+                ),
+                network.AzureFirewallApplicationRuleCollectionArgs(
+                    action=network.AzureFirewallRCActionArgs(
+                        type=network.AzureFirewallRCActionType.ALLOW
+                    ),
+                    name="software-repositories-allow",
+                    priority=FirewallPriorities.SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
+                    rules=[
+                        network.AzureFirewallApplicationRuleArgs(
+                            description="Allow external CRAN package requests",
+                            name="AllowCRANPackageDownload",
+                            protocols=[
+                                network.AzureFirewallApplicationRuleProtocolArgs(
+                                    port=int(Ports.HTTPS),
+                                    protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                                )
+                            ],
+                            source_addresses=props.subnet_user_services_software_repositories_prefixes,
+                            target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_R,
+                        ),
+                        network.AzureFirewallApplicationRuleArgs(
+                            description="Allow external PyPI package requests",
+                            name="AllowPyPIPackageDownload",
+                            protocols=[
+                                network.AzureFirewallApplicationRuleProtocolArgs(
+                                    port=int(Ports.HTTPS),
+                                    protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                                )
+                            ],
+                            source_addresses=props.subnet_user_services_software_repositories_prefixes,
+                            target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_PYTHON,
                         ),
                     ],
                 ),
