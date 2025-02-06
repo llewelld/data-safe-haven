@@ -1023,7 +1023,7 @@ class AzureSdk:
                     location=location,
                 )
             except HttpResponseError:
-                self.logger.info(
+                self.logger.debug(
                     f"Key Vault [green]{key_vault_name}[/] does not need to be purged."
                 )
                 return False
@@ -1050,7 +1050,7 @@ class AzureSdk:
                 ):
                     msg = f"Key Vault '{key_vault_name}' exists in deleted state."
                     raise AzureError(msg)
-            self.logger.info(f"Purged Key Vault [green]{key_vault_name}[/].")
+            self.logger.debug(f"Purged Key Vault [green]{key_vault_name}[/].")
             return True
         except AzureError as exc:
             msg = f"Failed to remove Key Vault '{key_vault_name}'."
@@ -1118,7 +1118,7 @@ class AzureSdk:
             )
             # Remove the requested blob
             blob_client.delete_blob(delete_snapshots="include")
-            self.logger.info(
+            self.logger.debug(
                 f"Removed file [green]{blob_name}[/] from blob storage.",
             )
         except (AzureError, DataSafeHavenAzureStorageError) as exc:
