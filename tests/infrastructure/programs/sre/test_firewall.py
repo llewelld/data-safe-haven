@@ -142,7 +142,7 @@ class TestSREFirewallComponent:
                 if rule_collection["name"] == "workspaces-allow-all"
             ]
 
-            assert len(application_rule_collections) == 5
+            assert len(application_rule_collections) == 4
             assert len(allow_internet_collection) == 1
 
         pulumi.Output.all(
