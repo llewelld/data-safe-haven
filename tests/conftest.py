@@ -87,6 +87,21 @@ def config_section_sre(
         admin_email_address="admin@example.com",
         admin_ip_addresses=["1.2.3.4"],
         remote_desktop=config_subsection_remote_desktop,
+        software_packages="pre-approved",
+        storage_quota_gb=config_subsection_storage_quota_gb,
+        timezone="Europe/London",
+    )
+
+
+@fixture
+def config_section_sre_any_packages(
+    config_subsection_remote_desktop, config_subsection_storage_quota_gb
+) -> ConfigSectionSRE:
+    return ConfigSectionSRE(
+        admin_email_address="admin@example.com",
+        admin_ip_addresses=["1.2.3.4"],
+        remote_desktop=config_subsection_remote_desktop,
+        software_packages="any",
         storage_quota_gb=config_subsection_storage_quota_gb,
         timezone="Europe/London",
     )
@@ -495,6 +510,21 @@ def sre_config(
         dockerhub=config_section_dockerhub,
         name="sandbox",
         sre=config_section_sre,
+    )
+
+
+@fixture
+def sre_config_any_packages(
+    config_section_azure: ConfigSectionAzure,
+    config_section_dockerhub: ConfigSectionDockerHub,
+    config_section_sre_any_packages: ConfigSectionSRE,
+) -> SREConfig:
+    return SREConfig(
+        azure=config_section_azure,
+        description="Sandbox Project",
+        dockerhub=config_section_dockerhub,
+        name="sandbox",
+        sre=config_section_sre_any_packages,
     )
 
 
