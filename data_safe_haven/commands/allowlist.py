@@ -47,8 +47,13 @@ def show(
 
     if sre_config.sre.software_packages == SoftwarePackageCategory.ANY:
         logger.info(
-            "No package allowlist is configured for this SRE. "
+            "No package allowlist is required for this SRE. "
             "All packages are allowed."
+        )
+        raise typer.Exit()
+    elif sre_config.sre.software_packages == SoftwarePackageCategory.NONE:
+        logger.info(
+            "No package allowlist is required for this SRE. No packages are allowed."
         )
         raise typer.Exit()
 
@@ -147,6 +152,11 @@ def upload(
         logger.info(
             "No package allowlist is required for this SRE. "
             "All packages are allowed."
+        )
+        raise typer.Exit()
+    elif sre_config.sre.software_packages == "NONE":
+        logger.info(
+            "No package allowlist is required for this SRE. No packages are allowed."
         )
         raise typer.Exit()
     # Load Pulumi config
