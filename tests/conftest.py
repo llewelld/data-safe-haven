@@ -567,7 +567,7 @@ def sre_config_yaml(request):
             allow_copy: false
             allow_paste: false
         research_user_ip_addresses: []
-        software_packages: none
+        software_packages: pre-approved
         storage_quota_gb:
             home: 100
             shared: 100
