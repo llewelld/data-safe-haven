@@ -389,11 +389,11 @@ class TestAzureSdk:
         capsys,
     ):
         sdk = AzureSdk("subscription name")
-        sdk.purge_keyvault("key_vault_name", "location")
+        result = sdk.purge_keyvault("key_vault_name", "location")
         stdout, _ = capsys.readouterr()
         assert "Found deleted key vault key_vault_name in location" in stdout
         assert "Purging deleted key vault key_vault_name in location" in stdout
-        assert "Purged Key Vault key_vault_name" in stdout
+        assert result is True
 
     @pytest.mark.parametrize(
         "storage_account_name,exists",
