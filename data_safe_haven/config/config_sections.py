@@ -94,7 +94,7 @@ class ConfigSectionSRE(BaseModel, validate_assignment=True):
             return v
 
     @model_validator(mode="after")
-    def validate_internet_and_packages(self):
+    def validate_internet_and_packages(self) -> ConfigSectionSRE:
         if (
             self.allow_workspace_internet
             and self.software_packages != SoftwarePackageCategory.ANY
