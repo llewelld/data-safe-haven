@@ -214,7 +214,7 @@ class SREGiteaServerComponent(ComponentResource):
                     ],
                 ),
                 containerinstance.ContainerArgs(
-                    image="gitea/gitea:1.23.1",
+                    image="gitea/gitea:1.23.3",
                     name="gitea"[:63],
                     command=["/app/custom/entrypoint.sh"],
                     environment_variables=[
