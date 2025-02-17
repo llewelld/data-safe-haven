@@ -164,7 +164,7 @@ class SREHedgeDocServerComponent(ComponentResource):
                     ],
                 ),
                 containerinstance.ContainerArgs(
-                    image="quay.io/hedgedoc/hedgedoc:1.10.1",
+                    image="quay.io/hedgedoc/hedgedoc:1.10.2",
                     name="hedgedoc"[:63],
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
