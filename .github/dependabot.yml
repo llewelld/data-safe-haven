@@ -12,6 +12,7 @@ updates:
     directory: "/"
     ignore:
       - dependency-name: "psycopg"  # 3.1.19 is the latest version to support on older MacOS versions
+      - dependency-name: "josepy"  # josepy>=2 is incompatible with another dependency, acme
     groups:
       production-dependencies:
         dependency-type: "production"
