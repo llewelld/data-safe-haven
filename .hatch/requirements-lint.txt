@@ -24,7 +24,7 @@ ansible-builder==3.1.0
     #   ansible-dev-environment
     #   ansible-dev-tools
     #   ansible-navigator
-ansible-compat==25.1.2
+ansible-compat==25.1.4
     # via
     #   ansible-lint
     #   molecule
@@ -42,7 +42,7 @@ ansible-dev-environment==25.1.0
     # via ansible-dev-tools
 ansible-dev-tools==25.2.1
     # via hatch.envs.lint
-ansible-lint==25.1.2
+ansible-lint==25.1.3
     # via
     #   ansible-dev-tools
     #   ansible-navigator
@@ -125,7 +125,7 @@ markupsafe==3.0.2
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-molecule==25.2.0
+molecule==25.3.1
     # via ansible-dev-tools
 mypy==1.15.0
     # via hatch.envs.lint

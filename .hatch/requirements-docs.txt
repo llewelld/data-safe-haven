@@ -21,6 +21,7 @@
 # - chevron==0.14.0
 # - cryptography==44.0.1
 # - fqdn==1.5.1
+# - josepy<2.0.0
 # - psycopg[binary]==3.1.19
 # - pulumi-azure-native==2.88.0
 # - pulumi-azuread==6.2.0
@@ -193,8 +194,10 @@ jinja2==3.1.5
     # via
     #   myst-parser
     #   sphinx
-josepy==2.0.0
-    # via acme
+josepy==1.15.0
+    # via
+    #   hatch.envs.docs
+    #   acme
 markdown-it-py==3.0.0
     # via
     #   mdit-py-plugins
@@ -266,7 +269,9 @@ pyjwt==2.10.1
     #   hatch.envs.docs
     #   msal
 pyopenssl==25.0.0
-    # via acme
+    # via
+    #   acme
+    #   josepy
 pyrfc3339==2.0.1
     # via acme
 pytz==2025.1
