@@ -44,7 +44,6 @@ dependencies = [
   "chevron==0.14.0",
   "cryptography==44.0.1",
   "fqdn==1.5.1",
-  "josepy<2.0.0", # acme is not yet compatible with josepy>=2
   "psycopg[binary]==3.1.19", # needed for installation on older MacOS versions
   "pulumi-azure-native==2.88.0",
   "pulumi-azuread==6.2.0",
@@ -206,6 +205,11 @@ module = [
     "websocket.*",
 ]
 ignore_missing_imports = true
+
+[tool.pip-tools.compile]
+upgrade-package = [
+    "josepy<2.0.0", # acme is not yet compatible with josepy>=2
+]
 
 [tool.pytest.ini_options]
 addopts = [
