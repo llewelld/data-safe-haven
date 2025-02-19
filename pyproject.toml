@@ -255,7 +255,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.flake8-builtins]
-builtins-allowed-modules = ["types"]
+builtins-allowed-modules = ["logging", "types"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
