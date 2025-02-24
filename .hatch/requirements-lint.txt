@@ -7,7 +7,7 @@
 # - mypy==1.15.0
 # - pandas-stubs==2.2.3.241126
 # - pydantic==2.10.6
-# - ruff==0.9.6
+# - ruff==0.9.7
 # - types-appdirs==1.4.3.5
 # - types-chevron==0.14.2.20250103
 # - types-pytz==2025.1.0.20250204
@@ -64,7 +64,7 @@ black==25.1.0
     #   ansible-lint
 bracex==2.5.post1
     # via wcmatch
-cachetools==5.5.1
+cachetools==5.5.2
     # via tox
 cffi==1.17.1
     # via
@@ -225,7 +225,7 @@ rich==13.9.4
     # via
     #   enrich
     #   molecule
-rpds-py==0.22.3
+rpds-py==0.23.1
     # via
     #   jsonschema
     #   referencing
@@ -233,7 +233,7 @@ ruamel-yaml==0.18.10
     # via ansible-lint
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-ruff==0.9.6
+ruff==0.9.7
     # via hatch.envs.lint
 subprocess-tee==0.4.2
     # via
