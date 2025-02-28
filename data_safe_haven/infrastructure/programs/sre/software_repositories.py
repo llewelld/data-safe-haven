@@ -208,7 +208,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ],
                     ),
                     containerinstance.ContainerArgs(
-                        image="ghcr.io/alan-turing-institute/nexus-allowlist:v0.11.0",
+                        image="ghcr.io/alan-turing-institute/nexus-allowlist:v0.12.0",
                         name="nexus-allowlist"[:63],
                         environment_variables=[
                             containerinstance.EnvironmentVariableArgs(
