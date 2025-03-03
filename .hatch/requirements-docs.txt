@@ -13,13 +13,13 @@
 # - azure-mgmt-keyvault==10.3.1
 # - azure-mgmt-msi==7.0.0
 # - azure-mgmt-rdbms==10.1.0
-# - azure-mgmt-resource==23.2.0
-# - azure-mgmt-storage==22.1.0
+# - azure-mgmt-resource==23.3.0
+# - azure-mgmt-storage==22.1.1
 # - azure-storage-blob==12.24.1
 # - azure-storage-file-datalake==12.18.1
 # - azure-storage-file-share==12.20.1
 # - chevron==0.14.0
-# - cryptography==44.0.1
+# - cryptography==44.0.2
 # - fqdn==1.5.1
 # - psycopg[binary]==3.1.19
 # - pulumi-azure-native==2.88.0
@@ -31,20 +31,20 @@
 # - pytz==2025.1
 # - pyyaml==6.0.2
 # - rich==13.9.4
-# - simple-acme-dns==3.2.0
-# - typer==0.15.1
+# - simple-acme-dns==3.2.1
+# - typer==0.15.2
 # - websocket-client==1.8.0
 # - emoji==2.14.1
 # - myst-parser==4.0.1
 # - pydata-sphinx-theme==0.16.1
 # - sphinx-togglebutton==0.3.2
-# - sphinx==8.2.1
+# - sphinx==8.2.3
 # - sphinxcontrib-typer==0.5.1
 #
 
 accessible-pygments==0.0.5
     # via pydata-sphinx-theme
-acme==2.10.0
+acme==3.1.0
     # via simple-acme-dns
 alabaster==1.0.0
     # via sphinx
@@ -108,9 +108,9 @@ azure-mgmt-msi==7.0.0
     # via hatch.envs.docs
 azure-mgmt-rdbms==10.1.0
     # via hatch.envs.docs
-azure-mgmt-resource==23.2.0
+azure-mgmt-resource==23.3.0
     # via hatch.envs.docs
-azure-mgmt-storage==22.1.0
+azure-mgmt-storage==22.1.1
     # via hatch.envs.docs
 azure-storage-blob==12.24.1
     # via
@@ -140,7 +140,7 @@ click==8.1.8
     # via
     #   typer
     #   typer-slim
-cryptography==44.0.1
+cryptography==44.0.2
     # via
     #   hatch.envs.docs
     #   acme
@@ -307,7 +307,7 @@ shellingham==1.5.4
     # via
     #   typer
     #   typer-slim
-simple-acme-dns==3.2.0
+simple-acme-dns==3.2.1
     # via hatch.envs.docs
 six==1.17.0
     # via
@@ -317,7 +317,7 @@ snowballstemmer==2.2.0
     # via sphinx
 soupsieve==2.6
     # via beautifulsoup4
-sphinx==8.2.1
+sphinx==8.2.3
     # via
     #   hatch.envs.docs
     #   myst-parser
@@ -340,9 +340,9 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sphinxcontrib-typer==0.5.1
     # via hatch.envs.docs
-typer==0.15.1
+typer==0.15.2
     # via hatch.envs.docs
-typer-slim==0.15.1
+typer-slim==0.15.2
     # via sphinxcontrib-typer
 typing-extensions==4.12.2
     # via
