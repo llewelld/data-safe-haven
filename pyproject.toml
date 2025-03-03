@@ -36,13 +36,13 @@ dependencies = [
   "azure-mgmt-keyvault==10.3.1",
   "azure-mgmt-msi==7.0.0",
   "azure-mgmt-rdbms==10.1.0",
-  "azure-mgmt-resource==23.2.0",
-  "azure-mgmt-storage==22.1.0",
+  "azure-mgmt-resource==23.3.0",
+  "azure-mgmt-storage==22.1.1",
   "azure-storage-blob==12.24.1",
   "azure-storage-file-datalake==12.18.1",
   "azure-storage-file-share==12.20.1",
   "chevron==0.14.0",
-  "cryptography==44.0.1",
+  "cryptography==44.0.2",
   "fqdn==1.5.1",
   "psycopg[binary]==3.1.19", # needed for installation on older MacOS versions
   "pulumi-azure-native==2.88.0",
@@ -54,8 +54,8 @@ dependencies = [
   "pytz==2025.1",
   "pyyaml==6.0.2",
   "rich==13.9.4",
-  "simple-acme-dns==3.2.0",
-  "typer==0.15.1",
+  "simple-acme-dns==3.2.1",
+  "typer==0.15.2",
   "websocket-client==1.8.0",
 ]
 
@@ -70,28 +70,28 @@ docs = [
   "myst-parser==4.0.1",
   "pydata-sphinx-theme==0.16.1",
   "sphinx-togglebutton==0.3.2",
-  "sphinx==8.2.1",
+  "sphinx==8.2.3",
   "sphinxcontrib-typer==0.5.1",
 ]
 lint = [
   "ansible-dev-tools==25.2.1",
-  "ansible==11.2.0",
+  "ansible==11.3.0",
   "black==25.1.0",
   "mypy==1.15.0",
   "pandas-stubs==2.2.3.241126",
   "pydantic==2.10.6",
-  "ruff==0.9.7",
+  "ruff==0.9.9",
   "types-appdirs==1.4.3.5",
   "types-chevron==0.14.2.20250103",
   "types-pytz==2025.1.0.20250204",
   "types-pyyaml==6.0.12.20241230",
-  "types-requests==2.32.0.20241016",
+  "types-requests==2.32.0.20250301",
 ]
 test = [
   "coverage==7.6.12",
   "freezegun==1.5.1",
   "pytest-mock==3.14.0",
-  "pytest==8.3.4",
+  "pytest==8.3.5",
   "requests-mock==1.12.1",
 ]
 
