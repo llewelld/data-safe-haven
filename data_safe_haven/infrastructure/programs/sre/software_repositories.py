@@ -189,7 +189,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ],
                     ),
                     containerinstance.ContainerArgs(
-                        image="sonatype/nexus3:3.77.1",
+                        image="sonatype/nexus3:3.77.2",
                         name="nexus"[:63],
                         environment_variables=[],
                         ports=[],
@@ -208,7 +208,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ],
                     ),
                     containerinstance.ContainerArgs(
-                        image="ghcr.io/alan-turing-institute/nexus-allowlist:v0.11.0",
+                        image="ghcr.io/alan-turing-institute/nexus-allowlist:v0.12.0",
                         name="nexus-allowlist"[:63],
                         environment_variables=[
                             containerinstance.EnvironmentVariableArgs(
