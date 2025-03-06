@@ -36,7 +36,7 @@ ansible-core==2.18.3
     #   ansible-lint
     #   molecule
     #   pytest-ansible
-ansible-creator==25.0.0
+ansible-creator==25.3.0
     # via ansible-dev-tools
 ansible-dev-environment==25.1.0
     # via ansible-dev-tools
@@ -102,7 +102,7 @@ importlib-metadata==8.6.1
     # via ansible-lint
 iniconfig==2.0.0
     # via pytest
-jinja2==3.1.5
+jinja2==3.1.6
     # via
     #   ansible-core
     #   ansible-creator

@@ -134,7 +134,7 @@ cryptography==44.0.2
     #   msal
     #   pyjwt
     #   pyopenssl
-debugpy==1.8.12
+debugpy==1.8.13
     # via pulumi
 dill==0.3.9
     # via pulumi

@@ -152,7 +152,7 @@ cryptography==44.0.2
     #   msal
     #   pyjwt
     #   pyopenssl
-debugpy==1.8.12
+debugpy==1.8.13
     # via pulumi
 dill==0.3.9
     # via pulumi
@@ -189,7 +189,7 @@ isodate==0.7.2
     #   azure-storage-file-datalake
     #   azure-storage-file-share
     #   msrest
-jinja2==3.1.5
+jinja2==3.1.6
     # via
     #   myst-parser
     #   sphinx
