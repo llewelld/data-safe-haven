@@ -206,11 +206,6 @@ module = [
 ]
 ignore_missing_imports = true
 
-[tool.pip-tools.compile]
-upgrade-package = [
-    "josepy<2.0.0", # acme is not yet compatible with josepy>=2
-]
-
 [tool.pytest.ini_options]
 addopts = [
     "-vvv",
