@@ -3,7 +3,7 @@ name: Update Docker image versions
 
 on:  # yamllint disable-line rule:truthy
   schedule:
-    - cron: "0 3 * * 1"  # run at 3:00 every Monday
+    - cron: "0 3 1 * *"  # run at 3:00 on the first day of each month
   workflow_dispatch:  # allow this workflow to be manually triggered
 
 # checkout needs 'contents:read'
