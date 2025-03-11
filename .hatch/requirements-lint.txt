@@ -5,14 +5,14 @@
 # - ansible==11.3.0
 # - black==25.1.0
 # - mypy==1.15.0
-# - pandas-stubs==2.2.3.241126
+# - pandas-stubs==2.2.3.250308
 # - pydantic==2.10.6
-# - ruff==0.9.9
+# - ruff==0.9.10
 # - types-appdirs==1.4.3.5
 # - types-chevron==0.14.2.20250103
 # - types-pytz==2025.1.0.20250204
 # - types-pyyaml==6.0.12.20241230
-# - types-requests==2.32.0.20250301
+# - types-requests==2.32.0.20250306
 #
 
 annotated-types==0.7.0
@@ -151,7 +151,7 @@ packaging==24.2
     #   pytest
     #   pytest-ansible
     #   tox
-pandas-stubs==2.2.3.241126
+pandas-stubs==2.2.3.250308
     # via hatch.envs.lint
 parsley==1.3
     # via bindep
@@ -233,14 +233,14 @@ ruamel-yaml==0.18.10
     # via ansible-lint
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
-ruff==0.9.9
+ruff==0.9.10
     # via hatch.envs.lint
 subprocess-tee==0.4.2
     # via
     #   ansible-compat
     #   ansible-dev-environment
     #   ansible-lint
-tox==4.24.1
+tox==4.24.2
     # via tox-ansible
 tox-ansible==25.1.0
     # via ansible-dev-tools
@@ -254,7 +254,7 @@ types-pytz==2025.1.0.20250204
     #   pandas-stubs
 types-pyyaml==6.0.12.20241230
     # via hatch.envs.lint
-types-requests==2.32.0.20250301
+types-requests==2.32.0.20250306
     # via hatch.envs.lint
 typing-extensions==4.12.2
     # via
@@ -266,7 +266,7 @@ tzdata==2025.1
     # via ansible-navigator
 urllib3==2.3.0
     # via types-requests
-virtualenv==20.29.2
+virtualenv==20.29.3
     # via tox
 wcmatch==10.0
     # via
