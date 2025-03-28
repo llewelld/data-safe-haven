@@ -90,6 +90,18 @@ class SREGiteaServerComponent(ComponentResource):
             signed_identifiers=[],
             opts=child_opts,
         )
+
+        file_share_gitea = storage.FileShare(
+            f"{self._name}_file_share_gitea_data",
+            access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
+            account_name=props.storage_account_name,
+            resource_group_name=props.resource_group_name,
+            share_name="gitea-data",
+            share_quota=2,
+            signed_identifiers=[],
+            opts=child_opts,
+        )
+
         file_share_gitea_gitea = storage.FileShare(
             f"{self._name}_file_share_gitea_gitea",
             access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
@@ -272,6 +284,11 @@ class SREGiteaServerComponent(ComponentResource):
                             name="gitea-app-custom",
                             read_only=True,
                         ),
+                        containerinstance.VolumeMountArgs(
+                            mount_path="/data",
+                            name="gitea-gitea-data",
+                            read_only=False,
+                        ),
                     ],
                 ),
             ],
@@ -319,6 +336,14 @@ class SREGiteaServerComponent(ComponentResource):
                         storage_account_name=props.storage_account_name,
                     ),
                     name="caddy-etc-caddy",
+                ),
+                containerinstance.VolumeArgs(
+                    azure_file=containerinstance.AzureFileVolumeArgs(
+                        share_name=file_share_gitea.name,
+                        storage_account_key=props.storage_account_key,
+                        storage_account_name=props.storage_account_name,
+                    ),
+                    name="gitea-gitea-data",
                 ),
                 containerinstance.VolumeArgs(
                     azure_file=containerinstance.AzureFileVolumeArgs(
