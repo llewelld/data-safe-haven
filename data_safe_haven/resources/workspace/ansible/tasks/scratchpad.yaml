@@ -1,0 +1,9 @@
+---
+
+- name: Enable user writing on scratchpad (cgc6).
+  ansible.builtin.file:
+    path: /mnt/scratch
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
