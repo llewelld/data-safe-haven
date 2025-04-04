@@ -3,7 +3,7 @@
 #
 # - appdirs==1.4.4
 # - azure-core==1.32.0
-# - azure-identity==1.19.0
+# - azure-identity==1.20.0
 # - azure-keyvault-certificates==4.9.0
 # - azure-keyvault-keys==4.10.0
 # - azure-keyvault-secrets==4.9.0
@@ -13,30 +13,30 @@
 # - azure-mgmt-keyvault==10.3.1
 # - azure-mgmt-msi==7.0.0
 # - azure-mgmt-rdbms==10.1.0
-# - azure-mgmt-resource==23.2.0
-# - azure-mgmt-storage==22.0.0
+# - azure-mgmt-resource==23.3.0
+# - azure-mgmt-storage==22.1.1
 # - azure-storage-blob==12.24.1
 # - azure-storage-file-datalake==12.18.1
 # - azure-storage-file-share==12.20.1
 # - chevron==0.14.0
-# - cryptography==44.0.0
+# - cryptography==44.0.2
 # - fqdn==1.5.1
 # - psycopg[binary]==3.1.19
-# - pulumi-azure-native==2.86.0
+# - pulumi-azure-native==2.89.1
 # - pulumi-azuread==6.2.0
 # - pulumi-random==4.17.0
-# - pulumi==3.149.0
+# - pulumi==3.152.0
 # - pydantic==2.10.6
 # - pyjwt[crypto]==2.10.1
 # - pytz==2025.1
 # - pyyaml==6.0.2
 # - rich==13.9.4
-# - simple-acme-dns==3.2.0
-# - typer==0.15.1
+# - simple-acme-dns==3.2.1
+# - typer==0.15.2
 # - websocket-client==1.8.0
 #
 
-acme==2.10.0
+acme==3.1.0
     # via simple-acme-dns
 annotated-types==0.7.0
     # via pydantic
@@ -68,7 +68,7 @@ azure-core==1.32.0
     #   azure-storage-file-datalake
     #   azure-storage-file-share
     #   msrest
-azure-identity==1.19.0
+azure-identity==1.20.0
     # via hatch.envs.default
 azure-keyvault-certificates==4.9.0
     # via hatch.envs.default
@@ -98,9 +98,9 @@ azure-mgmt-msi==7.0.0
     # via hatch.envs.default
 azure-mgmt-rdbms==10.1.0
     # via hatch.envs.default
-azure-mgmt-resource==23.2.0
+azure-mgmt-resource==23.3.0
     # via hatch.envs.default
-azure-mgmt-storage==22.0.0
+azure-mgmt-storage==22.1.1
     # via hatch.envs.default
 azure-storage-blob==12.24.1
     # via
@@ -122,7 +122,7 @@ chevron==0.14.0
     # via hatch.envs.default
 click==8.1.8
     # via typer
-cryptography==44.0.0
+cryptography==44.0.2
     # via
     #   hatch.envs.default
     #   acme
@@ -134,7 +134,7 @@ cryptography==44.0.0
     #   msal
     #   pyjwt
     #   pyopenssl
-debugpy==1.8.12
+debugpy==1.8.13
     # via pulumi
 dill==0.3.9
     # via pulumi
@@ -192,13 +192,13 @@ psycopg==3.1.19
     # via hatch.envs.default
 psycopg-binary==3.1.19
     # via psycopg
-pulumi==3.149.0
+pulumi==3.152.0
     # via
     #   hatch.envs.default
     #   pulumi-azure-native
     #   pulumi-azuread
     #   pulumi-random
-pulumi-azure-native==2.86.0
+pulumi-azure-native==2.89.1
     # via hatch.envs.default
 pulumi-azuread==6.2.0
     # via hatch.envs.default
@@ -251,13 +251,13 @@ semver==2.13.0
     #   pulumi-random
 shellingham==1.5.4
     # via typer
-simple-acme-dns==3.2.0
+simple-acme-dns==3.2.1
     # via hatch.envs.default
 six==1.17.0
     # via
     #   azure-core
     #   pulumi
-typer==0.15.1
+typer==0.15.2
     # via hatch.envs.default
 typing-extensions==4.12.2
     # via
@@ -288,4 +288,3 @@ websocket-client==1.8.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
-# setuptools

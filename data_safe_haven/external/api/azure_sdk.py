@@ -46,8 +46,8 @@ from azure.mgmt.resource.resources.v2021_04_01 import ResourceManagementClient
 from azure.mgmt.resource.resources.v2021_04_01.models import ResourceGroup
 from azure.mgmt.resource.subscriptions import SubscriptionClient
 from azure.mgmt.resource.subscriptions.models import Location, Subscription
-from azure.mgmt.storage.v2023_05_01 import StorageManagementClient
-from azure.mgmt.storage.v2023_05_01.models import (
+from azure.mgmt.storage.v2024_01_01 import StorageManagementClient
+from azure.mgmt.storage.v2024_01_01.models import (
     BlobContainer,
     Kind as StorageAccountKind,
     MinimumTlsVersion,

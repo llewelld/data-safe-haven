@@ -3,7 +3,7 @@
 #
 # - appdirs==1.4.4
 # - azure-core==1.32.0
-# - azure-identity==1.19.0
+# - azure-identity==1.20.0
 # - azure-keyvault-certificates==4.9.0
 # - azure-keyvault-keys==4.10.0
 # - azure-keyvault-secrets==4.9.0
@@ -13,38 +13,38 @@
 # - azure-mgmt-keyvault==10.3.1
 # - azure-mgmt-msi==7.0.0
 # - azure-mgmt-rdbms==10.1.0
-# - azure-mgmt-resource==23.2.0
-# - azure-mgmt-storage==22.0.0
+# - azure-mgmt-resource==23.3.0
+# - azure-mgmt-storage==22.1.1
 # - azure-storage-blob==12.24.1
 # - azure-storage-file-datalake==12.18.1
 # - azure-storage-file-share==12.20.1
 # - chevron==0.14.0
-# - cryptography==44.0.0
+# - cryptography==44.0.2
 # - fqdn==1.5.1
 # - psycopg[binary]==3.1.19
-# - pulumi-azure-native==2.86.0
+# - pulumi-azure-native==2.89.1
 # - pulumi-azuread==6.2.0
 # - pulumi-random==4.17.0
-# - pulumi==3.149.0
+# - pulumi==3.152.0
 # - pydantic==2.10.6
 # - pyjwt[crypto]==2.10.1
 # - pytz==2025.1
 # - pyyaml==6.0.2
 # - rich==13.9.4
-# - simple-acme-dns==3.2.0
-# - typer==0.15.1
+# - simple-acme-dns==3.2.1
+# - typer==0.15.2
 # - websocket-client==1.8.0
 # - emoji==2.14.1
-# - myst-parser==4.0.0
+# - myst-parser==4.0.1
 # - pydata-sphinx-theme==0.16.1
 # - sphinx-togglebutton==0.3.2
-# - sphinx==8.1.3
+# - sphinx==8.2.3
 # - sphinxcontrib-typer==0.5.1
 #
 
 accessible-pygments==0.0.5
     # via pydata-sphinx-theme
-acme==2.10.0
+acme==3.1.0
     # via simple-acme-dns
 alabaster==1.0.0
     # via sphinx
@@ -78,7 +78,7 @@ azure-core==1.32.0
     #   azure-storage-file-datalake
     #   azure-storage-file-share
     #   msrest
-azure-identity==1.19.0
+azure-identity==1.20.0
     # via hatch.envs.docs
 azure-keyvault-certificates==4.9.0
     # via hatch.envs.docs
@@ -108,9 +108,9 @@ azure-mgmt-msi==7.0.0
     # via hatch.envs.docs
 azure-mgmt-rdbms==10.1.0
     # via hatch.envs.docs
-azure-mgmt-resource==23.2.0
+azure-mgmt-resource==23.3.0
     # via hatch.envs.docs
-azure-mgmt-storage==22.0.0
+azure-mgmt-storage==22.1.1
     # via hatch.envs.docs
 azure-storage-blob==12.24.1
     # via
@@ -140,7 +140,7 @@ click==8.1.8
     # via
     #   typer
     #   typer-slim
-cryptography==44.0.0
+cryptography==44.0.2
     # via
     #   hatch.envs.docs
     #   acme
@@ -152,7 +152,7 @@ cryptography==44.0.0
     #   msal
     #   pyjwt
     #   pyopenssl
-debugpy==1.8.12
+debugpy==1.8.13
     # via pulumi
 dill==0.3.9
     # via pulumi
@@ -189,7 +189,7 @@ isodate==0.7.2
     #   azure-storage-file-datalake
     #   azure-storage-file-share
     #   msrest
-jinja2==3.1.5
+jinja2==3.1.6
     # via
     #   myst-parser
     #   sphinx
@@ -216,7 +216,7 @@ msrest==0.7.1
     # via
     #   azure-mgmt-msi
     #   azure-mgmt-rdbms
-myst-parser==4.0.0
+myst-parser==4.0.1
     # via hatch.envs.docs
 oauthlib==3.2.2
     # via requests-oauthlib
@@ -235,13 +235,13 @@ psycopg==3.1.19
     # via hatch.envs.docs
 psycopg-binary==3.1.19
     # via psycopg
-pulumi==3.149.0
+pulumi==3.152.0
     # via
     #   hatch.envs.docs
     #   pulumi-azure-native
     #   pulumi-azuread
     #   pulumi-random
-pulumi-azure-native==2.86.0
+pulumi-azure-native==2.89.1
     # via hatch.envs.docs
 pulumi-azuread==6.2.0
     # via hatch.envs.docs
@@ -295,6 +295,8 @@ rich==13.9.4
     #   hatch.envs.docs
     #   typer
     #   typer-slim
+roman-numerals-py==3.1.0
+    # via sphinx
 semver==2.13.0
     # via
     #   pulumi
@@ -305,7 +307,7 @@ shellingham==1.5.4
     # via
     #   typer
     #   typer-slim
-simple-acme-dns==3.2.0
+simple-acme-dns==3.2.1
     # via hatch.envs.docs
 six==1.17.0
     # via
@@ -315,7 +317,7 @@ snowballstemmer==2.2.0
     # via sphinx
 soupsieve==2.6
     # via beautifulsoup4
-sphinx==8.1.3
+sphinx==8.2.3
     # via
     #   hatch.envs.docs
     #   myst-parser
@@ -338,9 +340,9 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sphinxcontrib-typer==0.5.1
     # via hatch.envs.docs
-typer==0.15.1
+typer==0.15.2
     # via hatch.envs.docs
-typer-slim==0.15.1
+typer-slim==0.15.2
     # via sphinxcontrib-typer
 typing-extensions==4.12.2
     # via
