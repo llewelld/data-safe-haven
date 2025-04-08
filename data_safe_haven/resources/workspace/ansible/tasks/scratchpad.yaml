@@ -1,6 +1,6 @@
 ---
 
-- name: Enable user writing on scratchpad (cgc6).
+- name: Enable user writing on scratchpad.
   ansible.builtin.file:
     path: /mnt/scratch
     state: directory
