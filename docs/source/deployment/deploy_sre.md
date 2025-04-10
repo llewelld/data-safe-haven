@@ -19,7 +19,7 @@ $ az provider register --name Microsoft.Network
 ## Requirements
 
 - An Azure subscription where you will deploy your infrastructure.
-    - An account with at least [Owner](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/privileged) permissions on this subscription.
+- An account with at least [Owner](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/privileged) role over the scope of the subscription.
 
 ## Configuration
 
