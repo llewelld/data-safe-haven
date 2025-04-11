@@ -1,4 +1,12 @@
 ---
+- name: Collect hardware information
+  ansible.builtin.setup:
+    gather_subset:
+      - hardware
+
+- name: Store temporary disks in list
+  ansible.builtin.set_fact:
+    temporary_disks: "{{ hostvars[inventory_hostname].ansible_devices.keys() | map('regex_search', 'sdb.*') | select('string') | list }}"
 
 - name: Enable user writing on scratchpad.
   ansible.builtin.file:
@@ -6,4 +14,5 @@
     state: directory
     owner: root
     group: root
-    mode: '0777'
+    mode: "0777"
+  when: "temporary_disks is defined and (temporary_disks|length>0)"
