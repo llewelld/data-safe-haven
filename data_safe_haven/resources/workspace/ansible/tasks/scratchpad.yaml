@@ -1,12 +1,10 @@
 ---
-- name: Collect hardware information
-  ansible.builtin.setup:
-    gather_subset:
-      - hardware
-
-- name: Store temporary disks in list
-  ansible.builtin.set_fact:
-    temporary_disks: "{{ hostvars[inventory_hostname].ansible_devices.keys() | map('regex_search', 'sdb.*') | select('string') | list }}"
+- name: Find temporary disk on Azure VM
+  ansible.builtin.shell: |
+    find /dev/disk/azure -name 'resource-part[0123456789]' | sort | sed -n 1p | xargs readlink -f
+  register: search_result
+  changed_when: false
+  ignore_errors: true
 
 - name: Enable user writing on scratchpad.
   ansible.builtin.file:
@@ -15,4 +13,4 @@
     owner: root
     group: root
     mode: "0777"
-  when: "temporary_disks is defined and (temporary_disks|length>0)"
+  when: "search_result.stdout != ''"
