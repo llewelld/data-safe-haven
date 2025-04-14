@@ -1,16 +1,14 @@
 ---
 - name: Find temporary disk on Azure VM
-  ansible.builtin.shell: |
-    find /dev/disk/azure -name 'resource-part[0123456789]' | sort | sed -n 1p | xargs readlink -f
-  register: search_result
-  changed_when: false
-  ignore_errors: true
+  ansible.builtin.stat:
+    path: /dev/disk/azure/resource-part1
+  register: ephemeral_disk_link
 
-- name: Enable user writing on scratchpad.
+- name: Set permissions of scratch directory
   ansible.builtin.file:
     path: /mnt/scratch
     state: directory
     owner: root
     group: root
     mode: "0777"
-  when: "search_result.stdout != ''"
+  when: ephemeral_disk_link.stat.exists and ephemeral_disk_link.stat.islnk
