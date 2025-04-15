@@ -46,6 +46,10 @@
       ansible.builtin.import_tasks: tasks/package_proxy.yaml
       tags: package_proxies
 
+    - name: Configure scratchpad
+      ansible.builtin.import_tasks: tasks/scratchpad.yaml
+      tags: scratchpad
+
     - name: Provision smoke tests
       ansible.builtin.import_tasks: tasks/smoke_tests.yaml
       tags: smoke_tests
