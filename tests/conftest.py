@@ -537,6 +537,8 @@ def sre_config_yaml(request):
             allow_copy: false
             allow_paste: false
         research_user_ip_addresses: []
+        service_quota_gb:
+            nexus: 2
         software_packages: none
         storage_quota_gb:
             home: 100

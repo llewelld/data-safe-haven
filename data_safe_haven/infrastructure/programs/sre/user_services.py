@@ -41,6 +41,7 @@ class SREUserServicesProps:
         resource_group_name: Input[str],
         software_packages: SoftwarePackageCategory,
         sre_fqdn: Input[str],
+        service_quota_gb_nexus: Input[int],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
@@ -63,6 +64,7 @@ class SREUserServicesProps:
         self.log_analytics_workspace = log_analytics_workspace
         self.nexus_admin_password = Output.secret(nexus_admin_password)
         self.resource_group_name = resource_group_name
+        self.service_quota_gb_nexus = service_quota_gb_nexus
         self.software_packages = software_packages
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
@@ -161,6 +163,7 @@ class SREUserServicesComponent(ComponentResource):
                 resource_group_name=props.resource_group_name,
                 sre_fqdn=props.sre_fqdn,
                 software_packages=props.software_packages,
+                service_quota_gb_nexus=props.service_quota_gb_nexus,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
                 subnet_id=props.subnet_software_repositories_id,

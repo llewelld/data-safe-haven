@@ -5,7 +5,7 @@ from __future__ import annotations
 from ipaddress import ip_network
 from itertools import combinations
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, PositiveInt, field_validator
 
 from data_safe_haven.types import (
     AzureLocation,
@@ -46,6 +46,10 @@ class ConfigSubsectionRemoteDesktopOpts(BaseModel, validate_assignment=True):
     allow_paste: bool
 
 
+class ConfigSubsectionServiceQuotaGB(BaseModel, validate_assignment=True):
+    nexus: PositiveInt
+
+
 class ConfigSubsectionStorageQuotaGB(BaseModel, validate_assignment=True):
     home: AzurePremiumFileShareSize
     shared: AzurePremiumFileShareSize
@@ -61,6 +65,9 @@ class ConfigSectionSRE(BaseModel, validate_assignment=True):
     data_provider_ip_addresses: list[IpAddress] = []
     remote_desktop: ConfigSubsectionRemoteDesktopOpts
     research_user_ip_addresses: list[IpAddress] | AzureServiceTag = []
+    service_quota_gb: ConfigSubsectionServiceQuotaGB = ConfigSubsectionServiceQuotaGB(
+        nexus=2
+    )
     storage_quota_gb: ConfigSubsectionStorageQuotaGB
     software_packages: SoftwarePackageCategory = SoftwarePackageCategory.NONE
     timezone: TimeZone = "Etc/UTC"
