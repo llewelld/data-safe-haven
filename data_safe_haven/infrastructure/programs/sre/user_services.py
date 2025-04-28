@@ -163,7 +163,7 @@ class SREUserServicesComponent(ComponentResource):
                 resource_group_name=props.resource_group_name,
                 sre_fqdn=props.sre_fqdn,
                 software_packages=props.software_packages,
-                persistent_quota_gb_nexus=props.nexus_persistent_quota_gb,
+                nexus_persistent_quota_gb=props.nexus_persistent_quota_gb,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
                 subnet_id=props.subnet_software_repositories_id,
