@@ -34,7 +34,7 @@ class SREConfig(AzureSerialisableModel):
     dockerhub: ConfigSectionDockerHub
     name: SafeSreName
     sre: ConfigSectionSRE
-    user_services: ConfigSectionUserServices | None = ConfigSectionUserServices()
+    user_services: ConfigSectionUserServices = ConfigSectionUserServices()
 
     @property
     def filename(self) -> str:
@@ -127,7 +127,7 @@ class SREConfig(AzureSerialisableModel):
             ),
             user_services=ConfigSectionUserServices.model_construct(
                 nexus=ConfigSubsectionNexus.model_construct(
-                    persistent_quota_gb="Total size in GiB for Nexus' persistent directory. "
+                    persistent_quota_gb="Total size in GiB for Nexus' persistent directory. "  # type: ignore
                 )
             ),
         )

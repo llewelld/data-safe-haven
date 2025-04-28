@@ -4,10 +4,10 @@ from pydantic import ValidationError
 from data_safe_haven.config.config_sections import (
     ConfigSectionAzure,
     ConfigSectionDockerHub,
-    ConfigSubsectionNexus,
     ConfigSectionSHM,
     ConfigSectionSRE,
     ConfigSectionUserServices,
+    ConfigSubsectionNexus,
     ConfigSubsectionRemoteDesktopOpts,
     ConfigSubsectionStorageQuotaGB,
 )
