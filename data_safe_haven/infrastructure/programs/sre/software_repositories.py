@@ -34,7 +34,7 @@ class SRESoftwareRepositoriesProps:
         resource_group_name: Input[str],
         software_packages: SoftwarePackageCategory,
         sre_fqdn: Input[str],
-        service_quota_gb_nexus: Input[int],
+        persistent_quota_gb_nexus: Input[int],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_id: Input[str],
@@ -50,7 +50,7 @@ class SRESoftwareRepositoriesProps:
             SoftwarePackageCategory.NONE: None,
         }[software_packages]
         self.resource_group_name = resource_group_name
-        self.service_quota_gb_nexus = service_quota_gb_nexus
+        self.persistent_quota_gb_nexus = persistent_quota_gb_nexus
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
@@ -92,7 +92,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
             account_name=props.storage_account_name,
             resource_group_name=props.resource_group_name,
             share_name="software-repositories-nexus",
-            share_quota=props.service_quota_gb_nexus,
+            share_quota=props.persistent_quota_gb_nexus,
             signed_identifiers=[],
             opts=child_opts,
         )

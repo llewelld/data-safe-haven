@@ -11,6 +11,7 @@ from .config_sections import (
     ConfigSectionAzure,
     ConfigSectionDockerHub,
     ConfigSectionSRE,
+    ConfigSectionUserServices,
     ConfigSubsectionRemoteDesktopOpts,
     ConfigSubsectionStorageQuotaGB,
 )
@@ -32,6 +33,7 @@ class SREConfig(AzureSerialisableModel):
     dockerhub: ConfigSectionDockerHub
     name: SafeSreName
     sre: ConfigSectionSRE
+    user_services: ConfigSectionUserServices | None = ConfigSectionUserServices()
 
     @property
     def filename(self) -> str:

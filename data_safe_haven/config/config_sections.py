@@ -46,13 +46,17 @@ class ConfigSubsectionRemoteDesktopOpts(BaseModel, validate_assignment=True):
     allow_paste: bool
 
 
-class ConfigSubsectionServiceQuotaGB(BaseModel, validate_assignment=True):
-    nexus: PositiveInt
-
-
 class ConfigSubsectionStorageQuotaGB(BaseModel, validate_assignment=True):
     home: AzurePremiumFileShareSize
     shared: AzurePremiumFileShareSize
+
+
+class ConfigSubsectionNexus(BaseModel, validate_assignment=True):
+    persistent_quota_gb: PositiveInt
+
+
+class ConfigSectionUserServices(BaseModel, validate_assignment=True):
+    nexus: ConfigSubsectionNexus | None = ConfigSubsectionNexus(persistent_quota_gb=2)
 
 
 class ConfigSectionSRE(BaseModel, validate_assignment=True):
@@ -65,9 +69,6 @@ class ConfigSectionSRE(BaseModel, validate_assignment=True):
     data_provider_ip_addresses: list[IpAddress] = []
     remote_desktop: ConfigSubsectionRemoteDesktopOpts
     research_user_ip_addresses: list[IpAddress] | AzureServiceTag = []
-    service_quota_gb: ConfigSubsectionServiceQuotaGB = ConfigSubsectionServiceQuotaGB(
-        nexus=2
-    )
     storage_quota_gb: ConfigSubsectionStorageQuotaGB
     software_packages: SoftwarePackageCategory = SoftwarePackageCategory.NONE
     timezone: TimeZone = "Etc/UTC"
