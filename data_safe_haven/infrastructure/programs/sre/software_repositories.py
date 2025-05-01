@@ -166,7 +166,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 container_group_name=f"{stack_name}-container-group-software-repositories",
                 containers=[
                     containerinstance.ContainerArgs(
-                        image="caddy:2.9.1",
+                        image="caddy:2.10.0",
                         name="caddy"[:63],
                         ports=[
                             containerinstance.ContainerPortArgs(
@@ -189,7 +189,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ],
                     ),
                     containerinstance.ContainerArgs(
-                        image="sonatype/nexus3:3.78.2",
+                        image="sonatype/nexus3:3.79.1",
                         name="nexus"[:63],
                         environment_variables=[],
                         ports=[],
