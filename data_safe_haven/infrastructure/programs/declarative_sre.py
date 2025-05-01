@@ -352,6 +352,7 @@ class DeclarativeSRE:
                 resource_group_name=resource_group.name,
                 software_packages=self.config.sre.software_packages,
                 sre_fqdn=networking.sre_fqdn,
+                nexus_persistent_quota_gb=self.config.user_services.nexus.persistent_quota_gb,
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
                 subnet_containers=networking.subnet_user_services_containers,

@@ -11,6 +11,8 @@ from .config_sections import (
     ConfigSectionAzure,
     ConfigSectionDockerHub,
     ConfigSectionSRE,
+    ConfigSectionUserServices,
+    ConfigSubsectionNexus,
     ConfigSubsectionRemoteDesktopOpts,
     ConfigSubsectionStorageQuotaGB,
 )
@@ -32,6 +34,7 @@ class SREConfig(AzureSerialisableModel):
     dockerhub: ConfigSectionDockerHub
     name: SafeSreName
     sre: ConfigSectionSRE
+    user_services: ConfigSectionUserServices = ConfigSectionUserServices()
 
     @property
     def filename(self) -> str:
@@ -121,5 +124,10 @@ class SREConfig(AzureSerialisableModel):
                 workspace_skus=[
                     "List of Azure VM SKUs that will be used for data analysis."
                 ],
+            ),
+            user_services=ConfigSectionUserServices.model_construct(
+                nexus=ConfigSubsectionNexus.model_construct(
+                    persistent_quota_gb="Total size in GiB for Nexus' persistent directory. "  # type: ignore
+                )
             ),
         )

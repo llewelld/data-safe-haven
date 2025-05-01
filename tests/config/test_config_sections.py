@@ -6,6 +6,8 @@ from data_safe_haven.config.config_sections import (
     ConfigSectionDockerHub,
     ConfigSectionSHM,
     ConfigSectionSRE,
+    ConfigSectionUserServices,
+    ConfigSubsectionNexus,
     ConfigSubsectionRemoteDesktopOpts,
     ConfigSubsectionStorageQuotaGB,
 )
@@ -112,6 +114,29 @@ class TestConfigSectionSHM:
             match=r"1 validation error for ConfigSectionSHM\nfqdn\n  Value error, Expected valid fully qualified domain name",
         ):
             ConfigSectionSHM(**config_section_shm_dict)
+
+
+class TestConfigSectionUserServices:
+    def test_constructor(self):
+        user_provided_quota: int = 20
+        user_services_config = ConfigSectionUserServices(
+            nexus=ConfigSubsectionNexus(persistent_quota_gb=user_provided_quota)
+        )
+
+        assert user_services_config.nexus is not None
+        assert user_services_config.nexus.persistent_quota_gb == user_provided_quota
+
+    def test_constructor_defaults(self):
+        default_quota_size: int = 10
+        user_services_config = ConfigSectionUserServices()
+        assert user_services_config.nexus is not None
+        assert user_services_config.nexus.persistent_quota_gb == default_quota_size
+
+    def test_invalid_nexus_quota(self):
+        with pytest.raises(ValueError, match="Input should be greater than 0"):
+            ConfigSectionUserServices(
+                nexus=ConfigSubsectionNexus(persistent_quota_gb=0)
+            )
 
 
 class TestConfigSectionSRE:
