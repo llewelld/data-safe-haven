@@ -545,7 +545,7 @@ def sre_config_yaml(request):
         workspace_skus: []
     user_services:
         nexus:
-            persistent_quota_gb: 2
+            persistent_quota_gb: 10
     """.replace(
         "guid_subscription", request.config.guid_subscription
     ).replace(

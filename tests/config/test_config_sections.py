@@ -118,17 +118,19 @@ class TestConfigSectionSHM:
 
 class TestConfigSectionUserServices:
     def test_constructor(self):
+        user_provided_quota: int = 20
         user_services_config = ConfigSectionUserServices(
-            nexus=ConfigSubsectionNexus(persistent_quota_gb=10)
+            nexus=ConfigSubsectionNexus(persistent_quota_gb=user_provided_quota)
         )
 
         assert user_services_config.nexus is not None
-        assert user_services_config.nexus.persistent_quota_gb == 10
+        assert user_services_config.nexus.persistent_quota_gb == user_provided_quota
 
     def test_constructor_defaults(self):
+        default_quota_size: int = 10
         user_services_config = ConfigSectionUserServices()
         assert user_services_config.nexus is not None
-        assert user_services_config.nexus.persistent_quota_gb == 2
+        assert user_services_config.nexus.persistent_quota_gb == default_quota_size
 
     def test_invalid_nexus_quota(self):
         with pytest.raises(ValueError, match="Input should be greater than 0"):
