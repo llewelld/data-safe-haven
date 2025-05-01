@@ -56,7 +56,7 @@ class ConfigSubsectionNexus(BaseModel, validate_assignment=True):
 
 
 class ConfigSectionUserServices(BaseModel, validate_assignment=True):
-    nexus: ConfigSubsectionNexus = ConfigSubsectionNexus(persistent_quota_gb=2)
+    nexus: ConfigSubsectionNexus = ConfigSubsectionNexus(persistent_quota_gb=10)
 
 
 class ConfigSectionSRE(BaseModel, validate_assignment=True):
