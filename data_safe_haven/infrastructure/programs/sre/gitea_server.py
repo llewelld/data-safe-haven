@@ -16,6 +16,10 @@ from data_safe_haven.infrastructure.components import (
     PostgresqlDatabaseProps,
     WrappedLogAnalyticsWorkspace,
 )
+from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
+    DnsMonitorComponent,
+    DnsMonitorProps,
+)
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
@@ -197,11 +201,26 @@ class SREGiteaServerComponent(ComponentResource):
             tags=child_tags,
         )
 
+        # Define the DNS Monitor sidecar container.
+        dns_monitor = DnsMonitorComponent(
+            "gitea_server_dns_monitor",
+            self.stack_name,
+            DnsMonitorProps(
+                location=props.location,
+                resource_group_name=props.resource_group_name,
+                storage_account_name=props.storage_account_name,
+                storage_account_key=props.storage_account_key,
+                subscription_id=props.subscription_id,
+            ),
+            tags=self.tags,
+        )
+
         # Define the container group with guacd, guacamole and caddy
         container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
             container_group_name=f"{stack_name}-container-group-gitea",
             containers=[
+                dns_monitor.get_container_arguments(),
                 containerinstance.ContainerArgs(
                     image="caddy:2.9.1",
                     name="caddy"[:63],
@@ -301,6 +320,7 @@ class SREGiteaServerComponent(ComponentResource):
             dns_config=containerinstance.DnsConfigurationArgs(
                 name_servers=[props.dns_server_ip],
             ),
+            identity=dns_monitor.get_group_identity(),
             # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
             image_registry_credentials=[
                 {
