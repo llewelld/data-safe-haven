@@ -30,6 +30,7 @@ class AzureSdkCredentialScope(str, Enum):
 class AzureServiceTag(str, Enum):
     INTERNET = "Internet"
     AZURE_RESOURCE_MANAGER = "AzureResourceManager"
+    AZURE_ACTIVE_DIRECTORY = "AzureActiveDirectory"
 
 
 @verify(UNIQUE)
@@ -102,6 +103,7 @@ class NetworkingPriorities(int, Enum):
     AZURE_MONITORING_SOURCES = 300
     AZURE_PLATFORM_DNS = 400
     AZURE_RESOURCE_MANAGER = 500
+    AZURE_ACTIVE_DIRECTORY = 600
     # DNS connections: 1000-1499
     INTERNAL_SRE_DNS_SERVERS = 1000
     # SRE connections: 1500-2999

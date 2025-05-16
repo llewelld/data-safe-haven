@@ -252,7 +252,7 @@ class SREFirewallComponent(ComponentResource):
                 action=network.AzureFirewallRCActionArgs(
                     type=network.AzureFirewallRCActionType.ALLOW
                 ),
-                name="user-services-allow-arm",
+                name="user-services-dns-monitor",
                 priority=FirewallPriorities.SRE_USER_SERVICES,
                 rules=[
                     network.AzureFirewallNetworkRuleArgs(
@@ -262,7 +262,15 @@ class SREFirewallComponent(ComponentResource):
                         name="allow-azure-resource-manager",
                         protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
                         source_addresses=props.subnet_user_services_containers_prefixes,
-                    )
+                    ),
+                    network.AzureFirewallNetworkRuleArgs(
+                        description="Enables access to the Azure Active Directory to user services containers.",
+                        destination_addresses=[AzureServiceTag.AZURE_ACTIVE_DIRECTORY],
+                        destination_ports=[Ports.HTTPS],
+                        name="allow-azure-active-directory",
+                        protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
+                        source_addresses=props.subnet_user_services_containers_prefixes,
+                    ),
                 ],
             ),
         ]
