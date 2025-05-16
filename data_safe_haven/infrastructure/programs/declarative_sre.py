@@ -350,6 +350,7 @@ class DeclarativeSRE:
                 location=self.config.azure.location,
                 log_analytics_workspace=monitoring.log_analytics,
                 nexus_admin_password=data.password_nexus_admin,
+                resource_group_id=resource_group.id,
                 resource_group_name=resource_group.name,
                 software_packages=self.config.sre.software_packages,
                 sre_fqdn=networking.sre_fqdn,

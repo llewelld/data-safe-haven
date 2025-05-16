@@ -22,12 +22,14 @@ class DnsMonitorProps:
     def __init__(
         self,
         location: Input[str],
+        resource_group_id: Input[str],
         resource_group_name: Input[str],
         storage_account_name: Input[str],
         storage_account_key: Input[str],
         subscription_id: Input[str],
     ):
         self.location = location
+        self.resource_group_id = resource_group_id
         self.resource_group_name = resource_group_name
         self.storage_account_name = storage_account_name
         self.storage_account_key = storage_account_key
@@ -109,7 +111,7 @@ class DnsMonitorComponent(ComponentResource):
                 "/providers/Microsoft.Authorization/roleDefinitions/",
                 self.azure_role_ids["Private DNS Zone Contributor"],
             ),
-            scope=f"subscriptions/{props.subscription_id}",  # TODO(cgavidia): Only for testing!
+            scope=props.resource_group_id,
             opts=child_opts,
         )
 
@@ -127,6 +129,6 @@ class DnsMonitorComponent(ComponentResource):
                 "/providers/Microsoft.Authorization/roleDefinitions/",
                 self.azure_role_ids["Azure Container Instances Contributor Role"],
             ),
-            scope=f"subscriptions/{props.subscription_id}",  # TODO(cgavidia): Only for testing!
+            scope=props.resource_group_id,
             opts=child_opts,
         )

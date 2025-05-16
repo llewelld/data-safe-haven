@@ -42,6 +42,7 @@ class SREUserServicesProps:
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         nexus_admin_password: Input[str],
+        resource_group_id: Input[str],
         resource_group_name: Input[str],
         software_packages: SoftwarePackageCategory,
         sre_fqdn: Input[str],
@@ -68,6 +69,7 @@ class SREUserServicesProps:
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
         self.nexus_admin_password = Output.secret(nexus_admin_password)
+        self.resource_group_id = resource_group_id
         self.resource_group_name = resource_group_name
         self.nexus_persistent_quota_gb = nexus_persistent_quota_gb
         self.software_packages = software_packages
@@ -110,6 +112,7 @@ class SREUserServicesComponent(ComponentResource):
             stack_name,
             DnsMonitorProps(
                 location=props.location,
+                resource_group_id=props.resource_group_id,
                 resource_group_name=props.resource_group_name,
                 storage_account_name=props.storage_account_name,
                 storage_account_key=props.storage_account_key,
