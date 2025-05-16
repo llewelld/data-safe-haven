@@ -1,9 +1,9 @@
 from collections.abc import Mapping
+from typing import ClassVar
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import (
     authorization,
-    containerinstance,
     managedidentity,
     storage,
 )
@@ -36,6 +36,10 @@ class DnsMonitorProps:
 
 class DnsMonitorComponent(ComponentResource):
 
+    azure_role_ids: ClassVar[dict[str, str]] = {
+        "Contributor": "b24988ac-6180-42a0-ab88-20f7382dd24c",
+    }
+
     def __init__(
         self,
         name: str,
@@ -48,12 +52,14 @@ class DnsMonitorComponent(ComponentResource):
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
         child_tags = {"component": "Dns monitor"} | (tags if tags else {})
 
+        self.share_name = "dns-monitor"
+
         file_share_dns_monitor = storage.FileShare(
             f"{self._name}_file_share_dns_monitor",
             access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
             account_name=props.storage_account_name,
             resource_group_name=props.resource_group_name,
-            share_name="dns-monitor",
+            share_name=self.share_name,
             share_quota=1,
             signed_identifiers=[],
             opts=child_opts,
@@ -64,8 +70,8 @@ class DnsMonitorComponent(ComponentResource):
             resources_path / "dns_monitor" / "init.sh"
         )
 
-        self.file_share_gitea_dns_monitor_script = FileShareFile(
-            f"{self._name}_file_share_gitea_dns_monitor_script",
+        self.file_share_dns_monitor_script = FileShareFile(
+            f"{self._name}_file_share_dns_monitor_script",
             FileShareFileProps(
                 destination_path=dns_monitor_script_reader.name,
                 share_name=file_share_dns_monitor.name,
@@ -83,7 +89,7 @@ class DnsMonitorComponent(ComponentResource):
             f"{self._name}_id_dns_monitor",
             location=props.location,
             resource_group_name=props.resource_group_name,
-            resource_name_=f"{stack_name}-id-key-vault-reader",
+            resource_name_=f"{stack_name}-id-dns-monitor",
             opts=child_opts,
             tags=child_tags,
         )
@@ -104,33 +110,4 @@ class DnsMonitorComponent(ComponentResource):
             ),
             scope=f"subscriptions/{props.subscription_id}",  # TODO(cgavidia): Only for testing!
             opts=child_opts,
-        )
-
-    def get_container_arguments(self):
-        return (
-            containerinstance.ContainerArgs(
-                image="mcr.microsoft.com/azure-cli:latest",
-                name="dnsmonitor"[:63],
-                command=["/bin/sh", "-c", "/mnt/init/init.sh"],
-                resources=containerinstance.ResourceRequirementsArgs(
-                    requests=containerinstance.ResourceRequestsArgs(
-                        cpu=0.5,
-                        memory_in_gb=0.5,
-                    ),
-                ),
-                environment_variables=[],
-                volume_mounts=[
-                    containerinstance.VolumeMountArgs(
-                        mount_path="/mnt/init",
-                        name="dns-monitor",
-                        read_only=True,
-                    )
-                ],
-            ),
-        )
-
-    def get_group_identity(self):
-        return containerinstance.ContainerGroupIdentityArgs(
-            user_assigned_identities=[self.identity_dns_monitor.id],
-            type=containerinstance.ResourceIdentityType.USER_ASSIGNED,
         )

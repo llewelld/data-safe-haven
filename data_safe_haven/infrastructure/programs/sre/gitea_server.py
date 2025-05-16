@@ -16,10 +16,6 @@ from data_safe_haven.infrastructure.components import (
     PostgresqlDatabaseProps,
     WrappedLogAnalyticsWorkspace,
 )
-from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
-    DnsMonitorComponent,
-    DnsMonitorProps,
-)
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
@@ -33,7 +29,10 @@ class SREGiteaServerProps:
         database_password: Input[str],
         database_subnet_id: Input[str],
         dns_server_ip: Input[str],
+        dns_monitor_share_name: str,
+        file_share_dns_monitor_script: Input[FileShareFile],
         dockerhub_credentials: DockerHubCredentials,
+        identity_dns_monitor_id: Input[str],
         ldap_server_hostname: Input[str],
         ldap_server_port: Input[int],
         ldap_username_attribute: Input[str],
@@ -54,7 +53,10 @@ class SREGiteaServerProps:
             database_username if database_username else "postgresadmin"
         )
         self.dns_server_ip = dns_server_ip
+        self.dns_monitor_share_name = dns_monitor_share_name
         self.dockerhub_credentials = dockerhub_credentials
+        self.file_share_dns_monitor_script = file_share_dns_monitor_script
+        self.identity_dns_monitor_id = identity_dns_monitor_id
         self.ldap_server_hostname = ldap_server_hostname
         self.ldap_server_port = ldap_server_port
         self.ldap_username_attribute = ldap_username_attribute
@@ -201,26 +203,31 @@ class SREGiteaServerComponent(ComponentResource):
             tags=child_tags,
         )
 
-        # Define the DNS Monitor sidecar container.
-        dns_monitor = DnsMonitorComponent(
-            "gitea_server_dns_monitor",
-            self.stack_name,
-            DnsMonitorProps(
-                location=props.location,
-                resource_group_name=props.resource_group_name,
-                storage_account_name=props.storage_account_name,
-                storage_account_key=props.storage_account_key,
-                subscription_id=props.subscription_id,
-            ),
-            tags=self.tags,
-        )
-
         # Define the container group with guacd, guacamole and caddy
+        # TODO: Move container parameters to the DnsMonitorComponent.
         container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
             container_group_name=f"{stack_name}-container-group-gitea",
             containers=[
-                dns_monitor.get_container_arguments(),
+                containerinstance.ContainerArgs(
+                    image="mcr.microsoft.com/azure-cli:latest",
+                    name="dnsmonitor"[:63],
+                    command=["/bin/sh", "-c", "/mnt/init/init.sh"],
+                    resources=containerinstance.ResourceRequirementsArgs(
+                        requests=containerinstance.ResourceRequestsArgs(
+                            cpu=0.5,
+                            memory_in_gb=0.5,
+                        ),
+                    ),
+                    environment_variables=[],
+                    volume_mounts=[
+                        containerinstance.VolumeMountArgs(
+                            mount_path="/mnt/init",
+                            name=props.dns_monitor_share_name,
+                            read_only=True,
+                        )
+                    ],
+                ),
                 containerinstance.ContainerArgs(
                     image="caddy:2.9.1",
                     name="caddy"[:63],
@@ -320,7 +327,10 @@ class SREGiteaServerComponent(ComponentResource):
             dns_config=containerinstance.DnsConfigurationArgs(
                 name_servers=[props.dns_server_ip],
             ),
-            identity=dns_monitor.get_group_identity(),
+            identity=containerinstance.ContainerGroupIdentityArgs(
+                user_assigned_identities=[props.identity_dns_monitor_id],
+                type=containerinstance.ResourceIdentityType.USER_ASSIGNED,
+            ),
             # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
             image_registry_credentials=[
                 {
@@ -373,6 +383,14 @@ class SREGiteaServerComponent(ComponentResource):
                     ),
                     name="gitea-app-custom",
                 ),
+                containerinstance.VolumeArgs(
+                    azure_file=containerinstance.AzureFileVolumeArgs(
+                        share_name=props.dns_monitor_share_name,
+                        storage_account_key=props.storage_account_key,
+                        storage_account_name=props.storage_account_name,
+                    ),
+                    name=props.dns_monitor_share_name,
+                ),
             ],
             opts=ResourceOptions.merge(
                 child_opts,
@@ -382,6 +400,7 @@ class SREGiteaServerComponent(ComponentResource):
                         file_share_gitea_caddy_caddyfile,
                         file_share_gitea_gitea_configure_sh,
                         file_share_gitea_gitea_entrypoint_sh,
+                        props.file_share_dns_monitor_script,
                     ],
                     replace_on_changes=["containers"],
                 ),

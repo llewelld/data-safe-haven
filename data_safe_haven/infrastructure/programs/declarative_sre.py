@@ -355,6 +355,7 @@ class DeclarativeSRE:
                 nexus_persistent_quota_gb=self.config.user_services.nexus.persistent_quota_gb,
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
+                subscription_id=self.config.azure.subscription_id,
                 subnet_containers=networking.subnet_user_services_containers,
                 subnet_containers_support=networking.subnet_user_services_containers_support,
                 subnet_databases=networking.subnet_user_services_databases,

@@ -8,6 +8,10 @@ from data_safe_haven.infrastructure.common import (
     get_id_from_subnet,
 )
 from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
+from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
+    DnsMonitorComponent,
+    DnsMonitorProps,
+)
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps
@@ -44,6 +48,7 @@ class SREUserServicesProps:
         nexus_persistent_quota_gb: Input[int],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
+        subscription_id: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
         subnet_containers_support: Input[network.GetSubnetResult],
         subnet_databases: Input[network.GetSubnetResult],
@@ -69,6 +74,7 @@ class SREUserServicesProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
+        self.subscription_id = subscription_id
         self.subnet_containers_id = Output.from_input(subnet_containers).apply(
             get_id_from_subnet
         )
@@ -98,6 +104,20 @@ class SREUserServicesComponent(ComponentResource):
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
         child_tags = {"component": "user services"} | (tags if tags else {})
 
+        # Define the DNS Monitor sidecar container.
+        dns_monitor = DnsMonitorComponent(
+            "gitea_server_dns_monitor",
+            stack_name,
+            DnsMonitorProps(
+                location=props.location,
+                resource_group_name=props.resource_group_name,
+                storage_account_name=props.storage_account_name,
+                storage_account_key=props.storage_account_key,
+                subscription_id=props.subscription_id,
+            ),
+            tags=tags,
+        )
+
         # Deploy the Gitea server
         self.gitea_server = SREGiteaServerComponent(
             "sre_gitea_server",
@@ -107,7 +127,10 @@ class SREUserServicesComponent(ComponentResource):
                 database_subnet_id=props.subnet_containers_support_id,
                 database_password=props.gitea_database_password,
                 dns_server_ip=props.dns_server_ip,
+                dns_monitor_share_name=dns_monitor.share_name,
                 dockerhub_credentials=props.dockerhub_credentials,
+                file_share_dns_monitor_script=dns_monitor.file_share_dns_monitor_script,
+                identity_dns_monitor_id=dns_monitor.identity_dns_monitor.id,
                 ldap_server_hostname=props.ldap_server_hostname,
                 ldap_server_port=props.ldap_server_port,
                 ldap_username_attribute=props.ldap_username_attribute,
