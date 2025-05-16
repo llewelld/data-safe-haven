@@ -44,6 +44,7 @@ class SREGiteaServerProps:
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
+        subscription_id: Input[str],
         database_username: Input[str] | None = None,
     ) -> None:
         self.containers_subnet_id = containers_subnet_id
@@ -68,6 +69,7 @@ class SREGiteaServerProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
+        self.subscription_id = subscription_id
 
 
 class SREGiteaServerComponent(ComponentResource):
@@ -219,7 +221,26 @@ class SREGiteaServerComponent(ComponentResource):
                             memory_in_gb=0.5,
                         ),
                     ),
-                    environment_variables=[],
+                    environment_variables=[
+                        containerinstance.EnvironmentVariableArgs(
+                            name="CONTAINER_GROUP_NAME",
+                            value=f"{stack_name}-container-group-gitea",
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="RESOURCE_GROUP", value=props.resource_group_name
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="SUBSCRIPTION_ID", value=props.subscription_id
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="RECORD_NAME",
+                            value="gitea",
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="PRIVATE_ZONE_NAME",
+                            value=Output.concat("privatelink.", props.sre_fqdn),
+                        ),
+                    ],
                     volume_mounts=[
                         containerinstance.VolumeMountArgs(
                             mount_path="/mnt/init",

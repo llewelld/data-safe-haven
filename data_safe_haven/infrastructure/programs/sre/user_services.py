@@ -142,6 +142,7 @@ class SREUserServicesComponent(ComponentResource):
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
+                subscription_id=props.subscription_id,
             ),
             opts=child_opts,
             tags=child_tags,
