@@ -37,7 +37,8 @@ class DnsMonitorProps:
 class DnsMonitorComponent(ComponentResource):
 
     azure_role_ids: ClassVar[dict[str, str]] = {
-        "Contributor": "b24988ac-6180-42a0-ab88-20f7382dd24c",
+        "Private DNS Zone Contributor": "b12aa53e-6015-4669-85d0-8515ebb3ae7f",
+        "Azure Container Instances Contributor Role": "5d977122-f97e-4b4d-a52f-6b43003ddb4d",
     }
 
     def __init__(
@@ -94,19 +95,37 @@ class DnsMonitorComponent(ComponentResource):
             tags=child_tags,
         )
 
-        # Grant "Contributor" permissions to the Service Principal.
+        # Grant "Private DNS Zone Contributor" permissions to the Service Principal.
         authorization.RoleAssignment(
-            f"{self._name}_dns_monitor_contributor_role_assignment",
+            f"{self._name}_dns_monitor_dns_zone_contributor_role_assignment",
             principal_id=self.identity_dns_monitor.principal_id,
             principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
             role_assignment_name=str(
-                seeded_uuid(f"{stack_name} DNS Monitor Contributor")
+                seeded_uuid(f"{stack_name} Private DNS Zone Contributor")
             ),
             role_definition_id=Output.concat(
                 "/subscriptions/",
                 props.subscription_id,
                 "/providers/Microsoft.Authorization/roleDefinitions/",
-                self.azure_role_ids["Contributor"],
+                self.azure_role_ids["Private DNS Zone Contributor"],
+            ),
+            scope=f"subscriptions/{props.subscription_id}",  # TODO(cgavidia): Only for testing!
+            opts=child_opts,
+        )
+
+        # Grant "Private DNS Zone Contributor" permissions to the Service Principal.
+        authorization.RoleAssignment(
+            f"{self._name}_dns_monitor_container_instance_contributor_role_assignment",
+            principal_id=self.identity_dns_monitor.principal_id,
+            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+            role_assignment_name=str(
+                seeded_uuid(f"{stack_name} Azure Container Instances Contributor")
+            ),
+            role_definition_id=Output.concat(
+                "/subscriptions/",
+                props.subscription_id,
+                "/providers/Microsoft.Authorization/roleDefinitions/",
+                self.azure_role_ids["Azure Container Instances Contributor Role"],
             ),
             scope=f"subscriptions/{props.subscription_id}",  # TODO(cgavidia): Only for testing!
             opts=child_opts,
