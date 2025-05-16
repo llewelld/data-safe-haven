@@ -11,6 +11,7 @@ from data_safe_haven.infrastructure.common import (
 )
 from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
 from data_safe_haven.types import (
+    AzureServiceTag,
     FirewallPriorities,
     ForbiddenDomains,
     PermittedDomains,
@@ -35,6 +36,7 @@ class SREFirewallProps:
         subnet_firewall_management: Input[network.GetSubnetResult],
         subnet_guacamole_containers: Input[network.GetSubnetResult],
         subnet_identity_containers: Input[network.GetSubnetResult],
+        subnet_user_services_containers: Input[network.GetSubnetResult],
         subnet_user_services_software_repositories: Input[network.GetSubnetResult],
         subnet_workspaces: Input[network.GetSubnetResult],
     ) -> None:
@@ -60,6 +62,9 @@ class SREFirewallProps:
         ).apply(get_id_from_subnet)
         self.subnet_guacamole_containers_prefixes = Output.from_input(
             subnet_guacamole_containers
+        ).apply(get_address_prefixes_from_subnet)
+        self.subnet_user_services_containers_prefixes = Output.from_input(
+            subnet_user_services_containers
         ).apply(get_address_prefixes_from_subnet)
         self.subnet_user_services_software_repositories_prefixes = Output.from_input(
             subnet_user_services_software_repositories
@@ -242,11 +247,31 @@ class SREFirewallComponent(ComponentResource):
             ),
         ]
 
+        network_rule_collections = [
+            network.AzureFirewallNetworkRuleCollectionArgs(
+                action=network.AzureFirewallRCActionArgs(
+                    type=network.AzureFirewallRCActionType.ALLOW
+                ),
+                name="user-services-allow-arm",
+                priority=FirewallPriorities.SRE_USER_SERVICES,
+                rules=[
+                    network.AzureFirewallNetworkRuleArgs(
+                        description="Enables access to the Azure Resource Manager to user services containers.",
+                        destination_addresses=[AzureServiceTag.AZURE_RESOURCE_MANAGER],
+                        destination_ports=[Ports.HTTPS],
+                        name="allow-azure-resource-manager",
+                        protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
+                        source_addresses=props.subnet_user_services_containers_prefixes,
+                    )
+                ],
+            ),
+        ]
+
         if props.allow_workspace_internet:
             application_rule_collections = application_rule_collections_common
             # A network rule is used as application rules are restricted to certain
             # types of traffic, e.g. HTTP, HTTPS
-            network_rule_collections = [
+            network_rule_collections += [
                 network.AzureFirewallNetworkRuleCollectionArgs(
                     action=network.AzureFirewallRCActionArgs(
                         type=network.AzureFirewallRCActionType.ALLOW
@@ -339,7 +364,6 @@ class SREFirewallComponent(ComponentResource):
                     ],
                 ),
             ]
-            network_rule_collections = None
 
         # Deploy firewall
         self.firewall = network.AzureFirewall(

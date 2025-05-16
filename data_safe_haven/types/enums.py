@@ -29,6 +29,7 @@ class AzureSdkCredentialScope(str, Enum):
 @verify(UNIQUE)
 class AzureServiceTag(str, Enum):
     INTERNET = "Internet"
+    AZURE_RESOURCE_MANAGER = "AzureResourceManager"
 
 
 @verify(UNIQUE)
@@ -64,7 +65,8 @@ class FirewallPriorities(int, Enum):
     ALL = 1000
     # SHM sources: 2000-2999
     SHM_IDENTITY_SERVERS = 2000
-    # SRE sources: 3000-3999
+    # SRE sources: 2500-3999
+    SRE_USER_SERVICES = 2500
     SRE_APT_PROXY_SERVER = 3000
     SRE_CLAMAV_MIRROR = 3100
     SRE_GUACAMOLE_CONTAINERS = 3200
@@ -99,6 +101,7 @@ class NetworkingPriorities(int, Enum):
     AZURE_LOAD_BALANCER = 200
     AZURE_MONITORING_SOURCES = 300
     AZURE_PLATFORM_DNS = 400
+    AZURE_RESOURCE_MANAGER = 500
     # DNS connections: 1000-1499
     INTERNAL_SRE_DNS_SERVERS = 1000
     # SRE connections: 1500-2999
