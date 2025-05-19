@@ -56,6 +56,7 @@ class DnsMonitorComponent(ComponentResource):
         child_tags = {"component": "Dns monitor"} | (tags if tags else {})
 
         self.share_name = "dns-monitor"
+        self.subscription_id = props.subscription_id
 
         file_share_dns_monitor = storage.FileShare(
             f"{self._name}_file_share_dns_monitor",

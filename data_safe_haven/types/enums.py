@@ -154,6 +154,7 @@ class PermittedDomains(tuple[str, ...], Enum):
         # "ubuntu.qgis.org"
     )
     AZURE_DNS_ZONES = AzureDnsZoneNames.ALL
+    AZURE_RESOURCE_MANAGER = ("management.azure.com",)
     CLAMAV_UPDATES = (
         "clamav.net",
         "current.cvd.clamav.net",
@@ -180,6 +181,7 @@ class PermittedDomains(tuple[str, ...], Enum):
             set(
                 APT_REPOSITORIES
                 + AZURE_DNS_ZONES
+                + AZURE_RESOURCE_MANAGER
                 + CLAMAV_UPDATES
                 + MICROSOFT_GRAPH_API
                 + MICROSOFT_LOGIN

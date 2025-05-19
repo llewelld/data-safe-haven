@@ -7,6 +7,11 @@ from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_ip_address_from_container_group,
 )
+
+from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
+    DnsMonitorComponent,
+)
+
 from data_safe_haven.infrastructure.components import (
     FileShareFile,
     FileShareFileProps,
@@ -29,10 +34,8 @@ class SREGiteaServerProps:
         database_password: Input[str],
         database_subnet_id: Input[str],
         dns_server_ip: Input[str],
-        dns_monitor_share_name: str,
-        file_share_dns_monitor_script: Input[FileShareFile],
+        dns_monitor: Input[DnsMonitorComponent],
         dockerhub_credentials: DockerHubCredentials,
-        identity_dns_monitor_id: Input[str],
         ldap_server_hostname: Input[str],
         ldap_server_port: Input[int],
         ldap_username_attribute: Input[str],
@@ -44,7 +47,6 @@ class SREGiteaServerProps:
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
-        subscription_id: Input[str],
         database_username: Input[str] | None = None,
     ) -> None:
         self.containers_subnet_id = containers_subnet_id
@@ -54,10 +56,8 @@ class SREGiteaServerProps:
             database_username if database_username else "postgresadmin"
         )
         self.dns_server_ip = dns_server_ip
-        self.dns_monitor_share_name = dns_monitor_share_name
+        self.dns_monitor = dns_monitor
         self.dockerhub_credentials = dockerhub_credentials
-        self.file_share_dns_monitor_script = file_share_dns_monitor_script
-        self.identity_dns_monitor_id = identity_dns_monitor_id
         self.ldap_server_hostname = ldap_server_hostname
         self.ldap_server_port = ldap_server_port
         self.ldap_username_attribute = ldap_username_attribute
@@ -69,7 +69,6 @@ class SREGiteaServerProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
-        self.subscription_id = subscription_id
 
 
 class SREGiteaServerComponent(ComponentResource):
@@ -230,7 +229,8 @@ class SREGiteaServerComponent(ComponentResource):
                             name="RESOURCE_GROUP", value=props.resource_group_name
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="SUBSCRIPTION_ID", value=props.subscription_id
+                            name="SUBSCRIPTION_ID",
+                            value=props.dns_monitor.subscription_id,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="RECORD_NAME",
@@ -244,7 +244,7 @@ class SREGiteaServerComponent(ComponentResource):
                     volume_mounts=[
                         containerinstance.VolumeMountArgs(
                             mount_path="/mnt/init",
-                            name=props.dns_monitor_share_name,
+                            name=props.dns_monitor.share_name,
                             read_only=True,
                         )
                     ],
@@ -349,7 +349,7 @@ class SREGiteaServerComponent(ComponentResource):
                 name_servers=[props.dns_server_ip],
             ),
             identity=containerinstance.ContainerGroupIdentityArgs(
-                user_assigned_identities=[props.identity_dns_monitor_id],
+                user_assigned_identities=[props.dns_monitor.identity_dns_monitor.id],
                 type=containerinstance.ResourceIdentityType.USER_ASSIGNED,
             ),
             # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
@@ -406,11 +406,11 @@ class SREGiteaServerComponent(ComponentResource):
                 ),
                 containerinstance.VolumeArgs(
                     azure_file=containerinstance.AzureFileVolumeArgs(
-                        share_name=props.dns_monitor_share_name,
+                        share_name=props.dns_monitor.share_name,
                         storage_account_key=props.storage_account_key,
                         storage_account_name=props.storage_account_name,
                     ),
-                    name=props.dns_monitor_share_name,
+                    name=props.dns_monitor.share_name,
                 ),
             ],
             opts=ResourceOptions.merge(
@@ -421,7 +421,7 @@ class SREGiteaServerComponent(ComponentResource):
                         file_share_gitea_caddy_caddyfile,
                         file_share_gitea_gitea_configure_sh,
                         file_share_gitea_gitea_entrypoint_sh,
-                        props.file_share_dns_monitor_script,
+                        props.dns_monitor.file_share_dns_monitor_script,
                     ],
                     replace_on_changes=["containers"],
                 ),
