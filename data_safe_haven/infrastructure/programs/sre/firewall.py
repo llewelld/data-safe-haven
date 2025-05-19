@@ -1,5 +1,6 @@
 """Pulumi component for SRE traffic routing"""
 
+import itertools
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
@@ -261,8 +262,14 @@ class SREFirewallComponent(ComponentResource):
                         destination_ports=[Ports.HTTPS],
                         name="allow-azure-resource-manager",
                         protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
-                        source_addresses=props.subnet_user_services_containers_prefixes
-                        + props.subnet_apt_proxy_server_prefixes,
+                        source_addresses=Output.all(
+                            props.subnet_user_services_containers_prefixes,
+                            props.subnet_apt_proxy_server_prefixes,
+                        ).apply(
+                            lambda prefixes: list(
+                                itertools.chain.from_iterable(prefixes)
+                            )
+                        ),
                     ),
                     network.AzureFirewallNetworkRuleArgs(
                         description="Enables access to the Azure Active Directory to user services containers.",
@@ -270,8 +277,14 @@ class SREFirewallComponent(ComponentResource):
                         destination_ports=[Ports.HTTPS],
                         name="allow-azure-active-directory",
                         protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
-                        source_addresses=props.subnet_user_services_containers_prefixes
-                        + props.subnet_apt_proxy_server_prefixes,
+                        source_addresses=Output.all(
+                            props.subnet_user_services_containers_prefixes,
+                            props.subnet_apt_proxy_server_prefixes,
+                        ).apply(
+                            lambda prefixes: list(
+                                itertools.chain.from_iterable(prefixes)
+                            )
+                        ),
                     ),
                 ],
             ),
