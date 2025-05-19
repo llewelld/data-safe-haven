@@ -17,6 +17,9 @@ from data_safe_haven.infrastructure.components import (
     PostgresqlDatabaseProps,
     WrappedLogAnalyticsWorkspace,
 )
+from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
+    DnsMonitorComponent,
+)
 from data_safe_haven.resources import resources_path
 from data_safe_haven.types import Ports
 from data_safe_haven.utility import FileReader
@@ -28,6 +31,8 @@ class SREHedgeDocServerProps:
     def __init__(
         self,
         containers_subnet_id: Input[str],
+        dns_monitor_identity_id: Input[str],
+        dns_monitor_file_share_script: Input[FileShareFile],
         database_password: Input[str],
         database_subnet_id: Input[str],
         dns_server_ip: Input[str],
@@ -43,9 +48,12 @@ class SREHedgeDocServerProps:
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
+        subscription_id: Input[str],
         database_username: Input[str] | None = None,
     ) -> None:
         self.containers_subnet_id = containers_subnet_id
+        self.dns_monitor_identity_id = dns_monitor_identity_id
+        self.dns_monitor_file_share_script = dns_monitor_file_share_script
         self.database_subnet_id = database_subnet_id
         self.database_password = database_password
         self.database_username = (
@@ -65,6 +73,7 @@ class SREHedgeDocServerProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
+        self.subscription_id = subscription_id
 
 
 class SREHedgeDocServerComponent(ComponentResource):
@@ -136,10 +145,51 @@ class SREHedgeDocServerComponent(ComponentResource):
         )
 
         # Define the container group with caddy and HedgeDoc
+        container_group_name = f"{stack_name}-container-group-hedgedoc"
+        dns_record_name = "hedgedoc"
         container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
             container_group_name=f"{stack_name}-container-group-hedgedoc",
             containers=[
+                containerinstance.ContainerArgs(
+                    image=DnsMonitorComponent.sidecar_container_image,
+                    name=DnsMonitorComponent.sidecar_container_name,
+                    command=DnsMonitorComponent.sidecar_command,
+                    resources=containerinstance.ResourceRequirementsArgs(
+                        requests=containerinstance.ResourceRequestsArgs(
+                            cpu=DnsMonitorComponent.sidecar_container_cpu,
+                            memory_in_gb=DnsMonitorComponent.sidecar_container_memory_in_gb,
+                        ),
+                    ),
+                    environment_variables=[
+                        containerinstance.EnvironmentVariableArgs(
+                            name="CONTAINER_GROUP_NAME",
+                            value=container_group_name,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="RESOURCE_GROUP", value=props.resource_group_name
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="SUBSCRIPTION_ID",
+                            value=props.subscription_id,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="RECORD_NAME",
+                            value=dns_record_name,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="PRIVATE_ZONE_NAME",
+                            value=Output.concat("privatelink.", props.sre_fqdn),
+                        ),
+                    ],
+                    volume_mounts=[
+                        containerinstance.VolumeMountArgs(
+                            mount_path=DnsMonitorComponent.sidecar_container_mount_path,
+                            name=DnsMonitorComponent.share_name,
+                            read_only=True,
+                        )
+                    ],
+                ),
                 containerinstance.ContainerArgs(
                     image="caddy:2.9.1",
                     name="caddy"[:63],
@@ -265,6 +315,10 @@ class SREHedgeDocServerComponent(ComponentResource):
             dns_config=containerinstance.DnsConfigurationArgs(
                 name_servers=[props.dns_server_ip],
             ),
+            identity=containerinstance.ContainerGroupIdentityArgs(
+                user_assigned_identities=[props.dns_monitor_identity_id],
+                type=containerinstance.ResourceIdentityType.USER_ASSIGNED,
+            ),
             # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
             image_registry_credentials=[
                 {
@@ -309,6 +363,14 @@ class SREHedgeDocServerComponent(ComponentResource):
                         )
                     },
                 ),
+                containerinstance.VolumeArgs(
+                    azure_file=containerinstance.AzureFileVolumeArgs(
+                        share_name=DnsMonitorComponent.share_name,
+                        storage_account_key=props.storage_account_key,
+                        storage_account_name=props.storage_account_name,
+                    ),
+                    name=DnsMonitorComponent.share_name,
+                ),
             ],
             opts=ResourceOptions.merge(
                 child_opts,
@@ -316,6 +378,7 @@ class SREHedgeDocServerComponent(ComponentResource):
                     delete_before_replace=True,
                     depends_on=[
                         file_share_hedgedoc_caddy_caddyfile,
+                        props.dns_monitor_file_share_script,
                     ],
                     replace_on_changes=["containers"],
                 ),

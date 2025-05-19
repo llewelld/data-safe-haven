@@ -9,9 +9,13 @@ from data_safe_haven.infrastructure.common import (
     get_ip_address_from_container_group,
 )
 from data_safe_haven.infrastructure.components import (
+    FileShareFile,
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
     WrappedLogAnalyticsWorkspace,
+)
+from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
+    DnsMonitorComponent,
 )
 
 
@@ -20,6 +24,8 @@ class SREClamAVMirrorProps:
 
     def __init__(
         self,
+        dns_monitor_identity_id: Input[str],
+        dns_monitor_file_share_script: Input[FileShareFile],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         location: Input[str],
@@ -29,7 +35,10 @@ class SREClamAVMirrorProps:
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet: Input[network.GetSubnetResult],
+        subscription_id: Input[str],
     ) -> None:
+        self.dns_monitor_identity_id = dns_monitor_identity_id
+        self.dns_monitor_file_share_script = dns_monitor_file_share_script
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.location = location
@@ -39,6 +48,7 @@ class SREClamAVMirrorProps:
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
         self.subnet_id = Output.from_input(subnet).apply(get_id_from_subnet)
+        self.subscription_id = subscription_id
 
 
 class SREClamAVMirrorComponent(ComponentResource):
@@ -69,10 +79,51 @@ class SREClamAVMirrorComponent(ComponentResource):
         )
 
         # Define the container group with ClamAV
+        container_group_name = f"{stack_name}-container-group-clamav"
+        dns_record_name = "apt"
         container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
-            container_group_name=f"{stack_name}-container-group-clamav",
+            container_group_name=container_group_name,
             containers=[
+                containerinstance.ContainerArgs(
+                    image=DnsMonitorComponent.sidecar_container_image,
+                    name=DnsMonitorComponent.sidecar_container_name,
+                    command=DnsMonitorComponent.sidecar_command,
+                    resources=containerinstance.ResourceRequirementsArgs(
+                        requests=containerinstance.ResourceRequestsArgs(
+                            cpu=DnsMonitorComponent.sidecar_container_cpu,
+                            memory_in_gb=DnsMonitorComponent.sidecar_container_memory_in_gb,
+                        ),
+                    ),
+                    environment_variables=[
+                        containerinstance.EnvironmentVariableArgs(
+                            name="CONTAINER_GROUP_NAME",
+                            value=container_group_name,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="RESOURCE_GROUP", value=props.resource_group_name
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="SUBSCRIPTION_ID",
+                            value=props.subscription_id,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="RECORD_NAME",
+                            value=dns_record_name,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="PRIVATE_ZONE_NAME",
+                            value=Output.concat("privatelink.", props.sre_fqdn),
+                        ),
+                    ],
+                    volume_mounts=[
+                        containerinstance.VolumeMountArgs(
+                            mount_path=DnsMonitorComponent.sidecar_container_mount_path,
+                            name=DnsMonitorComponent.share_name,
+                            read_only=True,
+                        )
+                    ],
+                ),
                 containerinstance.ContainerArgs(
                     image="chmey/clamav-mirror:latest",  # only one image is published
                     name="clamav-mirror"[:63],
@@ -107,6 +158,10 @@ class SREClamAVMirrorComponent(ComponentResource):
             dns_config=containerinstance.DnsConfigurationArgs(
                 name_servers=[props.dns_server_ip],
             ),
+            identity=containerinstance.ContainerGroupIdentityArgs(
+                user_assigned_identities=[props.dns_monitor_identity_id],
+                type=containerinstance.ResourceIdentityType.USER_ASSIGNED,
+            ),
             # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
             image_registry_credentials=[
                 {
@@ -140,6 +195,14 @@ class SREClamAVMirrorComponent(ComponentResource):
                         storage_account_name=props.storage_account_name,
                     ),
                     name="clamavmirror-clamavmirror-clamav",
+                ),
+                containerinstance.VolumeArgs(
+                    azure_file=containerinstance.AzureFileVolumeArgs(
+                        share_name=DnsMonitorComponent.share_name,
+                        storage_account_key=props.storage_account_key,
+                        storage_account_name=props.storage_account_name,
+                    ),
+                    name=DnsMonitorComponent.share_name,
                 ),
             ],
             opts=ResourceOptions.merge(

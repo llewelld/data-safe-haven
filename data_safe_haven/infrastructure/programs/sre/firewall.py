@@ -248,6 +248,16 @@ class SREFirewallComponent(ComponentResource):
             ),
         ]
 
+        # Enabling DNS Monitors to connect to Azure AD and ARM.
+
+        subnets_for_dns_monitoring = Output.all(
+            props.subnet_user_services_containers_prefixes,
+            props.subnet_apt_proxy_server_prefixes,
+            props.subnet_clamav_mirror_prefixes,
+            props.subnet_identity_containers_prefixes,
+            props.subnet_user_services_software_repositories_prefixes,
+        ).apply(lambda prefixes: list(itertools.chain.from_iterable(prefixes)))
+
         network_rule_collections = [
             network.AzureFirewallNetworkRuleCollectionArgs(
                 action=network.AzureFirewallRCActionArgs(
@@ -262,14 +272,7 @@ class SREFirewallComponent(ComponentResource):
                         destination_ports=[Ports.HTTPS],
                         name="allow-azure-resource-manager",
                         protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
-                        source_addresses=Output.all(
-                            props.subnet_user_services_containers_prefixes,
-                            props.subnet_apt_proxy_server_prefixes,
-                        ).apply(
-                            lambda prefixes: list(
-                                itertools.chain.from_iterable(prefixes)
-                            )
-                        ),
+                        source_addresses=subnets_for_dns_monitoring,
                     ),
                     network.AzureFirewallNetworkRuleArgs(
                         description="Enables access to the Azure Active Directory to user services containers.",
@@ -277,14 +280,7 @@ class SREFirewallComponent(ComponentResource):
                         destination_ports=[Ports.HTTPS],
                         name="allow-azure-active-directory",
                         protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
-                        source_addresses=Output.all(
-                            props.subnet_user_services_containers_prefixes,
-                            props.subnet_apt_proxy_server_prefixes,
-                        ).apply(
-                            lambda prefixes: list(
-                                itertools.chain.from_iterable(prefixes)
-                            )
-                        ),
+                        source_addresses=subnets_for_dns_monitoring,
                     ),
                 ],
             ),

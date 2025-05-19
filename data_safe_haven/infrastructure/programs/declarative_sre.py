@@ -269,6 +269,8 @@ class DeclarativeSRE:
             "sre_clamav_mirror",
             self.stack_name,
             SREClamAVMirrorProps(
+                dns_monitor_identity_id=dns_monitor.identity_dns_monitor.id,
+                dns_monitor_file_share_script=dns_monitor.file_share_dns_monitor_script,
                 dns_server_ip=dns.ip_address,
                 dockerhub_credentials=dockerhub_credentials,
                 location=self.config.azure.location,
@@ -278,6 +280,7 @@ class DeclarativeSRE:
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
                 subnet=networking.subnet_clamav_mirror,
+                subscription_id=self.config.azure.subscription_id,
             ),
             tags=self.tags,
         )

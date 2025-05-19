@@ -13,8 +13,6 @@ from data_safe_haven.infrastructure.components import FileShareFile, FileShareFi
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
-# TODO(cgavidia): This needs adjustments. Some components needs to be instantiated once, other multiple times.
-
 
 class DnsMonitorProps:
     """Properties of the DnsMonitorProps"""
@@ -122,7 +120,7 @@ class DnsMonitorComponent(ComponentResource):
             opts=child_opts,
         )
 
-        # Grant "Private DNS Zone Contributor" permissions to the Service Principal.
+        # Grant "Azure Container Instances Contributor" permissions to the Service Principal.
         authorization.RoleAssignment(
             f"{self._name}_dns_monitor_container_instance_contributor_role_assignment",
             principal_id=self.identity_dns_monitor.principal_id,
