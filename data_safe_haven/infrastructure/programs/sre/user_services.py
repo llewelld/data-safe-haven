@@ -172,6 +172,8 @@ class SREUserServicesComponent(ComponentResource):
             "sre_software_repositories",
             stack_name,
             SRESoftwareRepositoriesProps(
+                dns_monitor_identity_id=props.dns_monitor_identity_id,
+                dns_monitor_file_share_script=props.dns_monitor_file_share_script,
                 dns_server_ip=props.dns_server_ip,
                 dockerhub_credentials=props.dockerhub_credentials,
                 location=props.location,
@@ -184,6 +186,7 @@ class SREUserServicesComponent(ComponentResource):
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
                 subnet_id=props.subnet_software_repositories_id,
+                subscription_id=props.subscription_id,
             ),
             opts=child_opts,
             tags=child_tags,
