@@ -290,6 +290,8 @@ class DeclarativeSRE:
             "sre_identity",
             self.stack_name,
             SREIdentityProps(
+                dns_monitor_identity_id=dns_monitor.identity_dns_monitor.id,
+                dns_monitor_file_share_script=dns_monitor.file_share_dns_monitor_script,
                 dns_server_ip=dns.ip_address,
                 dockerhub_credentials=dockerhub_credentials,
                 entra_application_id=entra.identity_application_id,
@@ -303,6 +305,7 @@ class DeclarativeSRE:
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
                 subnet_containers=networking.subnet_identity_containers,
+                subscription_id=self.config.azure.subscription_id,
             ),
             tags=self.tags,
         )
