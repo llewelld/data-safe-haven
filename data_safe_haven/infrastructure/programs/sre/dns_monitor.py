@@ -43,6 +43,15 @@ class DnsMonitorComponent(ComponentResource):
         "Azure Container Instances Contributor Role": "5d977122-f97e-4b4d-a52f-6b43003ddb4d",
     }
 
+    share_name: ClassVar[str] = "dns-monitor"
+
+    sidecar_container_image: ClassVar[str] = "mcr.microsoft.com/azure-cli:latest"
+    sidecar_container_name: ClassVar[str] = "dnsmonitor"[:63]
+    sidecar_command: ClassVar[list[str]] = ["/bin/sh", "-c", "/mnt/init/init.sh"]
+    sidecar_container_cpu: ClassVar[float] = 0.5
+    sidecar_container_memory_in_gb: ClassVar[float] = 0.5
+    sidecar_container_mount_path: ClassVar[str] = "/mnt/init"
+
     def __init__(
         self,
         name: str,
@@ -54,9 +63,6 @@ class DnsMonitorComponent(ComponentResource):
         super().__init__("dsh:sre:DnsMonitorComponent", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
         child_tags = {"component": "Dns monitor"} | (tags if tags else {})
-
-        self.share_name = "dns-monitor"
-        self.subscription_id = props.subscription_id
 
         file_share_dns_monitor = storage.FileShare(
             f"{self._name}_file_share_dns_monitor",
