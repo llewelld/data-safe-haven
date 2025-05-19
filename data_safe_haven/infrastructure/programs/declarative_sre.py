@@ -17,6 +17,7 @@ from .sre.backup import SREBackupComponent, SREBackupProps
 from .sre.clamav_mirror import SREClamAVMirrorComponent, SREClamAVMirrorProps
 from .sre.data import SREDataComponent, SREDataProps
 from .sre.desired_state import SREDesiredStateComponent, SREDesiredStateProps
+from .sre.dns_monitor import DnsMonitorComponent, DnsMonitorProps
 from .sre.dns_server import SREDnsServerComponent, SREDnsServerProps
 from .sre.entra import SREEntraComponent, SREEntraProps
 from .sre.firewall import SREFirewallComponent, SREFirewallProps
@@ -228,12 +229,29 @@ class DeclarativeSRE:
             tags=self.tags,
         )
 
+        # Define the DNS Monitor sidecar properties.
+        dns_monitor = DnsMonitorComponent(
+            "gitea_server_dns_monitor",
+            self.stack_name,
+            DnsMonitorProps(
+                location=self.config.azure.location,
+                resource_group_id=resource_group.id,
+                resource_group_name=resource_group.name,
+                storage_account_name=data.storage_account_data_configuration_name,
+                storage_account_key=data.storage_account_data_configuration_key,
+                subscription_id=self.config.azure.subscription_id,
+            ),
+            tags=self.tags,
+        )
+
         # Deploy the apt proxy server
         apt_proxy_server = SREAptProxyServerComponent(
             "sre_apt_proxy_server",
             self.stack_name,
             SREAptProxyServerProps(
                 containers_subnet=networking.subnet_apt_proxy_server,
+                dns_monitor_identity_id=dns_monitor.identity_dns_monitor.id,
+                dns_monitor_file_share_script=dns_monitor.file_share_dns_monitor_script,
                 dns_server_ip=dns.ip_address,
                 location=self.config.azure.location,
                 log_analytics_workspace=monitoring.log_analytics,
@@ -241,6 +259,7 @@ class DeclarativeSRE:
                 sre_fqdn=networking.sre_fqdn,
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
+                subscription_id=self.config.azure.subscription_id,
             ),
             tags=self.tags,
         )
@@ -338,6 +357,8 @@ class DeclarativeSRE:
             SREUserServicesProps(
                 database_service_admin_password=data.password_database_service_admin,
                 databases=self.config.sre.databases,
+                dns_monitor_identity_id=dns_monitor.identity_dns_monitor.id,
+                dns_monitor_file_share_script=dns_monitor.file_share_dns_monitor_script,
                 dns_server_ip=dns.ip_address,
                 dockerhub_credentials=dockerhub_credentials,
                 gitea_database_password=data.password_gitea_database_admin,

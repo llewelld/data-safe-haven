@@ -7,11 +7,6 @@ from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_ip_address_from_container_group,
 )
-
-from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
-    DnsMonitorComponent,
-)
-
 from data_safe_haven.infrastructure.components import (
     FileShareFile,
     FileShareFileProps,
@@ -20,6 +15,9 @@ from data_safe_haven.infrastructure.components import (
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
     WrappedLogAnalyticsWorkspace,
+)
+from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
+    DnsMonitorComponent,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
@@ -209,11 +207,12 @@ class SREGiteaServerComponent(ComponentResource):
             tags=child_tags,
         )
 
-        # Define the container group with guacd, guacamole and caddy
-        # TODO: Move container parameters to the DnsMonitorComponent.
+        # Define the container group with a dns monitor, guacd, guacamole and caddy
+        container_group_name = f"{stack_name}-container-group-gitea"
+        dns_record_name = "gitea"
         container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
-            container_group_name=f"{stack_name}-container-group-gitea",
+            container_group_name=container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
                     image=DnsMonitorComponent.sidecar_container_image,
@@ -228,7 +227,7 @@ class SREGiteaServerComponent(ComponentResource):
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
                             name="CONTAINER_GROUP_NAME",
-                            value=f"{stack_name}-container-group-gitea",
+                            value=container_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="RESOURCE_GROUP", value=props.resource_group_name
@@ -239,7 +238,7 @@ class SREGiteaServerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="RECORD_NAME",
-                            value="gitea",
+                            value=dns_record_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="PRIVATE_ZONE_NAME",

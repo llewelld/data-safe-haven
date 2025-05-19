@@ -7,10 +7,9 @@ from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_id_from_subnet,
 )
-from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
-from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
-    DnsMonitorComponent,
-    DnsMonitorProps,
+from data_safe_haven.infrastructure.components import (
+    FileShareFile,
+    WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 
@@ -30,6 +29,8 @@ class SREUserServicesProps:
         self,
         database_service_admin_password: Input[str],
         databases: list[DatabaseSystem],  # this must *not* be passed as an Input[T]
+        dns_monitor_identity_id: Input[str],
+        dns_monitor_file_share_script: Input[FileShareFile],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         gitea_database_password: Input[str],
@@ -57,6 +58,8 @@ class SREUserServicesProps:
     ) -> None:
         self.database_service_admin_password = database_service_admin_password
         self.databases = databases
+        self.dns_monitor_identity_id = dns_monitor_identity_id
+        self.dns_monitor_file_share_script = dns_monitor_file_share_script
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.gitea_database_password = gitea_database_password
@@ -106,21 +109,6 @@ class SREUserServicesComponent(ComponentResource):
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
         child_tags = {"component": "user services"} | (tags if tags else {})
 
-        # Define the DNS Monitor sidecar container.
-        dns_monitor = DnsMonitorComponent(
-            "gitea_server_dns_monitor",
-            stack_name,
-            DnsMonitorProps(
-                location=props.location,
-                resource_group_id=props.resource_group_id,
-                resource_group_name=props.resource_group_name,
-                storage_account_name=props.storage_account_name,
-                storage_account_key=props.storage_account_key,
-                subscription_id=props.subscription_id,
-            ),
-            tags=tags,
-        )
-
         # Deploy the Gitea server
         self.gitea_server = SREGiteaServerComponent(
             "sre_gitea_server",
@@ -129,8 +117,8 @@ class SREUserServicesComponent(ComponentResource):
                 containers_subnet_id=props.subnet_containers_id,
                 database_subnet_id=props.subnet_containers_support_id,
                 database_password=props.gitea_database_password,
-                dns_monitor_identity_id=dns_monitor.identity_dns_monitor.id,
-                dns_monitor_file_share_script=dns_monitor.file_share_dns_monitor_script,
+                dns_monitor_identity_id=props.dns_monitor_identity_id,
+                dns_monitor_file_share_script=props.dns_monitor_file_share_script,
                 dns_server_ip=props.dns_server_ip,
                 dockerhub_credentials=props.dockerhub_credentials,
                 ldap_server_hostname=props.ldap_server_hostname,
