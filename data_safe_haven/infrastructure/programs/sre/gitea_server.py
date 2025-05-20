@@ -254,7 +254,46 @@ class SREGiteaServerComponent(ComponentResource):
                     ],
                 ),
                 containerinstance.ContainerArgs(
-                    image="caddy:2.9.1",
+                    image=DnsMonitorComponent.sidecar_container_image,
+                    name=DnsMonitorComponent.sidecar_container_name,
+                    command=DnsMonitorComponent.sidecar_command,
+                    resources=containerinstance.ResourceRequirementsArgs(
+                        requests=containerinstance.ResourceRequestsArgs(
+                            cpu=DnsMonitorComponent.sidecar_container_cpu,
+                            memory_in_gb=DnsMonitorComponent.sidecar_container_memory_in_gb,
+                        ),
+                    ),
+                    environment_variables=[
+                        containerinstance.EnvironmentVariableArgs(
+                            name="CONTAINER_GROUP_NAME",
+                            value=container_group_name,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="RESOURCE_GROUP", value=props.resource_group_name
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="SUBSCRIPTION_ID",
+                            value=props.subscription_id,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="RECORD_NAME",
+                            value=dns_record_name,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="PRIVATE_ZONE_NAME",
+                            value=Output.concat("privatelink.", props.sre_fqdn),
+                        ),
+                    ],
+                    volume_mounts=[
+                        containerinstance.VolumeMountArgs(
+                            mount_path=DnsMonitorComponent.sidecar_container_mount_path,
+                            name=DnsMonitorComponent.share_name,
+                            read_only=True,
+                        )
+                    ],
+                ),
+                containerinstance.ContainerArgs(
+                    image="caddy:2.10.0",
                     name="caddy"[:63],
                     ports=[
                         containerinstance.ContainerPortArgs(
@@ -277,7 +316,7 @@ class SREGiteaServerComponent(ComponentResource):
                     ],
                 ),
                 containerinstance.ContainerArgs(
-                    image="gitea/gitea:1.23.6",
+                    image="gitea/gitea:1.23.7",
                     name="gitea"[:63],
                     command=["/app/custom/entrypoint.sh"],
                     environment_variables=[
