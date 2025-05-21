@@ -56,7 +56,6 @@ class DnsMonitorComponent(ComponentResource):
     record_name_environment_variable: ClassVar[str] = "RECORD_NAME"
     zone_name_environment_variable: ClassVar[str] = "PRIVATE_ZONE_NAME"
 
-
     def __init__(
         self,
         name: str,
