@@ -50,6 +50,13 @@ class DnsMonitorComponent(ComponentResource):
     sidecar_container_memory_in_gb: ClassVar[float] = 0.5
     sidecar_container_mount_path: ClassVar[str] = "/mnt/init"
 
+    container_group_environment_variable: ClassVar[str] = "CONTAINER_GROUP_NAME"
+    resource_group_environment_variable: ClassVar[str] = "RESOURCE_GROUP"
+    subscription_id_environment_variable: ClassVar[str] = "SUBSCRIPTION_ID"
+    record_name_environment_variable: ClassVar[str] = "RECORD_NAME"
+    zone_name_environment_variable: ClassVar[str] = "PRIVATE_ZONE_NAME"
+
+
     def __init__(
         self,
         name: str,

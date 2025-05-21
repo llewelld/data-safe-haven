@@ -163,61 +163,23 @@ class SREHedgeDocServerComponent(ComponentResource):
                     ),
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
-                            name="CONTAINER_GROUP_NAME",
+                            name=DnsMonitorComponent.container_group_environment_variable,
                             value=container_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="RESOURCE_GROUP", value=props.resource_group_name
+                            name=DnsMonitorComponent.resource_group_environment_variable,
+                            value=props.resource_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="SUBSCRIPTION_ID",
+                            name=DnsMonitorComponent.subscription_id_environment_variable,
                             value=props.subscription_id,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="RECORD_NAME",
+                            name=DnsMonitorComponent.record_name_environment_variable,
                             value=dns_record_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="PRIVATE_ZONE_NAME",
-                            value=Output.concat("privatelink.", props.sre_fqdn),
-                        ),
-                    ],
-                    volume_mounts=[
-                        containerinstance.VolumeMountArgs(
-                            mount_path=DnsMonitorComponent.sidecar_container_mount_path,
-                            name=DnsMonitorComponent.share_name,
-                            read_only=True,
-                        )
-                    ],
-                ),
-                containerinstance.ContainerArgs(
-                    image=DnsMonitorComponent.sidecar_container_image,
-                    name=DnsMonitorComponent.sidecar_container_name,
-                    command=DnsMonitorComponent.sidecar_command,
-                    resources=containerinstance.ResourceRequirementsArgs(
-                        requests=containerinstance.ResourceRequestsArgs(
-                            cpu=DnsMonitorComponent.sidecar_container_cpu,
-                            memory_in_gb=DnsMonitorComponent.sidecar_container_memory_in_gb,
-                        ),
-                    ),
-                    environment_variables=[
-                        containerinstance.EnvironmentVariableArgs(
-                            name="CONTAINER_GROUP_NAME",
-                            value=container_group_name,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name="RESOURCE_GROUP", value=props.resource_group_name
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name="SUBSCRIPTION_ID",
-                            value=props.subscription_id,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name="RECORD_NAME",
-                            value=dns_record_name,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name="PRIVATE_ZONE_NAME",
+                            name=DnsMonitorComponent.zone_name_environment_variable,
                             value=Output.concat("privatelink.", props.sre_fqdn),
                         ),
                     ],

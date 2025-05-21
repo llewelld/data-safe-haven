@@ -114,22 +114,23 @@ class SREAptProxyServerComponent(ComponentResource):
                     ),
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
-                            name="CONTAINER_GROUP_NAME",
+                            name=DnsMonitorComponent.container_group_environment_variable,
                             value=container_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="RESOURCE_GROUP", value=props.resource_group_name
+                            name=DnsMonitorComponent.resource_group_environment_variable,
+                            value=props.resource_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="SUBSCRIPTION_ID",
+                            name=DnsMonitorComponent.subscription_id_environment_variable,
                             value=props.subscription_id,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="RECORD_NAME",
+                            name=DnsMonitorComponent.record_name_environment_variable,
                             value=dns_record_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="PRIVATE_ZONE_NAME",
+                            name=DnsMonitorComponent.zone_name_environment_variable,
                             value=Output.concat("privatelink.", props.sre_fqdn),
                         ),
                     ],
