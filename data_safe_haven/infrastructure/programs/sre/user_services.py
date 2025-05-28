@@ -128,6 +128,7 @@ class SREUserServicesComponent(ComponentResource):
                 ldap_user_search_base=props.ldap_user_search_base,
                 location=props.location,
                 log_analytics_workspace=props.log_analytics_workspace,
+                resource_group_id=props.resource_group_id,
                 resource_group_name=props.resource_group_name,
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,

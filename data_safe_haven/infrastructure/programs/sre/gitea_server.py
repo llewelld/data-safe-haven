@@ -1,8 +1,9 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, storage
+from pulumi_azure_native import authorization, containerinstance, storage
 
+from data_safe_haven.functions import seeded_uuid
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_ip_address_from_container_group,
@@ -42,6 +43,7 @@ class SREGiteaServerProps:
         ldap_user_search_base: Input[str],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        resource_group_id: Input[str],
         resource_group_name: Input[str],
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
@@ -67,6 +69,7 @@ class SREGiteaServerProps:
         self.ldap_user_search_base = ldap_user_search_base
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
+        self.resource_group_id = resource_group_id
         self.resource_group_name = resource_group_name
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
@@ -354,8 +357,7 @@ class SREGiteaServerComponent(ComponentResource):
                 name_servers=[props.dns_server_ip],
             ),
             identity=containerinstance.ContainerGroupIdentityArgs(
-                user_assigned_identities=[props.dns_monitor_identity_id],
-                type=containerinstance.ResourceIdentityType.USER_ASSIGNED,
+                type=containerinstance.ResourceIdentityType.SYSTEM_ASSIGNED,
             ),
             # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
             image_registry_credentials=[
@@ -446,6 +448,46 @@ class SREGiteaServerComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts, ResourceOptions(parent=container_group)
             ),
+        )
+
+        # Grant "Private DNS Zone Contributor" permissions to the Service Principal.
+        authorization.RoleAssignment(
+            f"{self._name}_gitea_dns_monitor_dns_zone_contributor_role_assignment",
+            principal_id=container_group.identity.principal_id,
+            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+            role_assignment_name=str(
+                seeded_uuid(f"{stack_name} Private DNS Zone Contributor for Gitea")
+            ),
+            role_definition_id=Output.concat(
+                "/subscriptions/",
+                props.subscription_id,
+                "/providers/Microsoft.Authorization/roleDefinitions/",
+                DnsMonitorComponent.azure_role_ids["Private DNS Zone Contributor"],
+            ),
+            scope=props.resource_group_id,
+            opts=child_opts,
+        )
+
+        # Grant "Azure Container Instances Contributor" permissions to the Service Principal.
+        authorization.RoleAssignment(
+            f"{self._name}_gitea_dns_monitor_container_instance_contributor_role_assignment",
+            principal_id=container_group.identity.principal_id,
+            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+            role_assignment_name=str(
+                seeded_uuid(
+                    f"{stack_name} Azure Container Instances Contributor for Gitea"
+                )
+            ),
+            role_definition_id=Output.concat(
+                "/subscriptions/",
+                props.subscription_id,
+                "/providers/Microsoft.Authorization/roleDefinitions/",
+                DnsMonitorComponent.azure_role_ids[
+                    "Azure Container Instances Contributor Role"
+                ],
+            ),
+            scope=props.resource_group_id,
+            opts=child_opts,
         )
 
         # Register outputs
