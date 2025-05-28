@@ -450,43 +450,78 @@ class SREGiteaServerComponent(ComponentResource):
             ),
         )
 
-        # Grant "Private DNS Zone Contributor" permissions to the Service Principal.
-        authorization.RoleAssignment(
-            f"{self._name}_gitea_dns_monitor_dns_zone_contributor_role_assignment",
-            principal_id=container_group.identity.principal_id,
-            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
-            role_assignment_name=str(
-                seeded_uuid(f"{stack_name} Private DNS Zone Contributor for Gitea")
-            ),
-            role_definition_id=Output.concat(
-                "/subscriptions/",
-                props.subscription_id,
-                "/providers/Microsoft.Authorization/roleDefinitions/",
-                DnsMonitorComponent.azure_role_ids["Private DNS Zone Contributor"],
-            ),
-            scope=props.resource_group_id,
-            opts=child_opts,
+        dns_zone_role_definition = authorization.RoleDefinition(
+            f"{self._name}_{dns_record_name}_dns_monitor_dns_zone_role",
+            role_name=f"DNS Zone updater for {dns_record_name}",
+            scope=local_dns.private_record_set_id,
+            description=f"Custom role for updating {dns_record_name}'s DNS zone",
+            permissions=[
+                authorization.PermissionArgs(
+                    actions=[
+                        "Microsoft.Insights/alertRules/*",
+                        "Microsoft.Resources/deployments/*",
+                        "Microsoft.Resources/subscriptions/resourceGroups/read",
+                        "Microsoft.Support/*",
+                        "Microsoft.Network/privateDnsZones/*",
+                        "Microsoft.Network/privateDnsOperationResults/*",
+                        "Microsoft.Network/privateDnsOperationStatuses/*",
+                        "Microsoft.Network/virtualNetworks/read",
+                        "Microsoft.Network/virtualNetworks/join/action",
+                        "Microsoft.Authorization/*/read",
+                    ],
+                    not_actions=[],
+                )
+            ],
+            assignable_scopes=[local_dns.private_record_set_id],
         )
 
-        # Grant "Azure Container Instances Contributor" permissions to the Service Principal.
+        # Grant "Private DNS Zone Contributor" permissions to the Service Principal.
         authorization.RoleAssignment(
-            f"{self._name}_gitea_dns_monitor_container_instance_contributor_role_assignment",
+            f"{self._name}_{dns_record_name}_dns_monitor_dns_zone_contributor_role_assignment",
             principal_id=container_group.identity.principal_id,
             principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
             role_assignment_name=str(
                 seeded_uuid(
-                    f"{stack_name} Azure Container Instances Contributor for Gitea"
+                    f"{stack_name} Private DNS Zone Contributor for {dns_record_name}"
                 )
             ),
-            role_definition_id=Output.concat(
-                "/subscriptions/",
-                props.subscription_id,
-                "/providers/Microsoft.Authorization/roleDefinitions/",
-                DnsMonitorComponent.azure_role_ids[
-                    "Azure Container Instances Contributor Role"
-                ],
+            role_definition_id=dns_zone_role_definition.id,
+            scope=local_dns.private_record_set_id,
+            opts=child_opts,
+        )
+
+        container_group_role_definition = authorization.RoleDefinition(
+            f"{self._name}_{dns_record_name}_dns_monitor_container_group_role",
+            role_name=f"Container group reader for {dns_record_name}",
+            scope=container_group.id,
+            description=f"Custom role for accessing {dns_record_name}'s container group",
+            permissions=[
+                authorization.PermissionArgs(
+                    actions=[
+                        "Microsoft.ContainerInstance/containerGroups/*",
+                        "Microsoft.Resources/deployments/*",
+                        "Microsoft.Authorization/*/read",
+                        "Microsoft.Insights/alertRules/*",
+                        "Microsoft.Resources/subscriptions/resourceGroups/read",
+                    ],
+                    not_actions=[],
+                )
+            ],
+            assignable_scopes=[container_group.id],
+        )
+
+        # Grant "Azure Container Instances Contributor" permissions to the Service Principal.
+        authorization.RoleAssignment(
+            f"{self._name}_{dns_record_name}_dns_monitor_container_instance_contributor_role_assignment",
+            principal_id=container_group.identity.principal_id,
+            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+            role_assignment_name=str(
+                seeded_uuid(
+                    f"{stack_name} Azure Container Instances Contributor for {dns_record_name}"
+                )
             ),
-            scope=props.resource_group_id,
+            role_definition_id=container_group_role_definition.id,
+            scope=container_group.id,
             opts=child_opts,
         )
 
