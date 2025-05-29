@@ -241,6 +241,7 @@ class DeclarativeSRE:
                 sre_fqdn=networking.sre_fqdn,
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
+                subscription_id=self.config.azure.subscription_id,
             ),
             tags=self.tags,
         )
