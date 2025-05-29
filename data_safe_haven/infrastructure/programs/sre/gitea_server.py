@@ -458,16 +458,8 @@ class SREGiteaServerComponent(ComponentResource):
             permissions=[
                 authorization.PermissionArgs(
                     actions=[
-                        "Microsoft.Insights/alertRules/*",
-                        "Microsoft.Resources/deployments/*",
-                        "Microsoft.Resources/subscriptions/resourceGroups/read",
-                        "Microsoft.Support/*",
-                        "Microsoft.Network/privateDnsZones/*",
-                        "Microsoft.Network/privateDnsOperationResults/*",
-                        "Microsoft.Network/privateDnsOperationStatuses/*",
-                        "Microsoft.Network/virtualNetworks/read",
-                        "Microsoft.Network/virtualNetworks/join/action",
-                        "Microsoft.Authorization/*/read",
+                        "Microsoft.Network/privateDnsZones/A/read",
+                        "Microsoft.Network/privateDnsZones/A/write",
                     ],
                     not_actions=[],
                 )
@@ -498,11 +490,7 @@ class SREGiteaServerComponent(ComponentResource):
             permissions=[
                 authorization.PermissionArgs(
                     actions=[
-                        "Microsoft.ContainerInstance/containerGroups/*",
-                        "Microsoft.Resources/deployments/*",
-                        "Microsoft.Authorization/*/read",
-                        "Microsoft.Insights/alertRules/*",
-                        "Microsoft.Resources/subscriptions/resourceGroups/read",
+                        "Microsoft.ContainerInstance/containerGroups/read",
                     ],
                     not_actions=[],
                 )
