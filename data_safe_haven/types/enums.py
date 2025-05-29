@@ -1,5 +1,4 @@
 from enum import UNIQUE, Enum, verify
-from typing import ClassVar
 
 
 @verify(UNIQUE)
@@ -233,7 +232,7 @@ class DnsMonitorSidecarConfig:
 
     SIDECAR_CONTAINER_IMAGE: str = "mcr.microsoft.com/azure-cli:latest"
     SIDECAR_CONTAINER_NAME: str = "dnsmonitor"[:63]
-    SIDECAR_COMMAND: tuple = ("/bin/sh", "-c", "/mnt/init/init.sh")
+    SIDECAR_COMMAND: tuple[str, str, str] = ("/bin/sh", "-c", "/mnt/init/init.sh")
     SIDECAR_CONTAINER_GPU: float = 0.5
     SIDECAR_CONTAINER_MEMORY_IN_GB: float = 0.5
     SIDECAR_CONTAINER_MOUNT_PATH: str = "/mnt/init"
