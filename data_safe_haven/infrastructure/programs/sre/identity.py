@@ -11,14 +11,15 @@ from data_safe_haven.infrastructure.common import (
     get_ip_address_from_container_group,
 )
 from data_safe_haven.infrastructure.components import (
-    FileShareFile,
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
     WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
     DnsMonitorComponent,
+    DnsMonitorProps,
 )
+from data_safe_haven.types import DnsMonitorSidecarConfig
 
 
 class SREIdentityProps:
@@ -39,6 +40,7 @@ class SREIdentityProps:
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
+        subscription_id: Input[str],
     ) -> None:
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
@@ -55,6 +57,7 @@ class SREIdentityProps:
         self.subnet_containers_id = Output.from_input(subnet_containers).apply(
             get_id_from_subnet
         )
+        self.subscription_id = subscription_id
 
 
 class SREIdentityComponent(ComponentResource):
@@ -95,6 +98,46 @@ class SREIdentityComponent(ComponentResource):
             f"{self._name}_container_group",
             container_group_name=container_group_name,
             containers=[
+                containerinstance.ContainerArgs(
+                    image=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_IMAGE,
+                    name=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_NAME,
+                    command=DnsMonitorSidecarConfig.SIDECAR_COMMAND,
+                    resources=containerinstance.ResourceRequirementsArgs(
+                        requests=containerinstance.ResourceRequestsArgs(
+                            cpu=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_GPU,
+                            memory_in_gb=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_MEMORY_IN_GB,
+                        ),
+                    ),
+                    environment_variables=[
+                        containerinstance.EnvironmentVariableArgs(
+                            name=DnsMonitorSidecarConfig.CONTAINER_GROUP_ENVIRONMENT_VARIABLE,
+                            value=container_group_name,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name=DnsMonitorSidecarConfig.RESOURCE_GROUP_ENVIRONMENT_VARIABLE,
+                            value=props.resource_group_name,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name=DnsMonitorSidecarConfig.SUBSCRIPTION_ID_ENVIRONMENT_VARIABLE,
+                            value=props.subscription_id,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name=DnsMonitorSidecarConfig.RECORD_NAME_ENVIRONMENT_VARIABLE,
+                            value=dns_record_name,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name=DnsMonitorSidecarConfig.ZONE_NAME_ENVIRONMENT_VARIABLE,
+                            value=Output.concat("privatelink.", props.sre_fqdn),
+                        ),
+                    ],
+                    volume_mounts=[
+                        containerinstance.VolumeMountArgs(
+                            mount_path=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_MOUNT_PATH,
+                            name=f"{dns_record_name}-dnsmonitor",
+                            read_only=True,
+                        )
+                    ],
+                ),
                 containerinstance.ContainerArgs(
                     image="ghcr.io/alan-turing-institute/apricot:0.1.1",
                     name="apricot",
@@ -182,6 +225,9 @@ class SREIdentityComponent(ComponentResource):
             dns_config=containerinstance.DnsConfigurationArgs(
                 name_servers=[props.dns_server_ip],
             ),
+            identity=containerinstance.ContainerGroupIdentityArgs(
+                type=containerinstance.ResourceIdentityType.SYSTEM_ASSIGNED,
+            ),
             # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
             image_registry_credentials=[
                 {
@@ -222,6 +268,14 @@ class SREIdentityComponent(ComponentResource):
                     ),
                     name="identity-redis-data",
                 ),
+                containerinstance.VolumeArgs(
+                    azure_file=containerinstance.AzureFileVolumeArgs(
+                        share_name=f"{dns_record_name}-dnsmonitor",
+                        storage_account_key=props.storage_account_key,
+                        storage_account_name=props.storage_account_name,
+                    ),
+                    name=f"{dns_record_name}-dnsmonitor",
+                ),
             ],
             opts=ResourceOptions.merge(
                 child_opts,
@@ -244,6 +298,20 @@ class SREIdentityComponent(ComponentResource):
             ),
             opts=ResourceOptions.merge(
                 child_opts, ResourceOptions(parent=container_group)
+            ),
+        )
+
+        DnsMonitorComponent(
+            f"{dns_record_name}_dns_monitor",
+            stack_name,
+            DnsMonitorProps(
+                container_group_id=container_group.id,
+                dns_record_name=dns_record_name,
+                identity_principal_id=container_group.identity.principal_id,
+                private_record_set_id=local_dns.private_record_set_id,
+                resource_group_name=props.resource_group_name,
+                storage_account_name=props.storage_account_name,
+                storage_account_key=props.storage_account_key,
             ),
         )
 
