@@ -14,9 +14,6 @@ from data_safe_haven.infrastructure.components import (
     LocalDnsRecordProps,
     WrappedLogAnalyticsWorkspace,
 )
-from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
-    DnsMonitorComponent,
-)
 from data_safe_haven.types import PermittedDomains
 
 
@@ -26,8 +23,6 @@ class SREAptProxyServerProps:
     def __init__(
         self,
         containers_subnet: Input[str],
-        dns_monitor_identity_id: Input[str],
-        dns_monitor_file_share_script: Input[FileShareFile],
         dns_server_ip: Input[str],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
@@ -35,13 +30,10 @@ class SREAptProxyServerProps:
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
-        subscription_id: Input[str],
     ) -> None:
         self.containers_subnet_id = Output.from_input(containers_subnet).apply(
             get_id_from_subnet
         )
-        self.dns_monitor_identity_id = dns_monitor_identity_id
-        self.dns_monitor_file_share_script = dns_monitor_file_share_script
         self.dns_server_ip = dns_server_ip
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
@@ -49,7 +41,6 @@ class SREAptProxyServerProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
-        self.subscription_id = subscription_id
 
 
 class SREAptProxyServerComponent(ComponentResource):
@@ -103,46 +94,6 @@ class SREAptProxyServerComponent(ComponentResource):
             container_group_name=container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image=DnsMonitorComponent.sidecar_container_image,
-                    name=DnsMonitorComponent.sidecar_container_name,
-                    command=DnsMonitorComponent.sidecar_command,
-                    resources=containerinstance.ResourceRequirementsArgs(
-                        requests=containerinstance.ResourceRequestsArgs(
-                            cpu=DnsMonitorComponent.sidecar_container_cpu,
-                            memory_in_gb=DnsMonitorComponent.sidecar_container_memory_in_gb,
-                        ),
-                    ),
-                    environment_variables=[
-                        containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.container_group_environment_variable,
-                            value=container_group_name,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.resource_group_environment_variable,
-                            value=props.resource_group_name,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.subscription_id_environment_variable,
-                            value=props.subscription_id,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.record_name_environment_variable,
-                            value=dns_record_name,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.zone_name_environment_variable,
-                            value=Output.concat("privatelink.", props.sre_fqdn),
-                        ),
-                    ],
-                    volume_mounts=[
-                        containerinstance.VolumeMountArgs(
-                            mount_path=DnsMonitorComponent.sidecar_container_mount_path,
-                            name=DnsMonitorComponent.share_name,
-                            read_only=True,
-                        )
-                    ],
-                ),
-                containerinstance.ContainerArgs(
                     image="ghcr.io/alan-turing-institute/squid-deb-proxy:0.0.1",
                     name="squid-deb-proxy"[:63],
                     environment_variables=[],
@@ -182,10 +133,6 @@ class SREAptProxyServerComponent(ComponentResource):
             dns_config=containerinstance.DnsConfigurationArgs(
                 name_servers=[props.dns_server_ip],
             ),
-            identity=containerinstance.ContainerGroupIdentityArgs(
-                user_assigned_identities=[props.dns_monitor_identity_id],
-                type=containerinstance.ResourceIdentityType.USER_ASSIGNED,
-            ),
             ip_address=containerinstance.IpAddressArgs(
                 ports=[
                     containerinstance.PortArgs(
@@ -218,14 +165,6 @@ class SREAptProxyServerComponent(ComponentResource):
                     ),
                     name="proxy-app-allowlists",
                 ),
-                containerinstance.VolumeArgs(
-                    azure_file=containerinstance.AzureFileVolumeArgs(
-                        share_name=DnsMonitorComponent.share_name,
-                        storage_account_key=props.storage_account_key,
-                        storage_account_name=props.storage_account_name,
-                    ),
-                    name=DnsMonitorComponent.share_name,
-                ),
             ],
             opts=ResourceOptions.merge(
                 child_opts,
@@ -234,7 +173,6 @@ class SREAptProxyServerComponent(ComponentResource):
                     depends_on=[
                         file_share_apt_proxy_server,
                         file_share_apt_proxy_server_repositories,
-                        props.dns_monitor_file_share_script,
                     ],
                     replace_on_changes=["containers"],
                 ),

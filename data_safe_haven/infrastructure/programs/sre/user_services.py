@@ -8,7 +8,6 @@ from data_safe_haven.infrastructure.common import (
     get_id_from_subnet,
 )
 from data_safe_haven.infrastructure.components import (
-    FileShareFile,
     WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
@@ -29,8 +28,6 @@ class SREUserServicesProps:
         self,
         database_service_admin_password: Input[str],
         databases: list[DatabaseSystem],  # this must *not* be passed as an Input[T]
-        dns_monitor_identity_id: Input[str],
-        dns_monitor_file_share_script: Input[FileShareFile],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         gitea_database_password: Input[str],
@@ -50,16 +47,15 @@ class SREUserServicesProps:
         nexus_persistent_quota_gb: Input[int],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
-        subscription_id: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
         subnet_containers_support: Input[network.GetSubnetResult],
         subnet_databases: Input[network.GetSubnetResult],
         subnet_software_repositories: Input[network.GetSubnetResult],
+        subscription_id: Input[str],
     ) -> None:
         self.database_service_admin_password = database_service_admin_password
         self.databases = databases
-        self.dns_monitor_identity_id = dns_monitor_identity_id
-        self.dns_monitor_file_share_script = dns_monitor_file_share_script
+
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.gitea_database_password = gitea_database_password
@@ -79,7 +75,6 @@ class SREUserServicesProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
-        self.subscription_id = subscription_id
         self.subnet_containers_id = Output.from_input(subnet_containers).apply(
             get_id_from_subnet
         )
@@ -92,6 +87,7 @@ class SREUserServicesProps:
         self.subnet_software_repositories_id = Output.from_input(
             subnet_software_repositories
         ).apply(get_id_from_subnet)
+        self.subscription_id = subscription_id
 
 
 class SREUserServicesComponent(ComponentResource):
@@ -117,8 +113,6 @@ class SREUserServicesComponent(ComponentResource):
                 containers_subnet_id=props.subnet_containers_id,
                 database_subnet_id=props.subnet_containers_support_id,
                 database_password=props.gitea_database_password,
-                dns_monitor_identity_id=props.dns_monitor_identity_id,
-                dns_monitor_file_share_script=props.dns_monitor_file_share_script,
                 dns_server_ip=props.dns_server_ip,
                 dockerhub_credentials=props.dockerhub_credentials,
                 ldap_server_hostname=props.ldap_server_hostname,
@@ -128,7 +122,6 @@ class SREUserServicesComponent(ComponentResource):
                 ldap_user_search_base=props.ldap_user_search_base,
                 location=props.location,
                 log_analytics_workspace=props.log_analytics_workspace,
-                resource_group_id=props.resource_group_id,
                 resource_group_name=props.resource_group_name,
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,
@@ -147,8 +140,6 @@ class SREUserServicesComponent(ComponentResource):
                 containers_subnet_id=props.subnet_containers_id,
                 database_password=props.hedgedoc_database_password,
                 database_subnet_id=props.subnet_containers_support_id,
-                dns_monitor_identity_id=props.dns_monitor_identity_id,
-                dns_monitor_file_share_script=props.dns_monitor_file_share_script,
                 dns_server_ip=props.dns_server_ip,
                 dockerhub_credentials=props.dockerhub_credentials,
                 ldap_server_hostname=props.ldap_server_hostname,
@@ -162,7 +153,6 @@ class SREUserServicesComponent(ComponentResource):
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
-                subscription_id=props.subscription_id,
             ),
             opts=child_opts,
             tags=child_tags,
@@ -173,8 +163,6 @@ class SREUserServicesComponent(ComponentResource):
             "sre_software_repositories",
             stack_name,
             SRESoftwareRepositoriesProps(
-                dns_monitor_identity_id=props.dns_monitor_identity_id,
-                dns_monitor_file_share_script=props.dns_monitor_file_share_script,
                 dns_server_ip=props.dns_server_ip,
                 dockerhub_credentials=props.dockerhub_credentials,
                 location=props.location,
@@ -187,7 +175,6 @@ class SREUserServicesComponent(ComponentResource):
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
                 subnet_id=props.subnet_software_repositories_id,
-                subscription_id=props.subscription_id,
             ),
             opts=child_opts,
             tags=child_tags,

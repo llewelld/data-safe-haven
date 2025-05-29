@@ -1,4 +1,5 @@
 from enum import UNIQUE, Enum, verify
+from typing import ClassVar
 
 
 @verify(UNIQUE)
@@ -226,3 +227,19 @@ class AllowlistRepository(str, Enum):
 
     CRAN = "cran"
     PYPI = "pypi"
+
+
+class DnsMonitorSidecarConfig:
+
+    SIDECAR_CONTAINER_IMAGE: str = "mcr.microsoft.com/azure-cli:latest"
+    SIDECAR_CONTAINER_NAME: str = "dnsmonitor"[:63]
+    SIDECAR_COMMAND: tuple = ("/bin/sh", "-c", "/mnt/init/init.sh")
+    SIDECAR_CONTAINER_GPU: float = 0.5
+    SIDECAR_CONTAINER_MEMORY_IN_GB: float = 0.5
+    SIDECAR_CONTAINER_MOUNT_PATH: str = "/mnt/init"
+
+    CONTAINER_GROUP_ENVIRONMENT_VARIABLE: str = "CONTAINER_GROUP_NAME"
+    RESOURCE_GROUP_ENVIRONMENT_VARIABLE: str = "RESOURCE_GROUP"
+    SUBSCRIPTION_ID_ENVIRONMENT_VARIABLE: str = "SUBSCRIPTION_ID"
+    RECORD_NAME_ENVIRONMENT_VARIABLE: str = "RECORD_NAME"
+    ZONE_NAME_ENVIRONMENT_VARIABLE: str = "PRIVATE_ZONE_NAME"

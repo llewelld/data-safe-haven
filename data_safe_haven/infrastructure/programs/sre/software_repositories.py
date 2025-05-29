@@ -29,8 +29,6 @@ class SRESoftwareRepositoriesProps:
 
     def __init__(
         self,
-        dns_monitor_identity_id: Input[str],
-        dns_monitor_file_share_script: Input[FileShareFile],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         location: Input[str],
@@ -43,10 +41,7 @@ class SRESoftwareRepositoriesProps:
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_id: Input[str],
-        subscription_id: Input[str],
     ) -> None:
-        self.dns_monitor_identity_id = dns_monitor_identity_id
-        self.dns_monitor_file_share_script = dns_monitor_file_share_script
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.location = location
@@ -63,7 +58,6 @@ class SRESoftwareRepositoriesProps:
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
         self.subnet_id = subnet_id
-        self.subscription_id = subscription_id
 
 
 class SRESoftwareRepositoriesComponent(ComponentResource):
@@ -179,46 +173,6 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 container_group_name=container_group_name,
                 containers=[
                     containerinstance.ContainerArgs(
-                        image=DnsMonitorComponent.sidecar_container_image,
-                        name=DnsMonitorComponent.sidecar_container_name,
-                        command=DnsMonitorComponent.sidecar_command,
-                        resources=containerinstance.ResourceRequirementsArgs(
-                            requests=containerinstance.ResourceRequestsArgs(
-                                cpu=DnsMonitorComponent.sidecar_container_cpu,
-                                memory_in_gb=DnsMonitorComponent.sidecar_container_memory_in_gb,
-                            ),
-                        ),
-                        environment_variables=[
-                            containerinstance.EnvironmentVariableArgs(
-                                name=DnsMonitorComponent.container_group_environment_variable,
-                                value=container_group_name,
-                            ),
-                            containerinstance.EnvironmentVariableArgs(
-                                name=DnsMonitorComponent.resource_group_environment_variable,
-                                value=props.resource_group_name,
-                            ),
-                            containerinstance.EnvironmentVariableArgs(
-                                name=DnsMonitorComponent.subscription_id_environment_variable,
-                                value=props.subscription_id,
-                            ),
-                            containerinstance.EnvironmentVariableArgs(
-                                name=DnsMonitorComponent.record_name_environment_variable,
-                                value=dns_record_name,
-                            ),
-                            containerinstance.EnvironmentVariableArgs(
-                                name=DnsMonitorComponent.zone_name_environment_variable,
-                                value=Output.concat("privatelink.", props.sre_fqdn),
-                            ),
-                        ],
-                        volume_mounts=[
-                            containerinstance.VolumeMountArgs(
-                                mount_path=DnsMonitorComponent.sidecar_container_mount_path,
-                                name=DnsMonitorComponent.share_name,
-                                read_only=True,
-                            )
-                        ],
-                    ),
-                    containerinstance.ContainerArgs(
                         image="caddy:2.10.0",
                         name="caddy"[:63],
                         ports=[
@@ -317,10 +271,6 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 dns_config=containerinstance.DnsConfigurationArgs(
                     name_servers=[props.dns_server_ip],
                 ),
-                identity=containerinstance.ContainerGroupIdentityArgs(
-                    user_assigned_identities=[props.dns_monitor_identity_id],
-                    type=containerinstance.ResourceIdentityType.USER_ASSIGNED,
-                ),
                 # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
                 image_registry_credentials=[
                     {
@@ -373,21 +323,12 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ),
                         name="nexus-allowlists-allowlists",
                     ),
-                    containerinstance.VolumeArgs(
-                        azure_file=containerinstance.AzureFileVolumeArgs(
-                            share_name=DnsMonitorComponent.share_name,
-                            storage_account_key=props.storage_account_key,
-                            storage_account_name=props.storage_account_name,
-                        ),
-                        name=DnsMonitorComponent.share_name,
-                    ),
                 ],
                 opts=ResourceOptions.merge(
                     child_opts,
                     ResourceOptions(
                         delete_before_replace=True,
                         replace_on_changes=["containers"],
-                        depends_on=props.dns_monitor_file_share_script,
                     ),
                 ),
                 tags=child_tags,

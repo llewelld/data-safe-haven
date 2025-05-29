@@ -1,9 +1,8 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import authorization, containerinstance, storage
+from pulumi_azure_native import containerinstance, storage
 
-from data_safe_haven.functions import seeded_uuid
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_ip_address_from_container_group,
@@ -19,8 +18,10 @@ from data_safe_haven.infrastructure.components import (
 )
 from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
     DnsMonitorComponent,
+    DnsMonitorProps,
 )
 from data_safe_haven.resources import resources_path
+from data_safe_haven.types import DnsMonitorSidecarConfig
 from data_safe_haven.utility import FileReader
 
 
@@ -32,8 +33,6 @@ class SREGiteaServerProps:
         containers_subnet_id: Input[str],
         database_password: Input[str],
         database_subnet_id: Input[str],
-        dns_monitor_identity_id: Input[str],
-        dns_monitor_file_share_script: Input[FileShareFile],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         ldap_server_hostname: Input[str],
@@ -43,7 +42,6 @@ class SREGiteaServerProps:
         ldap_user_search_base: Input[str],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
-        resource_group_id: Input[str],
         resource_group_name: Input[str],
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
@@ -58,8 +56,6 @@ class SREGiteaServerProps:
             database_username if database_username else "postgresadmin"
         )
 
-        self.dns_monitor_identity_id = dns_monitor_identity_id
-        self.dns_monitor_file_share_script = dns_monitor_file_share_script
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.ldap_server_hostname = ldap_server_hostname
@@ -69,7 +65,6 @@ class SREGiteaServerProps:
         self.ldap_user_search_base = ldap_user_search_base
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
-        self.resource_group_id = resource_group_id
         self.resource_group_name = resource_group_name
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
@@ -218,41 +213,41 @@ class SREGiteaServerComponent(ComponentResource):
             container_group_name=container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image=DnsMonitorComponent.sidecar_container_image,
-                    name=DnsMonitorComponent.sidecar_container_name,
-                    command=DnsMonitorComponent.sidecar_command,
+                    image=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_IMAGE,
+                    name=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_NAME,
+                    command=DnsMonitorSidecarConfig.SIDECAR_COMMAND,
                     resources=containerinstance.ResourceRequirementsArgs(
                         requests=containerinstance.ResourceRequestsArgs(
-                            cpu=DnsMonitorComponent.sidecar_container_cpu,
-                            memory_in_gb=DnsMonitorComponent.sidecar_container_memory_in_gb,
+                            cpu=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_GPU,
+                            memory_in_gb=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_MEMORY_IN_GB,
                         ),
                     ),
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.container_group_environment_variable,
+                            name=DnsMonitorSidecarConfig.CONTAINER_GROUP_ENVIRONMENT_VARIABLE,
                             value=container_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.resource_group_environment_variable,
+                            name=DnsMonitorSidecarConfig.RESOURCE_GROUP_ENVIRONMENT_VARIABLE,
                             value=props.resource_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.subscription_id_environment_variable,
+                            name=DnsMonitorSidecarConfig.SUBSCRIPTION_ID_ENVIRONMENT_VARIABLE,
                             value=props.subscription_id,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.record_name_environment_variable,
+                            name=DnsMonitorSidecarConfig.RECORD_NAME_ENVIRONMENT_VARIABLE,
                             value=dns_record_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorComponent.zone_name_environment_variable,
+                            name=DnsMonitorSidecarConfig.ZONE_NAME_ENVIRONMENT_VARIABLE,
                             value=Output.concat("privatelink.", props.sre_fqdn),
                         ),
                     ],
                     volume_mounts=[
                         containerinstance.VolumeMountArgs(
-                            mount_path=DnsMonitorComponent.sidecar_container_mount_path,
-                            name=DnsMonitorComponent.share_name,
+                            mount_path=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_MOUNT_PATH,
+                            name=f"{dns_record_name}-dnsmonitor",
                             read_only=True,
                         )
                     ],
@@ -413,11 +408,11 @@ class SREGiteaServerComponent(ComponentResource):
                 ),
                 containerinstance.VolumeArgs(
                     azure_file=containerinstance.AzureFileVolumeArgs(
-                        share_name=DnsMonitorComponent.share_name,
+                        share_name=f"{dns_record_name}-dnsmonitor",
                         storage_account_key=props.storage_account_key,
                         storage_account_name=props.storage_account_name,
                     ),
-                    name=DnsMonitorComponent.share_name,
+                    name=f"{dns_record_name}-dnsmonitor",
                 ),
             ],
             opts=ResourceOptions.merge(
@@ -428,7 +423,6 @@ class SREGiteaServerComponent(ComponentResource):
                         file_share_gitea_caddy_caddyfile,
                         file_share_gitea_gitea_configure_sh,
                         file_share_gitea_gitea_entrypoint_sh,
-                        props.dns_monitor_file_share_script,
                     ],
                     replace_on_changes=["containers"],
                 ),
@@ -450,67 +444,18 @@ class SREGiteaServerComponent(ComponentResource):
             ),
         )
 
-        dns_zone_role_definition = authorization.RoleDefinition(
-            f"{self._name}_{dns_record_name}_dns_monitor_dns_zone_role",
-            role_name=f"DNS Zone updater for {dns_record_name}",
-            scope=local_dns.private_record_set_id,
-            description=f"Custom role for updating {dns_record_name}'s DNS zone",
-            permissions=[
-                authorization.PermissionArgs(
-                    actions=[
-                        "Microsoft.Network/privateDnsZones/A/read",
-                        "Microsoft.Network/privateDnsZones/A/write",
-                    ],
-                    not_actions=[],
-                )
-            ],
-            assignable_scopes=[local_dns.private_record_set_id],
-        )
-
-        # Grant "Private DNS Zone Contributor" permissions to the Service Principal.
-        authorization.RoleAssignment(
-            f"{self._name}_{dns_record_name}_dns_monitor_dns_zone_contributor_role_assignment",
-            principal_id=container_group.identity.principal_id,
-            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
-            role_assignment_name=str(
-                seeded_uuid(
-                    f"{stack_name} Private DNS Zone Contributor for {dns_record_name}"
-                )
+        DnsMonitorComponent(
+            f"{dns_record_name}_dns_monitor",
+            stack_name,
+            DnsMonitorProps(
+                container_group_id=container_group.id,
+                dns_record_name=dns_record_name,
+                identity_principal_id=container_group.identity.principal_id,
+                private_record_set_id=local_dns.private_record_set_id,
+                resource_group_name=props.resource_group_name,
+                storage_account_name=props.storage_account_name,
+                storage_account_key=props.storage_account_key,
             ),
-            role_definition_id=dns_zone_role_definition.id,
-            scope=local_dns.private_record_set_id,
-            opts=child_opts,
-        )
-
-        container_group_role_definition = authorization.RoleDefinition(
-            f"{self._name}_{dns_record_name}_dns_monitor_container_group_role",
-            role_name=f"Container group reader for {dns_record_name}",
-            scope=container_group.id,
-            description=f"Custom role for accessing {dns_record_name}'s container group",
-            permissions=[
-                authorization.PermissionArgs(
-                    actions=[
-                        "Microsoft.ContainerInstance/containerGroups/read",
-                    ],
-                    not_actions=[],
-                )
-            ],
-            assignable_scopes=[container_group.id],
-        )
-
-        # Grant "Azure Container Instances Contributor" permissions to the Service Principal.
-        authorization.RoleAssignment(
-            f"{self._name}_{dns_record_name}_dns_monitor_container_instance_contributor_role_assignment",
-            principal_id=container_group.identity.principal_id,
-            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
-            role_assignment_name=str(
-                seeded_uuid(
-                    f"{stack_name} Azure Container Instances Contributor for {dns_record_name}"
-                )
-            ),
-            role_definition_id=container_group_role_definition.id,
-            scope=container_group.id,
-            opts=child_opts,
         )
 
         # Register outputs
