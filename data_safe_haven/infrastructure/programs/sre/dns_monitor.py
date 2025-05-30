@@ -77,7 +77,7 @@ class DnsMonitorComponent(ComponentResource):
         # Allowing the managed identity to update DNS Records
         dns_zone_role_definition = authorization.RoleDefinition(
             f"{self._name}_{props.dns_record_name}_dnsmonitor_dns_updater_role",
-            role_name=f"DNS Zone updater for {props.dns_record_name}",
+            role_name=f"DNS Zone updater for {props.dns_record_name} at {stack_name}",
             scope=props.private_record_set_id,
             description=f"Custom role for updating {props.dns_record_name}'s DNS records",
             permissions=[
@@ -108,7 +108,7 @@ class DnsMonitorComponent(ComponentResource):
 
         container_group_role_definition = authorization.RoleDefinition(
             f"{self._name}_dnsmonitor_ip_reader_role",
-            role_name=f"Container group reader for {props.dns_record_name}",
+            role_name=f"Container group reader for {props.dns_record_name} at {stack_name}",
             scope=props.container_group_id,
             description=f"Custom role for reading {props.dns_record_name}'s container group",
             permissions=[
