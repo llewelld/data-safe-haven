@@ -226,5 +226,3 @@ class AllowlistRepository(str, Enum):
 
     CRAN = "cran"
     PYPI = "pypi"
-
-
