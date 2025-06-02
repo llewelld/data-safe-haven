@@ -9,8 +9,24 @@ from data_safe_haven.infrastructure.components import FileShareFile, FileShareFi
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
+# Configuration for the DNS Sidecar container.
+# TODO Remove later! Only for testing
+CONTAINER_IMAGE: str = "mcr.microsoft.com/azure-cli:0.10.7"
+# CONTAINER_IMAGE: str = "mcr.microsoft.com/azure-cli:latest"
+CONTAINER_NAME: str = "dnsmonitor"[:63]
+INIT_COMMAND: tuple[str, str, str] = ("/bin/sh", "-c", "/mnt/init/init.sh")
+CONTAINER_CPU: float = 0.5
+CONTAINER_MEMORY: float = 0.5
+MOUNT_PATH: str = "/mnt/init"
 
-class DnsMonitorProps:
+ENV_CONTAINER_GROUP: str = "CONTAINER_GROUP_NAME"
+ENV_RESOURCE_GROUP: str = "RESOURCE_GROUP"
+ENV_SUBSCRIPTION_ID: str = "SUBSCRIPTION_ID"
+ENV_RECORD_NAME: str = "RECORD_NAME"
+ENV_ZONE_NAME: str = "PRIVATE_ZONE_NAME"
+
+
+class DnsSidecarProps:
     """Properties of the DnsMonitorProps"""
 
     def __init__(
@@ -32,13 +48,13 @@ class DnsMonitorProps:
         self.storage_account_key = storage_account_key
 
 
-class DnsMonitorComponent(ComponentResource):
+class DnsSidecarComponent(ComponentResource):
 
     def __init__(
         self,
         name: str,
         stack_name: str,
-        props: DnsMonitorProps,
+        props: DnsSidecarProps,
         opts: ResourceOptions | None = None,
     ):
         super().__init__("dsh:sre:DnsMonitorComponent", name, {}, opts)

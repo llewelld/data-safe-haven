@@ -17,12 +17,9 @@ from data_safe_haven.infrastructure.components import (
     PostgresqlDatabaseProps,
     WrappedLogAnalyticsWorkspace,
 )
-from data_safe_haven.infrastructure.programs.sre.dns_monitor import (
-    DnsMonitorComponent,
-    DnsMonitorProps,
-)
+from data_safe_haven.infrastructure.programs.sre import dns_sidecar
 from data_safe_haven.resources import resources_path
-from data_safe_haven.types import DnsMonitorSidecarConfig, Ports
+from data_safe_haven.types import Ports
 from data_safe_haven.utility import FileReader
 
 
@@ -149,40 +146,40 @@ class SREHedgeDocServerComponent(ComponentResource):
             container_group_name=f"{stack_name}-container-group-hedgedoc",
             containers=[
                 containerinstance.ContainerArgs(
-                    image=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_IMAGE,
-                    name=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_NAME,
-                    command=DnsMonitorSidecarConfig.SIDECAR_COMMAND,
+                    image=dns_sidecar.CONTAINER_IMAGE,
+                    name=dns_sidecar.CONTAINER_NAME,
+                    command=dns_sidecar.INIT_COMMAND,
                     resources=containerinstance.ResourceRequirementsArgs(
                         requests=containerinstance.ResourceRequestsArgs(
-                            cpu=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_CPU,
-                            memory_in_gb=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_MEMORY_IN_GB,
+                            cpu=dns_sidecar.CONTAINER_CPU,
+                            memory_in_gb=dns_sidecar.CONTAINER_MEMORY,
                         ),
                     ),
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorSidecarConfig.CONTAINER_GROUP_ENVIRONMENT_VARIABLE,
+                            name=dns_sidecar.ENV_CONTAINER_GROUP,
                             value=container_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorSidecarConfig.RESOURCE_GROUP_ENVIRONMENT_VARIABLE,
+                            name=dns_sidecar.ENV_RESOURCE_GROUP,
                             value=props.resource_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorSidecarConfig.SUBSCRIPTION_ID_ENVIRONMENT_VARIABLE,
+                            name=dns_sidecar.ENV_SUBSCRIPTION_ID,
                             value=props.subscription_id,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorSidecarConfig.RECORD_NAME_ENVIRONMENT_VARIABLE,
+                            name=dns_sidecar.ENV_RECORD_NAME,
                             value=dns_record_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=DnsMonitorSidecarConfig.ZONE_NAME_ENVIRONMENT_VARIABLE,
+                            name=dns_sidecar.ENV_ZONE_NAME,
                             value=Output.concat("privatelink.", props.sre_fqdn),
                         ),
                     ],
                     volume_mounts=[
                         containerinstance.VolumeMountArgs(
-                            mount_path=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_MOUNT_PATH,
+                            mount_path=dns_sidecar.MOUNT_PATH,
                             name=f"{dns_record_name}-dnsmonitor",
                             read_only=True,
                         )
@@ -396,10 +393,10 @@ class SREHedgeDocServerComponent(ComponentResource):
             ),
         )
 
-        DnsMonitorComponent(
+        dns_sidecar.DnsSidecarComponent(
             f"{dns_record_name}_dns_monitor",
             stack_name,
-            DnsMonitorProps(
+            dns_sidecar.DnsSidecarProps(
                 container_group_id=container_group.id,
                 dns_record_name=dns_record_name,
                 identity_principal_id=container_group.identity.principal_id,
