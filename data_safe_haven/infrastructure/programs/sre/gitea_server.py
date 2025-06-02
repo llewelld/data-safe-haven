@@ -218,7 +218,7 @@ class SREGiteaServerComponent(ComponentResource):
                     command=DnsMonitorSidecarConfig.SIDECAR_COMMAND,
                     resources=containerinstance.ResourceRequirementsArgs(
                         requests=containerinstance.ResourceRequestsArgs(
-                            cpu=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_GPU,
+                            cpu=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_CPU,
                             memory_in_gb=DnsMonitorSidecarConfig.SIDECAR_CONTAINER_MEMORY_IN_GB,
                         ),
                     ),
