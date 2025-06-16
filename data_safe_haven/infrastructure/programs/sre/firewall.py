@@ -249,7 +249,9 @@ class SREFirewallComponent(ComponentResource):
         ]
 
         # Enabling DNS Monitors to connect to Azure AD and ARM.
-
+        # IMPORTANT: The subnets in this list will have access to the Azure Services with tags
+        # AzureResourceManager and AzureActiveDirectory. If adding user-facing subnets, make sure
+        # it's not possible to egress data via these services.
         subnets_for_dns_monitoring = Output.all(
             props.subnet_user_services_containers_prefixes,
             props.subnet_apt_proxy_server_prefixes,
