@@ -53,6 +53,21 @@ def get_quayio_versions(image_details: str) -> tuple[str, str, list[str]]:
     return (image_name, version, versions)
 
 
+@cache
+def get_mcr_versions(image_details: str) -> tuple[str, str, list[str]]:
+    """Get versions for Microsoft Artifact Registry images (via API)"""
+    image_name, version = image_details.split(":")
+    if "/" in image_name:
+        _, image_name = image_name.split("/")
+    response = requests.get(
+        f"https://mcr.microsoft.com/v2/{image_name}/tags/list",
+        timeout=60,
+    )
+
+    versions = response.json()["tags"]
+    return (image_name, version, versions)
+
+
 def annotate(
     versions: list[str], *, stable_only: bool
 ) -> list[tuple[str, version.Version]]:
@@ -83,6 +98,8 @@ for filename in (pathlib.Path("data_safe_haven") / "infrastructure").glob("**/*.
                     image, v_current, available = get_github_versions(image_details)
                 elif image_details.startswith("quay.io"):
                     image, v_current, available = get_quayio_versions(image_details)
+                elif image_details.startswith("mcr.microsoft.com"):
+                    image, v_current, available = get_mcr_versions(image_details)
                 else:
                     image, v_current, available = get_dockerhub_versions(image_details)
                 # Consider only stable versions unless there are none available

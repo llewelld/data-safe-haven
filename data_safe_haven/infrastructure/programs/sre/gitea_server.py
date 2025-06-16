@@ -209,7 +209,7 @@ class SREGiteaServerComponent(ComponentResource):
             container_group_name=container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image=dns_sidecar.CONTAINER_IMAGE,
+                    image="mcr.microsoft.com/azure-cli:2.74.0",
                     name=dns_sidecar.CONTAINER_NAME,
                     command=dns_sidecar.INIT_COMMAND,
                     resources=containerinstance.ResourceRequirementsArgs(
@@ -272,7 +272,7 @@ class SREGiteaServerComponent(ComponentResource):
                     ],
                 ),
                 containerinstance.ContainerArgs(
-                    image="gitea/gitea:1.23.7",
+                    image="gitea/gitea:1.24",
                     name="gitea"[:63],
                     command=["/app/custom/entrypoint.sh"],
                     environment_variables=[

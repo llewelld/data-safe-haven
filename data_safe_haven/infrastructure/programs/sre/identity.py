@@ -95,7 +95,7 @@ class SREIdentityComponent(ComponentResource):
             container_group_name=container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image=dns_sidecar.CONTAINER_IMAGE,
+                    image="mcr.microsoft.com/azure-cli:2.74.0",
                     name=dns_sidecar.CONTAINER_NAME,
                     command=dns_sidecar.INIT_COMMAND,
                     resources=containerinstance.ResourceRequirementsArgs(
@@ -188,7 +188,7 @@ class SREIdentityComponent(ComponentResource):
                     volume_mounts=[],
                 ),
                 containerinstance.ContainerArgs(
-                    image="redis:7.4.3",
+                    image="redis:8.0.2",
                     name="redis",
                     environment_variables=[],
                     ports=[

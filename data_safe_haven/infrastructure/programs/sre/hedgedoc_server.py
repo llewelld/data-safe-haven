@@ -146,7 +146,7 @@ class SREHedgeDocServerComponent(ComponentResource):
             container_group_name=f"{stack_name}-container-group-hedgedoc",
             containers=[
                 containerinstance.ContainerArgs(
-                    image=dns_sidecar.CONTAINER_IMAGE,
+                    image="mcr.microsoft.com/azure-cli:2.74.0",
                     name=dns_sidecar.CONTAINER_NAME,
                     command=dns_sidecar.INIT_COMMAND,
                     resources=containerinstance.ResourceRequirementsArgs(

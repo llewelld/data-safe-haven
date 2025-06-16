@@ -79,7 +79,7 @@ class SREClamAVMirrorComponent(ComponentResource):
             container_group_name=container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image=dns_sidecar.CONTAINER_IMAGE,
+                    image="mcr.microsoft.com/azure-cli:2.74.0",
                     name=dns_sidecar.CONTAINER_NAME,
                     command=dns_sidecar.INIT_COMMAND,
                     resources=containerinstance.ResourceRequirementsArgs(

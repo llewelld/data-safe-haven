@@ -176,7 +176,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 container_group_name=container_group_name,
                 containers=[
                     containerinstance.ContainerArgs(
-                        image=dns_sidecar.CONTAINER_IMAGE,
+                        image="mcr.microsoft.com/azure-cli:2.74.0",
                         name=dns_sidecar.CONTAINER_NAME,
                         command=dns_sidecar.INIT_COMMAND,
                         resources=containerinstance.ResourceRequirementsArgs(
@@ -239,7 +239,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ],
                     ),
                     containerinstance.ContainerArgs(
-                        image="sonatype/nexus3:3.79.1",
+                        image="sonatype/nexus3:3.81.1",
                         name="nexus"[:63],
                         environment_variables=[],
                         ports=[],

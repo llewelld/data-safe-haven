@@ -10,8 +10,7 @@ from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
 # Configuration for the DNS Sidecar container.
-CONTAINER_IMAGE: str = "mcr.microsoft.com/azure-cli:latest"
-CONTAINER_NAME: str = "dnsmonitor"[:63]
+CONTAINER_NAME: str = "dnsmonitor"  # must be fewer than 64 characters
 INIT_COMMAND: tuple[str, str, str] = ("/bin/sh", "-c", "/mnt/init/init.sh")
 CONTAINER_CPU: float = 0.5
 CONTAINER_MEMORY: float = 0.5
