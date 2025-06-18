@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Signing in with Azure CLI..."
-
+# For authenticating with Azure CLI, it's necessary to allow traffic to the service tag AzureActiveDirectory.
 az login --identity
 
 if [[ $? -ne 0 ]] ; then
@@ -9,6 +9,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
+# The IP resolution and DNS update are done through the Azure Resource Manager REST API. Hence, we need to allow traffic to the service tag AzureResourceManager.
 echo "Finding container group IP address..."
 private_ip=$(az container show --name $CONTAINER_GROUP_NAME --resource-group $RESOURCE_GROUP --subscription $SUBSCRIPTION_ID --query 'ipAddress.ip' -o tsv)
 if [[ $? -ne 0 ]] ; then
