@@ -1,20 +1,21 @@
-from pulumi import ComponentResource, Input, Output, ResourceOptions
+from pulumi import ComponentResource, Input, ResourceOptions
 from pulumi_azure_native import (
     authorization,
-    storage,
 )
 
-from data_safe_haven.functions import seeded_uuid
-from data_safe_haven.infrastructure.components import FileShareFile, FileShareFileProps
+from data_safe_haven.functions import b64encode, seeded_uuid
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
 # Configuration for the DNS Sidecar container.
 CONTAINER_NAME: str = "dnsmonitor"  # must be fewer than 64 characters
-INIT_COMMAND: tuple[str, str, str] = ("/bin/sh", "-c", "/mnt/init/init.sh")
+INIT_COMMAND: tuple[str, str] = ("/bin/sh", "/mnt/init/init.sh")
 CONTAINER_CPU: float = 0.5
 CONTAINER_MEMORY: float = 0.5
 MOUNT_PATH: str = "/mnt/init"
+INIT_SCRIPT_CONTENT: str = b64encode(
+    FileReader(resources_path / "dns_monitor" / "init.sh").file_contents()
+)  # DNS Monitor Script
 
 ENV_CONTAINER_GROUP: str = "CONTAINER_GROUP_NAME"
 ENV_RESOURCE_GROUP: str = "RESOURCE_GROUP"
@@ -33,16 +34,12 @@ class DnsSidecarProps:
         identity_principal_id: Input[str],
         private_record_set_id: Input[str],
         resource_group_name: Input[str],
-        storage_account_name: Input[str],
-        storage_account_key: Input[str],
     ):
         self.container_group_id = container_group_id
         self.dns_record_name = dns_record_name
         self.identity_principal_id = identity_principal_id
         self.private_record_set_id = private_record_set_id
         self.resource_group_name = resource_group_name
-        self.storage_account_name = storage_account_name
-        self.storage_account_key = storage_account_key
 
 
 class DnsSidecarComponent(ComponentResource):
@@ -56,36 +53,6 @@ class DnsSidecarComponent(ComponentResource):
     ):
         super().__init__("dsh:sre:DnsMonitorComponent", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
-
-        file_share_dns_monitor = storage.FileShare(
-            f"{self._name}_file_share_{props.dns_record_name}_dnsmonitor",
-            access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
-            account_name=props.storage_account_name,
-            resource_group_name=props.resource_group_name,
-            share_name=f"{props.dns_record_name}-dnsmonitor",
-            share_quota=1,
-            signed_identifiers=[],
-            opts=child_opts,
-        )
-
-        # Upload DNS Monitor Script
-        dns_monitor_script_reader = FileReader(
-            resources_path / "dns_monitor" / "init.sh"
-        )
-
-        self.file_share_dns_monitor_script = FileShareFile(
-            f"{self._name}_file_share_{props.dns_record_name}_dnsmonitor_init",
-            FileShareFileProps(
-                destination_path=dns_monitor_script_reader.name,
-                share_name=file_share_dns_monitor.name,
-                file_contents=Output.secret(dns_monitor_script_reader.file_contents()),
-                storage_account_key=props.storage_account_key,
-                storage_account_name=props.storage_account_name,
-            ),
-            opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=file_share_dns_monitor)
-            ),
-        )
 
         # Allowing the managed identity to update DNS Records
         dns_zone_role_definition = authorization.RoleDefinition(

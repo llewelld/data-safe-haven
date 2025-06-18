@@ -370,12 +370,8 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         name="nexus-allowlists-allowlists",
                     ),
                     containerinstance.VolumeArgs(
-                        azure_file=containerinstance.AzureFileVolumeArgs(
-                            share_name=f"{dns_record_name}-dnsmonitor",
-                            storage_account_key=props.storage_account_key,
-                            storage_account_name=props.storage_account_name,
-                        ),
                         name=f"{dns_record_name}-dnsmonitor",
+                        secret={"init.sh": dns_sidecar.INIT_SCRIPT_CONTENT},
                     ),
                 ],
                 opts=ResourceOptions.merge(
@@ -415,8 +411,6 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 identity_principal_id=container_group.identity.principal_id,
                 private_record_set_id=local_dns.private_record_set_id,
                 resource_group_name=props.resource_group_name,
-                storage_account_name=props.storage_account_name,
-                storage_account_key=props.storage_account_key,
             ),
         )
 
