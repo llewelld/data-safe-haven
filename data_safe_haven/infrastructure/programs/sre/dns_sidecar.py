@@ -17,12 +17,6 @@ INIT_SCRIPT_CONTENT: str = b64encode(
     FileReader(resources_path / "dns_monitor" / "init.sh").file_contents()
 )  # DNS Monitor Script
 
-ENV_CONTAINER_GROUP: str = "CONTAINER_GROUP_NAME"
-ENV_RESOURCE_GROUP: str = "RESOURCE_GROUP"
-ENV_SUBSCRIPTION_ID: str = "SUBSCRIPTION_ID"
-ENV_RECORD_NAME: str = "RECORD_NAME"
-ENV_ZONE_NAME: str = "PRIVATE_ZONE_NAME"
-
 
 class DnsSidecarProps:
     """Properties of the DnsMonitorProps"""

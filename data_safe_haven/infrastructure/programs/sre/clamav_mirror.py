@@ -90,23 +90,23 @@ class SREClamAVMirrorComponent(ComponentResource):
                     ),
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
-                            name=dns_sidecar.ENV_CONTAINER_GROUP,
+                            name="CONTAINER_GROUP_NAME",
                             value=container_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=dns_sidecar.ENV_RESOURCE_GROUP,
+                            name="RESOURCE_GROUP",
                             value=props.resource_group_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=dns_sidecar.ENV_SUBSCRIPTION_ID,
+                            name="SUBSCRIPTION_ID",
                             value=props.subscription_id,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=dns_sidecar.ENV_RECORD_NAME,
+                            name="RECORD_NAME",
                             value=dns_record_name,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name=dns_sidecar.ENV_ZONE_NAME,
+                            name="PRIVATE_ZONE_NAME",
                             value=Output.concat("privatelink.", props.sre_fqdn),
                         ),
                     ],
