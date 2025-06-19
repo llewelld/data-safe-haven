@@ -1,17 +1,16 @@
-from pulumi import ComponentResource, Input, ResourceOptions
-from pulumi_azure_native import (
-    authorization,
-)
+from pulumi import ComponentResource, Input, Output, ResourceOptions
+from pulumi_azure_native import app, authorization
 
 from data_safe_haven.functions import b64encode, seeded_uuid
+from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
 # Configuration for the DNS Sidecar container.
 CONTAINER_NAME: str = "dnsmonitor"  # must be fewer than 64 characters
 INIT_COMMAND: tuple[str, str] = ("/bin/sh", "/mnt/init/init.sh")
-CONTAINER_CPU: float = 0.1
-CONTAINER_MEMORY: float = 0.1
+CONTAINER_CPU: float = 0.25
+CONTAINER_MEMORY: float = 0.5
 MOUNT_PATH: str = "/mnt/init"
 INIT_SCRIPT_CONTENT: str = b64encode(
     FileReader(resources_path / "dns_monitor" / "init.sh").file_contents()
@@ -26,14 +25,22 @@ class DnsSidecarProps:
         container_group_id: Input[str],
         dns_record_name: str,
         identity_principal_id: Input[str],
+        location: Input[str],
+        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         private_record_set_id: Input[str],
         resource_group_name: Input[str],
+        sre_fqdn: Input[str],
+        subscription_id: Input[str],
     ):
         self.container_group_id = container_group_id
         self.dns_record_name = dns_record_name
         self.identity_principal_id = identity_principal_id
+        self.location = location
+        self.log_analytics_workspace = log_analytics_workspace
         self.private_record_set_id = private_record_set_id
         self.resource_group_name = resource_group_name
+        self.sre_fqdn = sre_fqdn
+        self.subscription_id = subscription_id
 
 
 class DnsSidecarComponent(ComponentResource):
@@ -107,3 +114,105 @@ class DnsSidecarComponent(ComponentResource):
             scope=props.container_group_id,
             opts=child_opts,
         )
+
+        # TODO: Experimenting with Container App Jobs:
+        self.container_app_job = DnsSidecarContainerAppJob(
+            f"{self._name}_app_job", stack_name, props, opts
+        )
+
+
+class DnsSidecarContainerAppJob(ComponentResource):
+
+    def __init__(
+        self,
+        name: str,
+        stack_name: str,
+        props: DnsSidecarProps | None = None,
+        opts: ResourceOptions | None = None,
+    ) -> None:
+        super().__init__("dsh:sre:DnsSidecarContainerAppJob", name, {}, opts)
+        child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
+
+        if props is not None:
+            self.managed_environment = app.ManagedEnvironment(
+                f"env-jobs-{props.dns_record_name}",
+                app_logs_configuration=app.AppLogsConfigurationArgs(
+                    destination="log-analytics",
+                    log_analytics_configuration=app.LogAnalyticsConfigurationArgs(
+                        customer_id=props.log_analytics_workspace.workspace_id,
+                        shared_key=props.log_analytics_workspace.workspace_key,
+                    ),
+                ),
+                resource_group_name=props.resource_group_name,
+                location=props.location,
+                opts=child_opts,
+            )
+
+            self.job = app.Job(
+                f"job-{props.dns_record_name}",
+                resource_group_name=props.resource_group_name,
+                environment_id=self.managed_environment.id,
+                configuration=app.JobConfigurationArgs(
+                    trigger_type=app.TriggerType.SCHEDULE,
+                    replica_timeout=1800,
+                    schedule_trigger_config=app.JobConfigurationScheduleTriggerConfigArgs(
+                        cron_expression="*/1 * * * *"
+                    ),
+                    secrets=[
+                        app.SecretArgs(
+                            name="init-script-content", value=INIT_SCRIPT_CONTENT
+                        )
+                    ],
+                ),
+                template=app.JobTemplateArgs(
+                    containers=[
+                        app.ContainerArgs(
+                            image="mcr.microsoft.com/azure-cli:2.74.0",
+                            name=CONTAINER_NAME,
+                            command=INIT_COMMAND,
+                            resources=app.ContainerResourcesArgs(
+                                cpu=CONTAINER_CPU,
+                                memory=f"{CONTAINER_MEMORY}Gi",
+                            ),
+                            env=[
+                                app.EnvironmentVarArgs(
+                                    name="CONTAINER_GROUP_NAME",
+                                    value=f"{stack_name}-container-group-{props.dns_record_name}",
+                                ),
+                                app.EnvironmentVarArgs(
+                                    name="RESOURCE_GROUP",
+                                    value=props.resource_group_name,
+                                ),
+                                app.EnvironmentVarArgs(
+                                    name="SUBSCRIPTION_ID",
+                                    value=props.subscription_id,
+                                ),
+                                app.EnvironmentVarArgs(
+                                    name="RECORD_NAME",
+                                    value=props.dns_record_name,
+                                ),
+                                app.EnvironmentVarArgs(
+                                    name="PRIVATE_ZONE_NAME",
+                                    value=Output.concat("privatelink.", props.sre_fqdn),
+                                ),
+                            ],
+                            volume_mounts=[
+                                app.VolumeMountArgs(
+                                    mount_path=MOUNT_PATH,
+                                    volume_name=f"{props.dns_record_name}-dnsmonitor",
+                                )
+                            ],
+                        )
+                    ],
+                    volumes=[
+                        app.VolumeArgs(
+                            name=f"{props.dns_record_name}-dnsmonitor",
+                            secrets=[
+                                app.SecretVolumeItemArgs(
+                                    path="init.sh", secret_ref="init-script-content"
+                                )
+                            ],
+                        )
+                    ],
+                ),
+            )

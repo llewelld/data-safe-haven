@@ -443,8 +443,12 @@ class SREGiteaServerComponent(ComponentResource):
                 container_group_id=container_group.id,
                 dns_record_name=dns_record_name,
                 identity_principal_id=container_group.identity.principal_id,
+                log_analytics_workspace=props.log_analytics_workspace,
+                location=props.location,
                 private_record_set_id=local_dns.private_record_set_id,
                 resource_group_name=props.resource_group_name,
+                sre_fqdn=props.sre_fqdn,
+                subscription_id=props.subscription_id,
             ),
         )
 
