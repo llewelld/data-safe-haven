@@ -207,6 +207,7 @@ class DnsSidecarContainerAppJob(ComponentResource):
                     volumes=[
                         app.VolumeArgs(
                             name=f"{props.dns_record_name}-dnsmonitor",
+                            storage_type=app.StorageType.SECRET,
                             secrets=[
                                 app.SecretVolumeItemArgs(
                                     path="init.sh", secret_ref="init-script-content"
