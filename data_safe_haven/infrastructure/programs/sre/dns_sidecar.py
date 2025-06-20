@@ -1,8 +1,12 @@
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import app, authorization
+from pulumi_azure_native import app, authorization, storage
 
 from data_safe_haven.functions import b64encode, seeded_uuid
-from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
+from data_safe_haven.infrastructure.components import (
+    FileShareFile,
+    FileShareFileProps,
+    WrappedLogAnalyticsWorkspace,
+)
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
@@ -31,6 +35,8 @@ class DnsSidecarProps:
         resource_group_name: Input[str],
         sre_fqdn: Input[str],
         subscription_id: Input[str],
+        storage_account_name: Input[str],
+        storage_account_key: Input[str],
     ):
         self.container_group_id = container_group_id
         self.dns_record_name = dns_record_name
@@ -41,6 +47,8 @@ class DnsSidecarProps:
         self.resource_group_name = resource_group_name
         self.sre_fqdn = sre_fqdn
         self.subscription_id = subscription_id
+        self.storage_account_name = storage_account_name
+        self.storage_account_key = storage_account_key
 
 
 class DnsSidecarComponent(ComponentResource):
@@ -134,7 +142,41 @@ class DnsSidecarContainerAppJob(ComponentResource):
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
 
         if props is not None:
-            self.managed_environment = app.ManagedEnvironment(
+
+            file_share = storage.FileShare(
+                f"{self._name}_file_share_{props.dns_record_name}_dnsmonitor",
+                access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
+                account_name=props.storage_account_name,
+                resource_group_name=props.resource_group_name,
+                share_name=f"{props.dns_record_name}-dnsmonitor-share",
+                share_quota=1,
+                signed_identifiers=[],
+                opts=child_opts,
+            )
+
+            # Upload DNS Monitor Script
+            dns_monitor_script_reader = FileReader(
+                resources_path / "dns_monitor" / "init.sh"
+            )
+
+            self.file_share_dns_monitor_script = FileShareFile(
+                f"{self._name}_file_share_{props.dns_record_name}_dnsmonitor_init",
+                FileShareFileProps(
+                    destination_path=dns_monitor_script_reader.name,
+                    share_name=file_share.name,
+                    file_contents=Output.secret(
+                        dns_monitor_script_reader.file_contents()
+                    ),
+                    storage_account_key=props.storage_account_key,
+                    storage_account_name=props.storage_account_name,
+                ),
+                opts=ResourceOptions.merge(
+                    child_opts, ResourceOptions(parent=file_share)
+                ),
+            )
+
+            # TODO: We can pass the workspace id and key via props.
+            managed_environment = app.ManagedEnvironment(
                 f"env-jobs-{props.dns_record_name}",
                 app_logs_configuration=app.AppLogsConfigurationArgs(
                     destination="log-analytics",
@@ -148,21 +190,31 @@ class DnsSidecarContainerAppJob(ComponentResource):
                 opts=child_opts,
             )
 
+            managed_environment_storage = app.ManagedEnvironmentsStorage(
+                f"env-storage-{props.dns_record_name}",
+                environment_name=managed_environment.name,
+                resource_group_name=props.resource_group_name,
+                properties=app.ManagedEnvironmentStoragePropertiesArgs(
+                    azure_file=app.AzureFilePropertiesArgs(
+                        access_mode=app.AccessMode.READ_ONLY,
+                        account_key=props.storage_account_key,
+                        account_name=props.storage_account_name,
+                        share_name=file_share.name,
+                    )
+                ),
+            )
+
+            volume_name: str = f"{props.dns_record_name}-dnsmonitor-volume"
             self.job = app.Job(
                 f"job-{props.dns_record_name}",
                 resource_group_name=props.resource_group_name,
-                environment_id=self.managed_environment.id,
+                environment_id=managed_environment.id,
                 configuration=app.JobConfigurationArgs(
                     trigger_type=app.TriggerType.SCHEDULE,
                     replica_timeout=1800,
                     schedule_trigger_config=app.JobConfigurationScheduleTriggerConfigArgs(
                         cron_expression="*/1 * * * *"
                     ),
-                    secrets=[
-                        app.SecretArgs(
-                            name="init-script-content", value=INIT_SCRIPT_CONTENT
-                        )
-                    ],
                 ),
                 template=app.JobTemplateArgs(
                     containers=[
@@ -199,20 +251,16 @@ class DnsSidecarContainerAppJob(ComponentResource):
                             volume_mounts=[
                                 app.VolumeMountArgs(
                                     mount_path=MOUNT_PATH,
-                                    volume_name=f"{props.dns_record_name}-dnsmonitor",
+                                    volume_name=volume_name,
                                 )
                             ],
                         )
                     ],
                     volumes=[
                         app.VolumeArgs(
-                            name=f"{props.dns_record_name}-dnsmonitor",
-                            storage_type=app.StorageType.SECRET,
-                            secrets=[
-                                app.SecretVolumeItemArgs(
-                                    path="init.sh", secret_ref="init-script-content"
-                                )
-                            ],
+                            name=volume_name,
+                            storage_type=app.StorageType.AZURE_FILE,
+                            storage_name=managed_environment_storage.name,
                         )
                     ],
                 ),

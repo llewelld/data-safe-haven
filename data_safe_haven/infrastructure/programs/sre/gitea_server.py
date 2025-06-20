@@ -449,6 +449,8 @@ class SREGiteaServerComponent(ComponentResource):
                 resource_group_name=props.resource_group_name,
                 sre_fqdn=props.sre_fqdn,
                 subscription_id=props.subscription_id,
+                storage_account_key=props.storage_account_key,
+                storage_account_name=props.storage_account_name,
             ),
         )
 
