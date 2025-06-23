@@ -1,5 +1,27 @@
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import app, authorization, storage
+from pulumi_azure_native import authorization, storage
+from pulumi_azure_native.app.v20250101 import (
+    AccessMode,
+    AppLogsConfigurationArgs,
+    AzureFilePropertiesArgs,
+    ContainerArgs,
+    ContainerResourcesArgs,
+    EnvironmentVarArgs,
+    Job,
+    JobConfigurationArgs,
+    JobConfigurationScheduleTriggerConfigArgs,
+    JobTemplateArgs,
+    LogAnalyticsConfigurationArgs,
+    ManagedEnvironment,
+    ManagedEnvironmentsStorage,
+    ManagedEnvironmentStoragePropertiesArgs,
+    StorageType,
+    TriggerType,
+    VnetConfigurationArgs,
+    VolumeArgs,
+    VolumeMountArgs,
+    WorkloadProfileArgs,
+)
 
 from data_safe_haven.functions import b64encode, seeded_uuid
 from data_safe_haven.infrastructure.components import (
@@ -29,6 +51,7 @@ class DnsSidecarProps:
         container_group_id: Input[str],
         dns_record_name: str,
         identity_principal_id: Input[str],
+        infrastructure_subnet_id: Input[str],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         private_record_set_id: Input[str],
@@ -41,6 +64,7 @@ class DnsSidecarProps:
         self.container_group_id = container_group_id
         self.dns_record_name = dns_record_name
         self.identity_principal_id = identity_principal_id
+        self.infrastructure_subnet_id = infrastructure_subnet_id
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
         self.private_record_set_id = private_record_set_id
@@ -176,27 +200,38 @@ class DnsSidecarContainerAppJob(ComponentResource):
             )
 
             # TODO: We can pass the workspace id and key via props.
-            managed_environment = app.ManagedEnvironment(
+            managed_environment = ManagedEnvironment(
                 f"env-jobs-{props.dns_record_name}",
-                app_logs_configuration=app.AppLogsConfigurationArgs(
+                app_logs_configuration=AppLogsConfigurationArgs(
                     destination="log-analytics",
-                    log_analytics_configuration=app.LogAnalyticsConfigurationArgs(
+                    log_analytics_configuration=LogAnalyticsConfigurationArgs(
                         customer_id=props.log_analytics_workspace.workspace_id,
                         shared_key=props.log_analytics_workspace.workspace_key,
                     ),
                 ),
                 resource_group_name=props.resource_group_name,
                 location=props.location,
+                vnet_configuration=VnetConfigurationArgs(
+                    infrastructure_subnet_id=props.infrastructure_subnet_id
+                ),
+                workload_profiles=[
+                    WorkloadProfileArgs(
+                        name=f"prof-{props.dns_record_name}",
+                        maximum_count=1,
+                        minimum_count=0,
+                        workload_profile_type="D4",
+                    )
+                ],
                 opts=child_opts,
             )
 
-            managed_environment_storage = app.ManagedEnvironmentsStorage(
+            managed_environment_storage = ManagedEnvironmentsStorage(
                 f"env-storage-{props.dns_record_name}",
                 environment_name=managed_environment.name,
                 resource_group_name=props.resource_group_name,
-                properties=app.ManagedEnvironmentStoragePropertiesArgs(
-                    azure_file=app.AzureFilePropertiesArgs(
-                        access_mode=app.AccessMode.READ_ONLY,
+                properties=ManagedEnvironmentStoragePropertiesArgs(
+                    azure_file=AzureFilePropertiesArgs(
+                        access_mode=AccessMode.READ_ONLY,
                         account_key=props.storage_account_key,
                         account_name=props.storage_account_name,
                         share_name=file_share.name,
@@ -205,51 +240,51 @@ class DnsSidecarContainerAppJob(ComponentResource):
             )
 
             volume_name: str = f"{props.dns_record_name}-dnsmonitor-volume"
-            self.job = app.Job(
+            self.job = Job(
                 f"job-{props.dns_record_name}",
                 resource_group_name=props.resource_group_name,
                 environment_id=managed_environment.id,
-                configuration=app.JobConfigurationArgs(
-                    trigger_type=app.TriggerType.SCHEDULE,
+                configuration=JobConfigurationArgs(
+                    trigger_type=TriggerType.SCHEDULE,
                     replica_timeout=1800,
-                    schedule_trigger_config=app.JobConfigurationScheduleTriggerConfigArgs(
+                    schedule_trigger_config=JobConfigurationScheduleTriggerConfigArgs(
                         cron_expression="*/1 * * * *"
                     ),
                 ),
-                template=app.JobTemplateArgs(
+                template=JobTemplateArgs(
                     containers=[
-                        app.ContainerArgs(
+                        ContainerArgs(
                             image="mcr.microsoft.com/azure-cli:2.74.0",
                             name=CONTAINER_NAME,
                             command=INIT_COMMAND,
-                            resources=app.ContainerResourcesArgs(
+                            resources=ContainerResourcesArgs(
                                 cpu=CONTAINER_CPU,
                                 memory=f"{CONTAINER_MEMORY}Gi",
                             ),
                             env=[
-                                app.EnvironmentVarArgs(
+                                EnvironmentVarArgs(
                                     name="CONTAINER_GROUP_NAME",
                                     value=f"{stack_name}-container-group-{props.dns_record_name}",
                                 ),
-                                app.EnvironmentVarArgs(
+                                EnvironmentVarArgs(
                                     name="RESOURCE_GROUP",
                                     value=props.resource_group_name,
                                 ),
-                                app.EnvironmentVarArgs(
+                                EnvironmentVarArgs(
                                     name="SUBSCRIPTION_ID",
                                     value=props.subscription_id,
                                 ),
-                                app.EnvironmentVarArgs(
+                                EnvironmentVarArgs(
                                     name="RECORD_NAME",
                                     value=props.dns_record_name,
                                 ),
-                                app.EnvironmentVarArgs(
+                                EnvironmentVarArgs(
                                     name="PRIVATE_ZONE_NAME",
                                     value=Output.concat("privatelink.", props.sre_fqdn),
                                 ),
                             ],
                             volume_mounts=[
-                                app.VolumeMountArgs(
+                                VolumeMountArgs(
                                     mount_path=MOUNT_PATH,
                                     volume_name=volume_name,
                                 )
@@ -257,9 +292,9 @@ class DnsSidecarContainerAppJob(ComponentResource):
                         )
                     ],
                     volumes=[
-                        app.VolumeArgs(
+                        VolumeArgs(
                             name=volume_name,
-                            storage_type=app.StorageType.AZURE_FILE,
+                            storage_type=StorageType.AZURE_FILE,
                             storage_name=managed_environment_storage.name,
                         )
                     ],

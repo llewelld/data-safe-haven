@@ -33,6 +33,7 @@ class SREFirewallProps:
         route_table_name: Input[str],
         subnet_apt_proxy_server: Input[network.GetSubnetResult],
         subnet_clamav_mirror: Input[network.GetSubnetResult],
+        subnet_dns_sidecar: Input[network.GetSubnetResult],
         subnet_firewall: Input[network.GetSubnetResult],
         subnet_firewall_management: Input[network.GetSubnetResult],
         subnet_guacamole_containers: Input[network.GetSubnetResult],
@@ -52,6 +53,11 @@ class SREFirewallProps:
         self.subnet_clamav_mirror_prefixes = Output.from_input(
             subnet_clamav_mirror
         ).apply(get_address_prefixes_from_subnet)
+
+        self.subnet_dns_sidecar_prefixes = Output.from_input(subnet_dns_sidecar).apply(
+            get_address_prefixes_from_subnet
+        )
+
         self.subnet_identity_containers_prefixes = Output.from_input(
             subnet_identity_containers
         ).apply(get_address_prefixes_from_subnet)
@@ -243,6 +249,27 @@ class SREFirewallComponent(ComponentResource):
                         ],
                         source_addresses=props.subnet_user_services_software_repositories_prefixes,
                         target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_PYTHON,
+                    ),
+                ],
+            ),
+            network.AzureFirewallApplicationRuleCollectionArgs(
+                action=network.AzureFirewallRCActionArgs(
+                    type=network.AzureFirewallRCActionType.ALLOW
+                ),
+                name="dnssidecar-mcr-registry-allow",
+                priority=FirewallPriorities.SRE_USER_SERVICES,
+                rules=[
+                    network.AzureFirewallApplicationRuleArgs(
+                        description="Allow Microsoft Container Registry downloads.",
+                        name="AllowMicrosoftContainerRegistryDownload",
+                        protocols=[
+                            network.AzureFirewallApplicationRuleProtocolArgs(
+                                port=int(Ports.HTTPS),
+                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                            )
+                        ],
+                        source_addresses=props.subnet_dns_sidecar_prefixes,
+                        target_fqdns=PermittedDomains.MICROSOFT_CONTAINER_REGISTRY,
                     ),
                 ],
             ),

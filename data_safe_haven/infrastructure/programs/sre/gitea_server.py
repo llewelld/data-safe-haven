@@ -27,6 +27,7 @@ class SREGiteaServerProps:
     def __init__(
         self,
         containers_subnet_id: Input[str],
+        dns_sidecar_subnet_id: Input[str],  # TODO: Remove later! Only for testing.
         database_password: Input[str],
         database_subnet_id: Input[str],
         dns_server_ip: Input[str],
@@ -53,6 +54,9 @@ class SREGiteaServerProps:
         )
 
         self.dns_server_ip = dns_server_ip
+        self.dns_sidecar_subnet_id = (
+            dns_sidecar_subnet_id  # TODO: Remove later! Only for testing.
+        )
         self.dockerhub_credentials = dockerhub_credentials
         self.ldap_server_hostname = ldap_server_hostname
         self.ldap_server_port = ldap_server_port
@@ -443,6 +447,7 @@ class SREGiteaServerComponent(ComponentResource):
                 container_group_id=container_group.id,
                 dns_record_name=dns_record_name,
                 identity_principal_id=container_group.identity.principal_id,
+                infrastructure_subnet_id=props.dns_sidecar_subnet_id,
                 log_analytics_workspace=props.log_analytics_workspace,
                 location=props.location,
                 private_record_set_id=local_dns.private_record_set_id,

@@ -51,6 +51,7 @@ class SREUserServicesProps:
         subnet_containers_support: Input[network.GetSubnetResult],
         subnet_databases: Input[network.GetSubnetResult],
         subnet_software_repositories: Input[network.GetSubnetResult],
+        subnet_dns_sidecar: Input[network.GetSubnetResult],
         subscription_id: Input[str],
     ) -> None:
         self.database_service_admin_password = database_service_admin_password
@@ -84,6 +85,9 @@ class SREUserServicesProps:
         self.subnet_databases_id = Output.from_input(subnet_databases).apply(
             get_id_from_subnet
         )
+        self.subnet_dns_sidecar_id = Output.from_input(subnet_dns_sidecar).apply(
+            get_id_from_subnet
+        )
         self.subnet_software_repositories_id = Output.from_input(
             subnet_software_repositories
         ).apply(get_id_from_subnet)
@@ -114,6 +118,7 @@ class SREUserServicesComponent(ComponentResource):
                 database_subnet_id=props.subnet_containers_support_id,
                 database_password=props.gitea_database_password,
                 dns_server_ip=props.dns_server_ip,
+                dns_sidecar_subnet_id=props.subnet_dns_sidecar_id,  # TODO: Remove later! Only for testing.
                 dockerhub_credentials=props.dockerhub_credentials,
                 ldap_server_hostname=props.ldap_server_hostname,
                 ldap_server_port=props.ldap_server_port,

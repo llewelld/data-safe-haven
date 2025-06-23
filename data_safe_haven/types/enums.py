@@ -31,6 +31,8 @@ class AzureServiceTag(str, Enum):
     INTERNET = "Internet"
     AZURE_RESOURCE_MANAGER = "AzureResourceManager"
     AZURE_ACTIVE_DIRECTORY = "AzureActiveDirectory"
+    MICROSOFT_CONTAINER_REGISTRY = "MicrosoftContainerRegistry"
+    AZURE_FRONT_DOOR_FIRST_PARTY = "AzureFrontDoorFirstParty"
 
 
 @verify(UNIQUE)
@@ -104,6 +106,7 @@ class NetworkingPriorities(int, Enum):
     AZURE_PLATFORM_DNS = 400
     AZURE_RESOURCE_MANAGER = 500
     AZURE_ACTIVE_DIRECTORY = 600
+    MICROSOFT_CONTAINER_REGISTRY = 700
     # DNS connections: 1000-1499
     INTERNAL_SRE_DNS_SERVERS = 1000
     # SRE connections: 1500-2999
@@ -163,6 +166,7 @@ class PermittedDomains(tuple[str, ...], Enum):
     )
     MICROSOFT_GRAPH_API = ("graph.microsoft.com",)
     MICROSOFT_LOGIN = ("login.microsoftonline.com",)
+    MICROSOFT_CONTAINER_REGISTRY = ("mcr.microsoft.com", "*.data.mcr.microsoft.com")
     MICROSOFT_IDENTITY = MICROSOFT_GRAPH_API + MICROSOFT_LOGIN
     RSTUDIO_DEB = ("download1.rstudio.org",)
     SOFTWARE_REPOSITORIES_PYTHON = (
@@ -183,6 +187,7 @@ class PermittedDomains(tuple[str, ...], Enum):
                 + AZURE_DNS_ZONES
                 + AZURE_RESOURCE_MANAGER
                 + CLAMAV_UPDATES
+                + MICROSOFT_CONTAINER_REGISTRY
                 + MICROSOFT_GRAPH_API
                 + MICROSOFT_LOGIN
                 + RSTUDIO_DEB
