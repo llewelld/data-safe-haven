@@ -16,7 +16,6 @@ from data_safe_haven.infrastructure.components import (
     PostgresqlDatabaseProps,
     WrappedLogAnalyticsWorkspace,
 )
-from data_safe_haven.infrastructure.programs.sre import dns_sidecar
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
@@ -27,7 +26,6 @@ class SREGiteaServerProps:
     def __init__(
         self,
         containers_subnet_id: Input[str],
-        dns_sidecar_subnet_id: Input[str],  # TODO: Remove later! Only for testing.
         database_password: Input[str],
         database_subnet_id: Input[str],
         dns_server_ip: Input[str],
@@ -54,9 +52,6 @@ class SREGiteaServerProps:
         )
 
         self.dns_server_ip = dns_server_ip
-        self.dns_sidecar_subnet_id = (
-            dns_sidecar_subnet_id  # TODO: Remove later! Only for testing.
-        )
         self.dockerhub_credentials = dockerhub_credentials
         self.ldap_server_hostname = ldap_server_hostname
         self.ldap_server_port = ldap_server_port
@@ -207,8 +202,8 @@ class SREGiteaServerComponent(ComponentResource):
 
         # Define the container group with a dns monitor, guacd, guacamole and caddy
         container_group_name = f"{stack_name}-container-group-gitea"
-        dns_record_name = "gitea"
-        container_group = containerinstance.ContainerGroup(
+        self.dns_record_name = "gitea"
+        self.container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
             container_group_name=container_group_name,
             containers=[
@@ -366,10 +361,6 @@ class SREGiteaServerComponent(ComponentResource):
                     ),
                     name="gitea-app-custom",
                 ),
-                containerinstance.VolumeArgs(
-                    name=f"{dns_record_name}-dnsmonitor",
-                    secret={"init.sh": dns_sidecar.INIT_SCRIPT_CONTENT},
-                ),
             ],
             opts=ResourceOptions.merge(
                 child_opts,
@@ -387,37 +378,20 @@ class SREGiteaServerComponent(ComponentResource):
         )
 
         # Register the container group in the SRE DNS zone
-        local_dns = LocalDnsRecordComponent(
+        self.local_dns = LocalDnsRecordComponent(
             f"{self._name}_gitea_dns_record_set",
             LocalDnsRecordProps(
                 base_fqdn=props.sre_fqdn,
-                private_ip_address=get_ip_address_from_container_group(container_group),
+                private_ip_address=get_ip_address_from_container_group(
+                    self.container_group
+                ),
                 record_name="gitea",
                 resource_group_name=props.resource_group_name,
             ),
             opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=container_group)
-            ),
-        )
-
-        dns_sidecar.DnsSidecarComponent(
-            f"{dns_record_name}_dns_monitor",
-            stack_name,
-            dns_sidecar.DnsSidecarProps(
-                container_group_id=container_group.id,
-                dns_record_name=dns_record_name,
-                identity_principal_id=container_group.identity.principal_id,
-                infrastructure_subnet_id=props.dns_sidecar_subnet_id,
-                log_analytics_workspace=props.log_analytics_workspace,
-                location=props.location,
-                private_record_set_id=local_dns.private_record_set_id,
-                resource_group_name=props.resource_group_name,
-                sre_fqdn=props.sre_fqdn,
-                subscription_id=props.subscription_id,
-                storage_account_key=props.storage_account_key,
-                storage_account_name=props.storage_account_name,
+                child_opts, ResourceOptions(parent=self.container_group)
             ),
         )
 
         # Register outputs
-        self.hostname = local_dns.hostname
+        self.hostname = self.local_dns.hostname

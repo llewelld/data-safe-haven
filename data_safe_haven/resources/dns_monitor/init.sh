@@ -9,19 +9,23 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-# The IP resolution and DNS update are done through the Azure Resource Manager REST API. Hence, we need to allow traffic to the service tag AzureResourceManager.
-echo "Finding container group IP address..."
-private_ip=$(az container show --name $CONTAINER_GROUP_NAME --resource-group $RESOURCE_GROUP --subscription $SUBSCRIPTION_ID --query 'ipAddress.ip' -o tsv)
-if [[ $? -ne 0 ]] ; then
-    echo "Could not find private IP for container group $CONTAINER_GROUP_NAME."
-    exit 1
-fi
-echo "Private IP for container group $CONTAINER_GROUP_NAME: $private_ip"
+for RECORD_NAME in ${RECORD_NAMES//,/ }
+do
+    CONTAINER_GROUP_NAME="${STACK_NAME}-container-group-${RECORD_NAME}"
+    # The IP resolution and DNS update are done through the Azure Resource Manager REST API. Hence, we need to allow traffic to the service tag AzureResourceManager.
+    echo "Finding container group IP address..."
+    private_ip=$(az container show --name $CONTAINER_GROUP_NAME --resource-group $RESOURCE_GROUP --subscription $SUBSCRIPTION_ID --query 'ipAddress.ip' -o tsv)
+    if [[ $? -ne 0 ]] ; then
+        echo "Could not find private IP for container group $CONTAINER_GROUP_NAME."
+        exit 1
+    fi
+    echo "Private IP for container group $CONTAINER_GROUP_NAME: $private_ip"
 
-echo "Updating DNS record..."
-az network private-dns record-set a update --name $RECORD_NAME --resource-group $RESOURCE_GROUP --subscription $SUBSCRIPTION_ID --zone-name $PRIVATE_ZONE_NAME --set aRecords[0].ipv4Address=$private_ip
-if [[ $? -ne 0 ]] ; then
-    echo "Could not update DNS record $RECORD_NAME in private zone $PRIVATE_ZONE_NAME."
-    exit 1
-fi
-echo "Record $RECORD_NAME updated in private zone $PRIVATE_ZONE_NAME"
+    echo "Updating DNS record..."
+    az network private-dns record-set a update --name $RECORD_NAME --resource-group $RESOURCE_GROUP --subscription $SUBSCRIPTION_ID --zone-name $PRIVATE_ZONE_NAME --set aRecords[0].ipv4Address=$private_ip
+    if [[ $? -ne 0 ]] ; then
+        echo "Could not update DNS record $RECORD_NAME in private zone $PRIVATE_ZONE_NAME."
+        exit 1
+    fi
+    echo "Record $RECORD_NAME updated in private zone $PRIVATE_ZONE_NAME"
+done
