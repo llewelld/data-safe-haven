@@ -15,6 +15,8 @@ from pulumi_azure_native.app.v20250101 import (
     ManagedEnvironment,
     ManagedEnvironmentsStorage,
     ManagedEnvironmentStoragePropertiesArgs,
+    ManagedServiceIdentityArgs,
+    ManagedServiceIdentityType,
     StorageType,
     TriggerType,
     VnetConfigurationArgs,
@@ -149,7 +151,12 @@ class DnsSidecarComponent(ComponentResource):
 
         # TODO: Experimenting with Container App Jobs:
         self.container_app_job = DnsSidecarContainerAppJob(
-            f"{self._name}_app_job", stack_name, props, opts
+            f"{self._name}_app_job",
+            stack_name,
+            dns_zone_role_definition.id,
+            container_group_role_definition.id,
+            props,
+            opts,
         )
 
 
@@ -159,6 +166,8 @@ class DnsSidecarContainerAppJob(ComponentResource):
         self,
         name: str,
         stack_name: str,
+        dns_zone_role_definition_id: Input[str],
+        container_group_role_definition_id: Input[str],
         props: DnsSidecarProps | None = None,
         opts: ResourceOptions | None = None,
     ) -> None:
@@ -200,6 +209,7 @@ class DnsSidecarContainerAppJob(ComponentResource):
             )
 
             # TODO: We can pass the workspace id and key via props.
+            workload_profile_name: str = f"prof-{props.dns_record_name}"
             managed_environment = ManagedEnvironment(
                 f"env-jobs-{props.dns_record_name}",
                 app_logs_configuration=AppLogsConfigurationArgs(
@@ -216,7 +226,7 @@ class DnsSidecarContainerAppJob(ComponentResource):
                 ),
                 workload_profiles=[
                     WorkloadProfileArgs(
-                        name=f"prof-{props.dns_record_name}",
+                        name=workload_profile_name,
                         maximum_count=1,
                         minimum_count=0,
                         workload_profile_type="D4",
@@ -240,10 +250,13 @@ class DnsSidecarContainerAppJob(ComponentResource):
             )
 
             volume_name: str = f"{props.dns_record_name}-dnsmonitor-volume"
-            self.job = Job(
+            job = Job(
                 f"job-{props.dns_record_name}",
                 resource_group_name=props.resource_group_name,
                 environment_id=managed_environment.id,
+                identity=ManagedServiceIdentityArgs(
+                    type=ManagedServiceIdentityType.SYSTEM_ASSIGNED,
+                ),
                 configuration=JobConfigurationArgs(
                     trigger_type=TriggerType.SCHEDULE,
                     replica_timeout=1800,
@@ -299,4 +312,33 @@ class DnsSidecarContainerAppJob(ComponentResource):
                         )
                     ],
                 ),
+                workload_profile_name=workload_profile_name,
+            )
+
+            authorization.RoleAssignment(
+                f"{self._name}_dnsmonitor_dns_updater_job_role_assignment",
+                principal_id=job.identity.principal_id,
+                principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+                role_assignment_name=str(
+                    seeded_uuid(
+                        f"{stack_name} DNS updater for Job {props.dns_record_name}"
+                    )
+                ),
+                role_definition_id=dns_zone_role_definition_id,
+                scope=props.private_record_set_id,
+                opts=child_opts,
+            )
+
+            authorization.RoleAssignment(
+                f"{self._name}_dnsmonitor_ip_reader_job_role_assignment",
+                principal_id=job.identity.principal_id,
+                principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+                role_assignment_name=str(
+                    seeded_uuid(
+                        f"{stack_name} IP Reader for Job {props.dns_record_name}"
+                    )
+                ),
+                role_definition_id=container_group_role_definition_id,
+                scope=props.container_group_id,
+                opts=child_opts,
             )

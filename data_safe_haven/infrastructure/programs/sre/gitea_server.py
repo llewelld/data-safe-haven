@@ -213,46 +213,6 @@ class SREGiteaServerComponent(ComponentResource):
             container_group_name=container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image="mcr.microsoft.com/azure-cli:2.74.0",
-                    name=dns_sidecar.CONTAINER_NAME,
-                    command=dns_sidecar.INIT_COMMAND,
-                    resources=containerinstance.ResourceRequirementsArgs(
-                        requests=containerinstance.ResourceRequestsArgs(
-                            cpu=dns_sidecar.CONTAINER_CPU,
-                            memory_in_gb=dns_sidecar.CONTAINER_MEMORY,
-                        ),
-                    ),
-                    environment_variables=[
-                        containerinstance.EnvironmentVariableArgs(
-                            name="CONTAINER_GROUP_NAME",
-                            value=container_group_name,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name="RESOURCE_GROUP",
-                            value=props.resource_group_name,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name="SUBSCRIPTION_ID",
-                            value=props.subscription_id,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name="RECORD_NAME",
-                            value=dns_record_name,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
-                            name="PRIVATE_ZONE_NAME",
-                            value=Output.concat("privatelink.", props.sre_fqdn),
-                        ),
-                    ],
-                    volume_mounts=[
-                        containerinstance.VolumeMountArgs(
-                            mount_path=dns_sidecar.MOUNT_PATH,
-                            name=f"{dns_record_name}-dnsmonitor",
-                            read_only=True,
-                        )
-                    ],
-                ),
-                containerinstance.ContainerArgs(
                     image="caddy:2.10.0",
                     name="caddy"[:63],
                     ports=[

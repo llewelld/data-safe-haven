@@ -280,11 +280,7 @@ class SREFirewallComponent(ComponentResource):
         # AzureResourceManager and AzureActiveDirectory. If adding user-facing subnets, make sure
         # it's not possible to egress data via these services.
         subnets_for_dns_monitoring = Output.all(
-            props.subnet_user_services_containers_prefixes,
-            props.subnet_apt_proxy_server_prefixes,
-            props.subnet_clamav_mirror_prefixes,
-            props.subnet_identity_containers_prefixes,
-            props.subnet_user_services_software_repositories_prefixes,
+            props.subnet_dns_sidecar_prefixes,
         ).apply(lambda prefixes: list(itertools.chain.from_iterable(prefixes)))
 
         network_rule_collections = [
