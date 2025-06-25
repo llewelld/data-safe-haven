@@ -24,6 +24,7 @@ from pulumi_azure_native.app.v20250101 import (
     VolumeMountArgs,
     WorkloadProfileArgs,
 )
+from pulumi_azure_native.managedidentity import UserAssignedIdentity
 
 from data_safe_haven.functions import seeded_uuid
 from data_safe_haven.infrastructure.components import (
@@ -101,6 +102,80 @@ class DnsSidecarComponent(ComponentResource):
             opts=ResourceOptions.merge(child_opts, ResourceOptions(parent=file_share)),
         )
 
+        user_assigned_identity = UserAssignedIdentity(
+            "identity_dns_monitor",
+            location=props.location,
+            resource_group_name=props.resource_group_name,
+            resource_name_=f"{stack_name}-id-dns-monitor",
+            opts=child_opts,
+        )
+
+        for (
+            dns_record_name,
+            private_record_set_id,
+            container_group_id,
+        ) in props.container_instance_information:
+
+            # Allowing the managed identity to update DNS Records
+            dns_zone_role_definition = authorization.RoleDefinition(
+                f"{self._name}_{dns_record_name}_dnsmonitor_dns_updater_role",
+                role_name=f"DNS Zone updater for {dns_record_name} at {stack_name}",
+                scope=private_record_set_id,
+                description=f"Custom role for updating {dns_record_name}'s DNS records",
+                permissions=[
+                    authorization.PermissionArgs(
+                        actions=[
+                            "Microsoft.Network/privateDnsZones/A/read",
+                            "Microsoft.Network/privateDnsZones/A/write",
+                        ],
+                        not_actions=[],
+                    )
+                ],
+                assignable_scopes=[private_record_set_id],
+            )
+
+            authorization.RoleAssignment(
+                f"{self._name}_dnsmonitor_dns_updater_job_role_assignment",
+                principal_id=user_assigned_identity.principal_id,
+                principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+                role_assignment_name=str(
+                    seeded_uuid(f"{stack_name} DNS updater for {dns_record_name}")
+                ),
+                role_definition_id=dns_zone_role_definition.id,
+                scope=private_record_set_id,
+                opts=child_opts,
+            )
+
+            # Allowing the managed identity to retrieve the container group IP
+
+            container_group_role_definition = authorization.RoleDefinition(
+                f"{self._name}_dnsmonitor_ip_reader_role",
+                role_name=f"Container group reader for {dns_record_name} at {stack_name}",
+                scope=container_group_id,
+                description=f"Custom role for reading {dns_record_name}'s container group",
+                permissions=[
+                    authorization.PermissionArgs(
+                        actions=[
+                            "Microsoft.ContainerInstance/containerGroups/read",
+                        ],
+                        not_actions=[],
+                    )
+                ],
+                assignable_scopes=[container_group_id],
+            )
+
+            authorization.RoleAssignment(
+                f"{self._name}_dnsmonitor_ip_reader_job_role_assignment",
+                principal_id=user_assigned_identity.principal_id,
+                principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+                role_assignment_name=str(
+                    seeded_uuid(f"{stack_name} IP Reader for Job {dns_record_name}")
+                ),
+                role_definition_id=container_group_role_definition.id,
+                scope=container_group_id,
+                opts=child_opts,
+            )
+
         workload_profile_name: str = "dnssidecarprof"
         managed_environment = ManagedEnvironment(
             "env-jobs-dns-sidecar",
@@ -114,7 +189,8 @@ class DnsSidecarComponent(ComponentResource):
             resource_group_name=props.resource_group_name,
             location=props.location,
             vnet_configuration=VnetConfigurationArgs(
-                infrastructure_subnet_id=props.infrastructure_subnet_id
+                infrastructure_subnet_id=props.infrastructure_subnet_id,
+                internal=True,
             ),
             workload_profiles=[
                 WorkloadProfileArgs(
@@ -142,12 +218,13 @@ class DnsSidecarComponent(ComponentResource):
         )
 
         volume_name: str = "dns-sidecar-volume"
-        job = Job(
+        self.job = Job(
             "job-dns-sidecar",
             resource_group_name=props.resource_group_name,
             environment_id=managed_environment.id,
             identity=ManagedServiceIdentityArgs(
-                type=ManagedServiceIdentityType.SYSTEM_ASSIGNED,
+                type=ManagedServiceIdentityType.USER_ASSIGNED,
+                user_assigned_identities=[user_assigned_identity.id],
             ),
             configuration=JobConfigurationArgs(
                 trigger_type=TriggerType.SCHEDULE,
@@ -167,6 +244,10 @@ class DnsSidecarComponent(ComponentResource):
                             memory="0.5Gi",
                         ),
                         env=[
+                            EnvironmentVarArgs(
+                                name="CLIENT_ID",
+                                value=user_assigned_identity.client_id,
+                            ),
                             EnvironmentVarArgs(
                                 name="STACK_NAME",
                                 value=stack_name,
@@ -211,69 +292,3 @@ class DnsSidecarComponent(ComponentResource):
             ),
             workload_profile_name=workload_profile_name,
         )
-
-        for (
-            dns_record_name,
-            private_record_set_id,
-            container_group_id,
-        ) in props.container_instance_information:
-
-            # Allowing the managed identity to update DNS Records
-            dns_zone_role_definition = authorization.RoleDefinition(
-                f"{self._name}_{dns_record_name}_dnsmonitor_dns_updater_role",
-                role_name=f"DNS Zone updater for {dns_record_name} at {stack_name}",
-                scope=private_record_set_id,
-                description=f"Custom role for updating {dns_record_name}'s DNS records",
-                permissions=[
-                    authorization.PermissionArgs(
-                        actions=[
-                            "Microsoft.Network/privateDnsZones/A/read",
-                            "Microsoft.Network/privateDnsZones/A/write",
-                        ],
-                        not_actions=[],
-                    )
-                ],
-                assignable_scopes=[private_record_set_id],
-            )
-
-            authorization.RoleAssignment(
-                f"{self._name}_dnsmonitor_dns_updater_job_role_assignment",
-                principal_id=job.identity.principal_id,
-                principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
-                role_assignment_name=str(
-                    seeded_uuid(f"{stack_name} DNS updater for {dns_record_name}")
-                ),
-                role_definition_id=dns_zone_role_definition.id,
-                scope=private_record_set_id,
-                opts=child_opts,
-            )
-
-            # Allowing the managed identity to retrieve the container group IP
-
-            container_group_role_definition = authorization.RoleDefinition(
-                f"{self._name}_dnsmonitor_ip_reader_role",
-                role_name=f"Container group reader for {dns_record_name} at {stack_name}",
-                scope=container_group_id,
-                description=f"Custom role for reading {dns_record_name}'s container group",
-                permissions=[
-                    authorization.PermissionArgs(
-                        actions=[
-                            "Microsoft.ContainerInstance/containerGroups/read",
-                        ],
-                        not_actions=[],
-                    )
-                ],
-                assignable_scopes=[container_group_id],
-            )
-
-            authorization.RoleAssignment(
-                f"{self._name}_dnsmonitor_ip_reader_job_role_assignment",
-                principal_id=job.identity.principal_id,
-                principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
-                role_assignment_name=str(
-                    seeded_uuid(f"{stack_name} IP Reader for Job {dns_record_name}")
-                ),
-                role_definition_id=container_group_role_definition.id,
-                scope=container_group_id,
-                opts=child_opts,
-            )

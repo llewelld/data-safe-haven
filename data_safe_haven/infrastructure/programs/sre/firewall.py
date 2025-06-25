@@ -256,7 +256,7 @@ class SREFirewallComponent(ComponentResource):
                 action=network.AzureFirewallRCActionArgs(
                     type=network.AzureFirewallRCActionType.ALLOW
                 ),
-                name="dnssidecar-mcr-registry-allow",
+                name="dns-sidecar-allow",
                 priority=FirewallPriorities.SRE_USER_SERVICES,
                 rules=[
                     network.AzureFirewallApplicationRuleArgs(
@@ -270,6 +270,18 @@ class SREFirewallComponent(ComponentResource):
                         ],
                         source_addresses=props.subnet_dns_sidecar_prefixes,
                         target_fqdns=PermittedDomains.MICROSOFT_CONTAINER_REGISTRY,
+                    ),
+                    network.AzureFirewallApplicationRuleArgs(
+                        description="Allow using Managed Identities.",
+                        name="AllowUsingManagedIdentities",
+                        protocols=[
+                            network.AzureFirewallApplicationRuleProtocolArgs(
+                                port=int(Ports.HTTPS),
+                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                            )
+                        ],
+                        source_addresses=props.subnet_dns_sidecar_prefixes,
+                        target_fqdns=PermittedDomains.MANAGED_IDENTITIES,
                     ),
                 ],
             ),

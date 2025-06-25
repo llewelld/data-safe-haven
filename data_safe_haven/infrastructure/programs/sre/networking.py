@@ -2049,7 +2049,7 @@ class SRENetworkingComponent(ComponentResource):
                     network_security_group=network.NetworkSecurityGroupArgs(
                         id=nsg_dns_sidecar.id
                     ),
-                    # route_table=network.RouteTableArgs(id=route_table.id),
+                    route_table=network.RouteTableArgs(id=route_table.id),
                 ),
             ],
             virtual_network_name=f"{stack_name}-vnet",

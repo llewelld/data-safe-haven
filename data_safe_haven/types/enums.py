@@ -168,6 +168,13 @@ class PermittedDomains(tuple[str, ...], Enum):
     MICROSOFT_LOGIN = ("login.microsoftonline.com",)
     MICROSOFT_CONTAINER_REGISTRY = ("mcr.microsoft.com", "*.data.mcr.microsoft.com")
     MICROSOFT_IDENTITY = MICROSOFT_GRAPH_API + MICROSOFT_LOGIN
+    MANAGED_IDENTITIES = (
+        "*.identity.azure.net",
+        *MICROSOFT_LOGIN,
+        "*.login.microsoftonline.com",
+        "*.login.microsoft.com",
+    )
+
     RSTUDIO_DEB = ("download1.rstudio.org",)
     SOFTWARE_REPOSITORIES_PYTHON = (
         "files.pythonhosted.org",
@@ -187,6 +194,7 @@ class PermittedDomains(tuple[str, ...], Enum):
                 + AZURE_DNS_ZONES
                 + AZURE_RESOURCE_MANAGER
                 + CLAMAV_UPDATES
+                + MANAGED_IDENTITIES
                 + MICROSOFT_CONTAINER_REGISTRY
                 + MICROSOFT_GRAPH_API
                 + MICROSOFT_LOGIN

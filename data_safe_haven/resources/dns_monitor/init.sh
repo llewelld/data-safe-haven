@@ -2,7 +2,7 @@
 
 echo "Signing in with Azure CLI..."
 # For authenticating with Azure CLI, it's necessary to allow traffic to the service tag AzureActiveDirectory.
-az login --identity
+az login --identity --client-id $CLIENT_ID
 
 if [[ $? -ne 0 ]] ; then
     echo "Could not sign in with Azure CLI with managed identity."
