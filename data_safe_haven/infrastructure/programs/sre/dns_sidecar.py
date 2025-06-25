@@ -41,7 +41,7 @@ class DnsSidecarProps:
 
     def __init__(
         self,
-        container_instance_information: list[tuple[str, Input[str], Input[str]]],
+        container_instance_information: list[tuple[str, str, Input[str], Input[str]]],
         infrastructure_subnet_id: Input[str],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
@@ -112,6 +112,7 @@ class DnsSidecarComponent(ComponentResource):
 
         for (
             dns_record_name,
+            _,
             private_record_set_id,
             container_group_id,
         ) in props.container_instance_information:
@@ -119,9 +120,9 @@ class DnsSidecarComponent(ComponentResource):
             # Allowing the managed identity to update DNS Records
             dns_zone_role_definition = authorization.RoleDefinition(
                 f"{self._name}_{dns_record_name}_dnsmonitor_dns_updater_role",
-                role_name=f"DNS Zone updater for {dns_record_name} at {stack_name}",
+                role_name=f"DNS Zone updater for {dns_record_name} ({stack_name})",
                 scope=private_record_set_id,
-                description=f"Custom role for updating {dns_record_name}'s DNS records",
+                description=f"Role for updating {dns_record_name}'s DNS records",
                 permissions=[
                     authorization.PermissionArgs(
                         actions=[
@@ -134,8 +135,8 @@ class DnsSidecarComponent(ComponentResource):
                 assignable_scopes=[private_record_set_id],
             )
 
-            authorization.RoleAssignment(
-                f"{self._name}_dnsmonitor_dns_updater_job_role_assignment",
+            self.dns_zone_role_assignment = authorization.RoleAssignment(
+                f"{self._name}_{dns_record_name}_dnsmonitor_dns_updater_job_role_assignment",
                 principal_id=user_assigned_identity.principal_id,
                 principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
                 role_assignment_name=str(
@@ -149,10 +150,10 @@ class DnsSidecarComponent(ComponentResource):
             # Allowing the managed identity to retrieve the container group IP
 
             container_group_role_definition = authorization.RoleDefinition(
-                f"{self._name}_dnsmonitor_ip_reader_role",
-                role_name=f"Container group reader for {dns_record_name} at {stack_name}",
+                f"{self._name}_{dns_record_name}_dnsmonitor_ip_reader_role",
+                role_name=f"Container group reader for {dns_record_name} ({stack_name})",
                 scope=container_group_id,
-                description=f"Custom role for reading {dns_record_name}'s container group",
+                description=f"Role for reading {dns_record_name}'s container group",
                 permissions=[
                     authorization.PermissionArgs(
                         actions=[
@@ -164,8 +165,8 @@ class DnsSidecarComponent(ComponentResource):
                 assignable_scopes=[container_group_id],
             )
 
-            authorization.RoleAssignment(
-                f"{self._name}_dnsmonitor_ip_reader_job_role_assignment",
+            self.container_group_role_assignment = authorization.RoleAssignment(
+                f"{self._name}_{dns_record_name}_dnsmonitor_ip_reader_job_role_assignment",
                 principal_id=user_assigned_identity.principal_id,
                 principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
                 role_assignment_name=str(
@@ -261,11 +262,11 @@ class DnsSidecarComponent(ComponentResource):
                                 value=props.subscription_id,
                             ),
                             EnvironmentVarArgs(
-                                name="RECORD_NAMES",
+                                name="RECORD_NAMES_CONTAINER_GROUPS",
                                 value=",".join(
                                     [
-                                        dns_record_name
-                                        for dns_record_name, _, _ in props.container_instance_information
+                                        f"{dns_record_name} {container_group_name}"
+                                        for dns_record_name, container_group_name, _, _ in props.container_instance_information
                                     ]
                                 ),
                             ),

@@ -1,12 +1,19 @@
 """Pulumi declarative program"""
 
 import pulumi
-from pulumi import ResourceOptions
+from pulumi import Input, Output, ResourceOptions
 from pulumi_azure_native import resources
 
 from data_safe_haven.config import Context, SREConfig
 from data_safe_haven.functions import replace_separators
-from data_safe_haven.infrastructure.common import DockerHubCredentials
+from data_safe_haven.infrastructure.common import (
+    DockerHubCredentials,
+    get_id_from_subnet,
+)
+from data_safe_haven.infrastructure.programs.sre.dns_sidecar import (
+    DnsSidecarComponent,
+    DnsSidecarProps,
+)
 
 from .sre.application_gateway import (
     SREApplicationGatewayComponent,
@@ -242,7 +249,6 @@ class DeclarativeSRE:
                 sre_fqdn=networking.sre_fqdn,
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
-                subscription_id=self.config.azure.subscription_id,
             ),
             tags=self.tags,
         )
@@ -433,6 +439,42 @@ class DeclarativeSRE:
                 storage_account_data_private_sensitive_name=data.storage_account_data_private_sensitive_name,
             ),
             tags=self.tags,
+        )
+
+        # Deploy the DNS Sidecar
+        container_instance_information: list[
+            tuple[str, str, Input[str], Input[str]]
+        ] = [
+            (
+                user_services.gitea_server.dns_record_name,
+                user_services.gitea_server.container_group_name,
+                user_services.gitea_server.local_dns.private_record_set_id,
+                user_services.gitea_server.container_group.id,
+            ),
+            (
+                apt_proxy_server.dns_record_name,
+                apt_proxy_server.container_group_name,
+                apt_proxy_server.local_dns.private_record_set_id,
+                apt_proxy_server.container_group.id,
+            ),
+        ]
+
+        DnsSidecarComponent(
+            "dns_monitor",
+            self.stack_name,
+            DnsSidecarProps(
+                container_instance_information=container_instance_information,
+                infrastructure_subnet_id=Output.from_input(
+                    networking.subnet_dns_sidecar
+                ).apply(get_id_from_subnet),
+                log_analytics_workspace=monitoring.log_analytics,
+                location=self.config.azure.location,
+                resource_group_name=resource_group.name,
+                sre_fqdn=networking.sre_fqdn,
+                subscription_id=self.config.azure.subscription_id,
+                storage_account_key=data.storage_account_data_configuration_key,
+                storage_account_name=data.storage_account_data_configuration_name,
+            ),
         )
 
         # Export values for later use

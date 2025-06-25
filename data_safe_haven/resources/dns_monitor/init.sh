@@ -9,9 +9,12 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-for RECORD_NAME in ${RECORD_NAMES//,/ }
-do
-    CONTAINER_GROUP_NAME="${STACK_NAME}-container-group-${RECORD_NAME}"
+IFS=',' read -ra RECORD_NAME_CONTAINER_GROUP <<< "$RECORD_NAMES_CONTAINER_GROUPS"
+for RECORD_NAME_CONTAINER_GROUP in "${RECORD_NAME_CONTAINER_GROUP[@]}"; do
+    as_array=($RECORD_NAME_CONTAINER_GROUP)
+    RECORD_NAME=${as_array[0]}
+    CONTAINER_GROUP_NAME=${as_array[1]}
+
     # The IP resolution and DNS update are done through the Azure Resource Manager REST API. Hence, we need to allow traffic to the service tag AzureResourceManager.
     echo "Finding container group IP address..."
     private_ip=$(az container show --name $CONTAINER_GROUP_NAME --resource-group $RESOURCE_GROUP --subscription $SUBSCRIPTION_ID --query 'ipAddress.ip' -o tsv)

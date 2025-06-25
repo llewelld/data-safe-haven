@@ -30,7 +30,6 @@ class SREAptProxyServerProps:
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
-        subscription_id: Input[str],
     ) -> None:
         self.containers_subnet_id = Output.from_input(containers_subnet).apply(
             get_id_from_subnet
@@ -42,7 +41,6 @@ class SREAptProxyServerProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
-        self.subscription_id = subscription_id
 
 
 class SREAptProxyServerComponent(ComponentResource):
@@ -89,11 +87,11 @@ class SREAptProxyServerComponent(ComponentResource):
         )
 
         # Define the container group with squid-deb-proxy
-        container_group_name = f"{stack_name}-container-group-apt-proxy-server"
-        dns_record_name = "apt"
-        container_group = containerinstance.ContainerGroup(
+        self.container_group_name = f"{stack_name}-container-group-apt-proxy-server"
+        self.dns_record_name = "apt"
+        self.container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
-            container_group_name=container_group_name,
+            container_group_name=self.container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
                     image="ghcr.io/alan-turing-institute/squid-deb-proxy:0.0.1",
@@ -186,18 +184,20 @@ class SREAptProxyServerComponent(ComponentResource):
         )
 
         # Register the container group in the SRE DNS zone
-        local_dns = LocalDnsRecordComponent(
+        self.local_dns = LocalDnsRecordComponent(
             f"{self._name}_apt_proxy_server_dns_record_set",
             LocalDnsRecordProps(
                 base_fqdn=props.sre_fqdn,
-                private_ip_address=get_ip_address_from_container_group(container_group),
+                private_ip_address=get_ip_address_from_container_group(
+                    self.container_group
+                ),
                 record_name="apt",
                 resource_group_name=props.resource_group_name,
             ),
             opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=container_group)
+                child_opts, ResourceOptions(parent=self.container_group)
             ),
         )
 
         # Register outputs
-        self.hostname = local_dns.hostname
+        self.hostname = self.local_dns.hostname

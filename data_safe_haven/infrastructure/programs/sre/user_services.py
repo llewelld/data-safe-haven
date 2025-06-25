@@ -10,10 +10,6 @@ from data_safe_haven.infrastructure.common import (
 from data_safe_haven.infrastructure.components import (
     WrappedLogAnalyticsWorkspace,
 )
-from data_safe_haven.infrastructure.programs.sre.dns_sidecar import (
-    DnsSidecarComponent,
-    DnsSidecarProps,
-)
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps
@@ -134,7 +130,6 @@ class SREUserServicesComponent(ComponentResource):
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
-                subscription_id=props.subscription_id,
             ),
             opts=child_opts,
             tags=child_tags,
@@ -206,28 +201,3 @@ class SREUserServicesComponent(ComponentResource):
                 opts=child_opts,
                 tags=child_tags,
             )
-
-        # Deploy the DNS Sidecar
-        container_instance_information: list[tuple[str, Input[str], Input[str]]] = [
-            (
-                self.gitea_server.dns_record_name,
-                self.gitea_server.local_dns.private_record_set_id,
-                self.gitea_server.container_group.id,
-            )
-        ]
-
-        DnsSidecarComponent(
-            "dns_monitor",
-            stack_name,
-            DnsSidecarProps(
-                container_instance_information=container_instance_information,
-                infrastructure_subnet_id=props.subnet_dns_sidecar_id,
-                log_analytics_workspace=props.log_analytics_workspace,
-                location=props.location,
-                resource_group_name=props.resource_group_name,
-                sre_fqdn=props.sre_fqdn,
-                subscription_id=props.subscription_id,
-                storage_account_key=props.storage_account_key,
-                storage_account_name=props.storage_account_name,
-            ),
-        )

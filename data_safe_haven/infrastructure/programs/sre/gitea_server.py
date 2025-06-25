@@ -41,7 +41,6 @@ class SREGiteaServerProps:
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
-        subscription_id: Input[str],
         database_username: Input[str] | None = None,
     ) -> None:
         self.containers_subnet_id = containers_subnet_id
@@ -64,7 +63,6 @@ class SREGiteaServerProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
-        self.subscription_id = subscription_id
 
 
 class SREGiteaServerComponent(ComponentResource):
@@ -201,11 +199,11 @@ class SREGiteaServerComponent(ComponentResource):
         )
 
         # Define the container group with a dns monitor, guacd, guacamole and caddy
-        container_group_name = f"{stack_name}-container-group-gitea"
+        self.container_group_name = f"{stack_name}-container-group-gitea"
         self.dns_record_name = "gitea"
         self.container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
-            container_group_name=container_group_name,
+            container_group_name=self.container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
                     image="caddy:2.10.0",
