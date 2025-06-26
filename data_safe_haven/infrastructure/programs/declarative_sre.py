@@ -1,7 +1,7 @@
 """Pulumi declarative program"""
 
 import pulumi
-from pulumi import Input, Output, ResourceOptions
+from pulumi import Output, ResourceOptions
 from pulumi_azure_native import resources
 
 from data_safe_haven.config import Context, SREConfig
