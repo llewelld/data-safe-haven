@@ -203,7 +203,6 @@ class DeclarativeSRE:
                 subnet_firewall_management=networking.subnet_firewall_management,
                 subnet_guacamole_containers=networking.subnet_guacamole_containers,
                 subnet_identity_containers=networking.subnet_identity_containers,
-                subnet_user_services_containers=networking.subnet_user_services_containers,
                 subnet_user_services_software_repositories=networking.subnet_user_services_software_repositories,
                 subnet_workspaces=networking.subnet_workspaces,
             ),

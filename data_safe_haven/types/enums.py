@@ -31,7 +31,6 @@ class AzureServiceTag(str, Enum):
     INTERNET = "Internet"
     AZURE_RESOURCE_MANAGER = "AzureResourceManager"
     AZURE_ACTIVE_DIRECTORY = "AzureActiveDirectory"
-    AZURE_FRONT_DOOR_FIRST_PARTY = "AzureFrontDoorFirstParty"
 
 
 @verify(UNIQUE)
@@ -67,15 +66,15 @@ class FirewallPriorities(int, Enum):
     ALL = 1000
     # SHM sources: 2000-2999
     SHM_IDENTITY_SERVERS = 2000
-    # SRE sources: 2500-3999
-    SRE_DNS_SIDECAR = 2500
+    # SRE sources: 3000-3999
     SRE_APT_PROXY_SERVER = 3000
     SRE_CLAMAV_MIRROR = 3100
-    SRE_GUACAMOLE_CONTAINERS = 3200
-    SRE_IDENTITY_CONTAINERS = 3300
-    SRE_USER_SERVICES_SOFTWARE_REPOSITORIES = 3400
-    SRE_WORKSPACES = 3500
-    SRE_WORKSPACES_DENY = 3550
+    SRE_DNS_SIDECAR = 3200
+    SRE_GUACAMOLE_CONTAINERS = 3300
+    SRE_IDENTITY_CONTAINERS = 3400
+    SRE_USER_SERVICES_SOFTWARE_REPOSITORIES = 3500
+    SRE_WORKSPACES = 3600
+    SRE_WORKSPACES_DENY = 3650
 
 
 @verify(UNIQUE)
@@ -166,9 +165,9 @@ class PermittedDomains(tuple[str, ...], Enum):
     MICROSOFT_LOGIN = ("login.microsoftonline.com",)
     MICROSOFT_CONTAINER_REGISTRY = ("mcr.microsoft.com", "*.data.mcr.microsoft.com")
     MICROSOFT_IDENTITY = MICROSOFT_GRAPH_API + MICROSOFT_LOGIN
-    MANAGED_IDENTITIES = (
-        "*.identity.azure.net",
+    AZURE_MANAGED_IDENTITIES = (
         *MICROSOFT_LOGIN,
+        "*.identity.azure.net",
         "*.login.microsoftonline.com",
         "*.login.microsoft.com",
     )
@@ -192,7 +191,7 @@ class PermittedDomains(tuple[str, ...], Enum):
                 + AZURE_DNS_ZONES
                 + AZURE_RESOURCE_MANAGER
                 + CLAMAV_UPDATES
-                + MANAGED_IDENTITIES
+                + AZURE_MANAGED_IDENTITIES
                 + MICROSOFT_CONTAINER_REGISTRY
                 + MICROSOFT_GRAPH_API
                 + MICROSOFT_LOGIN

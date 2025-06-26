@@ -53,7 +53,6 @@ class SREUserServicesProps:
     ) -> None:
         self.database_service_admin_password = database_service_admin_password
         self.databases = databases
-
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.gitea_database_password = gitea_database_password

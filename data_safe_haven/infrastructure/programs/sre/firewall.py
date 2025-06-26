@@ -37,7 +37,6 @@ class SREFirewallProps:
         subnet_firewall_management: Input[network.GetSubnetResult],
         subnet_guacamole_containers: Input[network.GetSubnetResult],
         subnet_identity_containers: Input[network.GetSubnetResult],
-        subnet_user_services_containers: Input[network.GetSubnetResult],
         subnet_user_services_software_repositories: Input[network.GetSubnetResult],
         subnet_workspaces: Input[network.GetSubnetResult],
     ) -> None:
@@ -68,9 +67,6 @@ class SREFirewallProps:
         ).apply(get_id_from_subnet)
         self.subnet_guacamole_containers_prefixes = Output.from_input(
             subnet_guacamole_containers
-        ).apply(get_address_prefixes_from_subnet)
-        self.subnet_user_services_containers_prefixes = Output.from_input(
-            subnet_user_services_containers
         ).apply(get_address_prefixes_from_subnet)
         self.subnet_user_services_software_repositories_prefixes = Output.from_input(
             subnet_user_services_software_repositories
@@ -280,7 +276,7 @@ class SREFirewallComponent(ComponentResource):
                             )
                         ],
                         source_addresses=props.subnet_dns_sidecar_prefixes,
-                        target_fqdns=PermittedDomains.MANAGED_IDENTITIES,
+                        target_fqdns=PermittedDomains.AZURE_MANAGED_IDENTITIES,
                     ),
                 ],
             ),

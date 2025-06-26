@@ -199,8 +199,10 @@ class SREGiteaServerComponent(ComponentResource):
         )
 
         # Define the container group with a dns monitor, guacd, guacamole and caddy
-        self.container_group_name = f"{stack_name}-container-group-gitea"
         self.dns_record_name = "gitea"
+        self.container_group_name = (
+            f"{stack_name}-container-group-{self.dns_record_name }"
+        )
         self.container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
             container_group_name=self.container_group_name,

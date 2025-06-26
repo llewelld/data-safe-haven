@@ -61,7 +61,6 @@ def firewall_props_internet_enabled(
     subnet_guacamole_containers: network.GetSubnetResult,
     subnet_identity_containers: network.GetSubnetResult,
     subnet_dns_sidecar: network.GetSubnetResult,
-    subnet_user_services_containers: network.GetSubnetResult,
     subnet_user_services_software_repositories: network.GetSubnetResult,
     subnet_workspaces: network.GetSubnetResult,
 ) -> SREFirewallProps:
@@ -78,7 +77,6 @@ def firewall_props_internet_enabled(
         subnet_firewall_management=subnet_firewall_management,
         subnet_guacamole_containers=subnet_guacamole_containers,
         subnet_identity_containers=subnet_identity_containers,
-        subnet_user_services_containers=subnet_user_services_containers,
         subnet_user_services_software_repositories=subnet_user_services_software_repositories,
         subnet_workspaces=subnet_workspaces,
     )
@@ -97,7 +95,6 @@ def firewall_props_internet_disabled(
     subnet_firewall_management: network.GetSubnetResult,
     subnet_guacamole_containers: network.GetSubnetResult,
     subnet_identity_containers: network.GetSubnetResult,
-    subnet_user_services_containers: network.GetSubnetResult,
     subnet_user_services_software_repositories: network.GetSubnetResult,
     subnet_workspaces: network.GetSubnetResult,
 ) -> SREFirewallProps:
@@ -114,7 +111,6 @@ def firewall_props_internet_disabled(
         subnet_firewall_management=subnet_firewall_management,
         subnet_guacamole_containers=subnet_guacamole_containers,
         subnet_identity_containers=subnet_identity_containers,
-        subnet_user_services_containers=subnet_user_services_containers,
         subnet_user_services_software_repositories=subnet_user_services_software_repositories,
         subnet_workspaces=subnet_workspaces,
     )
