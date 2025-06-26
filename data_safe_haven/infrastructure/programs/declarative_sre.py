@@ -267,7 +267,6 @@ class DeclarativeSRE:
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
                 subnet=networking.subnet_clamav_mirror,
-                subscription_id=self.config.azure.subscription_id,
             ),
             tags=self.tags,
         )
@@ -456,6 +455,12 @@ class DeclarativeSRE:
                 apt_proxy_server.container_group_name,
                 apt_proxy_server.local_dns.private_record_set_id,
                 apt_proxy_server.container_group.id,
+            ),
+            (
+                clamav_mirror.dns_record_name,
+                clamav_mirror.container_group_name,
+                clamav_mirror.local_dns.private_record_set_id,
+                clamav_mirror.container_group.id,
             ),
         ]
 
