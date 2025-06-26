@@ -358,7 +358,6 @@ class DeclarativeSRE:
                 location=self.config.azure.location,
                 log_analytics_workspace=monitoring.log_analytics,
                 nexus_admin_password=data.password_nexus_admin,
-                resource_group_id=resource_group.id,
                 resource_group_name=resource_group.name,
                 software_packages=self.config.sre.software_packages,
                 sre_fqdn=networking.sre_fqdn,
@@ -368,9 +367,7 @@ class DeclarativeSRE:
                 subnet_containers=networking.subnet_user_services_containers,
                 subnet_containers_support=networking.subnet_user_services_containers_support,
                 subnet_databases=networking.subnet_user_services_databases,
-                subnet_dns_sidecar=networking.subnet_dns_sidecar,
                 subnet_software_repositories=networking.subnet_user_services_software_repositories,
-                subscription_id=self.config.azure.subscription_id,
             ),
             tags=self.tags,
         )

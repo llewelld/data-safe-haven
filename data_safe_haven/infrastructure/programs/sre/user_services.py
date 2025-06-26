@@ -40,7 +40,6 @@ class SREUserServicesProps:
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         nexus_admin_password: Input[str],
-        resource_group_id: Input[str],
         resource_group_name: Input[str],
         software_packages: SoftwarePackageCategory,
         sre_fqdn: Input[str],
@@ -51,8 +50,6 @@ class SREUserServicesProps:
         subnet_containers_support: Input[network.GetSubnetResult],
         subnet_databases: Input[network.GetSubnetResult],
         subnet_software_repositories: Input[network.GetSubnetResult],
-        subnet_dns_sidecar: Input[network.GetSubnetResult],
-        subscription_id: Input[str],
     ) -> None:
         self.database_service_admin_password = database_service_admin_password
         self.databases = databases
@@ -69,7 +66,6 @@ class SREUserServicesProps:
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
         self.nexus_admin_password = Output.secret(nexus_admin_password)
-        self.resource_group_id = resource_group_id
         self.resource_group_name = resource_group_name
         self.nexus_persistent_quota_gb = nexus_persistent_quota_gb
         self.software_packages = software_packages
@@ -85,13 +81,9 @@ class SREUserServicesProps:
         self.subnet_databases_id = Output.from_input(subnet_databases).apply(
             get_id_from_subnet
         )
-        self.subnet_dns_sidecar_id = Output.from_input(subnet_dns_sidecar).apply(
-            get_id_from_subnet
-        )
         self.subnet_software_repositories_id = Output.from_input(
             subnet_software_repositories
         ).apply(get_id_from_subnet)
-        self.subscription_id = subscription_id
 
 
 class SREUserServicesComponent(ComponentResource):

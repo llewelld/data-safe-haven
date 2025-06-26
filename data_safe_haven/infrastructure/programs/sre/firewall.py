@@ -1,6 +1,5 @@
 """Pulumi component for SRE traffic routing"""
 
-import itertools
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
@@ -257,7 +256,7 @@ class SREFirewallComponent(ComponentResource):
                     type=network.AzureFirewallRCActionType.ALLOW
                 ),
                 name="dns-sidecar-allow",
-                priority=FirewallPriorities.SRE_USER_SERVICES,
+                priority=FirewallPriorities.SRE_DNS_SIDECAR,
                 rules=[
                     network.AzureFirewallApplicationRuleArgs(
                         description="Allow Microsoft Container Registry downloads.",

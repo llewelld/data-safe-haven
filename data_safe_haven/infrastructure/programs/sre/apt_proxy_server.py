@@ -133,9 +133,6 @@ class SREAptProxyServerComponent(ComponentResource):
             dns_config=containerinstance.DnsConfigurationArgs(
                 name_servers=[props.dns_server_ip],
             ),
-            identity=containerinstance.ContainerGroupIdentityArgs(
-                type=containerinstance.ResourceIdentityType.SYSTEM_ASSIGNED,
-            ),
             ip_address=containerinstance.IpAddressArgs(
                 ports=[
                     containerinstance.PortArgs(

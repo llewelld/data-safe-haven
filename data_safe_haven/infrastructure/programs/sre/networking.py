@@ -1583,6 +1583,7 @@ class SRENetworkingComponent(ComponentResource):
                     source_address_prefix="*",
                     source_port_range="*",
                 ),
+                # Outbound
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
                     description="Allow outbound connections to Azure Resource Manager. This is needed for the DNS Monitor.",

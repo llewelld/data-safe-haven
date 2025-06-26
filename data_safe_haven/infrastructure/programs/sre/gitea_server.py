@@ -304,9 +304,6 @@ class SREGiteaServerComponent(ComponentResource):
             dns_config=containerinstance.DnsConfigurationArgs(
                 name_servers=[props.dns_server_ip],
             ),
-            identity=containerinstance.ContainerGroupIdentityArgs(
-                type=containerinstance.ResourceIdentityType.SYSTEM_ASSIGNED,
-            ),
             # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
             image_registry_credentials=[
                 {
