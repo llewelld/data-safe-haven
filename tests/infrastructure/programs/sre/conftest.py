@@ -166,3 +166,11 @@ def subnet_monitoring() -> network.GetSubnetResult:
         address_prefix=SREIpRanges.monitoring.prefix,
         id="subnet_monitoring_id",
     )
+
+
+@fixture
+def subnet_dns_sidecar() -> network.GetSubnetResult:
+    return network.GetSubnetResult(
+        address_prefix=SREIpRanges.dns_sidecar.prefix,
+        id="subnet_dns_sidecar_id",
+    )
