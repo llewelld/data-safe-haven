@@ -21,7 +21,6 @@ $ az provider register --name Microsoft.App
 $ az provider register --name Microsoft.ContainerService
 :::
 
-
 ::::
 
 ## Requirements
