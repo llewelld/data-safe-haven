@@ -178,7 +178,6 @@ class SREUserServicesComponent(ComponentResource):
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
                 subnet_id=props.subnet_software_repositories_id,
-                subscription_id=props.subscription_id,
             ),
             opts=child_opts,
             tags=child_tags,

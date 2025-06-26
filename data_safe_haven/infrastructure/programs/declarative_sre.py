@@ -456,6 +456,12 @@ class DeclarativeSRE:
                 user_services.hedgedoc_server.container_group.id,
             ),
             (
+                user_services.software_repositories.dns_record_name,
+                user_services.software_repositories.container_group_name,
+                user_services.software_repositories.local_dns.private_record_set_id,
+                user_services.software_repositories.container_group.id,
+            ),
+            (
                 apt_proxy_server.dns_record_name,
                 apt_proxy_server.container_group_name,
                 apt_proxy_server.local_dns.private_record_set_id,
