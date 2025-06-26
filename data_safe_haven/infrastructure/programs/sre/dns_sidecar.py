@@ -1,5 +1,7 @@
+from typing import Protocol
+
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import authorization, storage
+from pulumi_azure_native import authorization, containerinstance, storage
 from pulumi_azure_native.app.v20250101 import (
     AccessMode,
     AppLogsConfigurationArgs,
@@ -30,10 +32,18 @@ from data_safe_haven.functions import seeded_uuid
 from data_safe_haven.infrastructure.components import (
     FileShareFile,
     FileShareFileProps,
+    LocalDnsRecordComponent,
     WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
+
+
+class SupportsDnsMonitoring(Protocol):
+    dns_record_name: str
+    container_group_name: str
+    local_dns: LocalDnsRecordComponent
+    container_group: containerinstance.ContainerGroup
 
 
 class DnsSidecarProps:
@@ -41,7 +51,7 @@ class DnsSidecarProps:
 
     def __init__(
         self,
-        container_instance_information: list[tuple[str, str, Input[str], Input[str]]],
+        container_instances: list[SupportsDnsMonitoring],
         infrastructure_subnet_id: Input[str],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
@@ -51,7 +61,7 @@ class DnsSidecarProps:
         storage_account_name: Input[str],
         storage_account_key: Input[str],
     ):
-        self.container_instance_information = container_instance_information
+        self.container_instances = container_instances
         self.infrastructure_subnet_id = infrastructure_subnet_id
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
@@ -110,19 +120,14 @@ class DnsSidecarComponent(ComponentResource):
             opts=child_opts,
         )
 
-        for (
-            dns_record_name,
-            _,
-            private_record_set_id,
-            container_group_id,
-        ) in props.container_instance_information:
+        for container_instance in props.container_instances:
 
             # Allowing the managed identity to update DNS Records
             dns_zone_role_definition = authorization.RoleDefinition(
-                f"{self._name}_{dns_record_name}_dnsmonitor_dns_updater_role",
-                role_name=f"DNS Zone updater for {dns_record_name} ({stack_name})",
-                scope=private_record_set_id,
-                description=f"Role for updating {dns_record_name}'s DNS records",
+                f"{self._name}_{container_instance.dns_record_name}_dnsmonitor_dns_updater_role",
+                role_name=f"DNS Zone updater for {container_instance.dns_record_name} ({stack_name})",
+                scope=container_instance.local_dns.private_record_set_id,
+                description=f"Role for updating {container_instance.dns_record_name}'s DNS records",
                 permissions=[
                     authorization.PermissionArgs(
                         actions=[
@@ -132,28 +137,30 @@ class DnsSidecarComponent(ComponentResource):
                         not_actions=[],
                     )
                 ],
-                assignable_scopes=[private_record_set_id],
+                assignable_scopes=[container_instance.local_dns.private_record_set_id],
             )
 
             self.dns_zone_role_assignment = authorization.RoleAssignment(
-                f"{self._name}_{dns_record_name}_dnsmonitor_dns_updater_job_role_assignment",
+                f"{self._name}_{container_instance.dns_record_name}_dnsmonitor_dns_updater_job_role_assignment",
                 principal_id=user_assigned_identity.principal_id,
                 principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
                 role_assignment_name=str(
-                    seeded_uuid(f"{stack_name} DNS updater for {dns_record_name}")
+                    seeded_uuid(
+                        f"{stack_name} DNS updater for {container_instance.dns_record_name}"
+                    )
                 ),
                 role_definition_id=dns_zone_role_definition.id,
-                scope=private_record_set_id,
+                scope=container_instance.local_dns.private_record_set_id,
                 opts=child_opts,
             )
 
             # Allowing the managed identity to retrieve the container group IP
 
             container_group_role_definition = authorization.RoleDefinition(
-                f"{self._name}_{dns_record_name}_dnsmonitor_ip_reader_role",
-                role_name=f"Container group reader for {dns_record_name} ({stack_name})",
-                scope=container_group_id,
-                description=f"Role for reading {dns_record_name}'s container group",
+                f"{self._name}_{container_instance.dns_record_name}_dnsmonitor_ip_reader_role",
+                role_name=f"Container group reader for {container_instance.dns_record_name} ({stack_name})",
+                scope=container_instance.container_group.id,
+                description=f"Role for reading {container_instance.dns_record_name}'s container group",
                 permissions=[
                     authorization.PermissionArgs(
                         actions=[
@@ -162,18 +169,20 @@ class DnsSidecarComponent(ComponentResource):
                         not_actions=[],
                     )
                 ],
-                assignable_scopes=[container_group_id],
+                assignable_scopes=[container_instance.container_group.id],
             )
 
             self.container_group_role_assignment = authorization.RoleAssignment(
-                f"{self._name}_{dns_record_name}_dnsmonitor_ip_reader_job_role_assignment",
+                f"{self._name}_{container_instance.dns_record_name}_dnsmonitor_ip_reader_job_role_assignment",
                 principal_id=user_assigned_identity.principal_id,
                 principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
                 role_assignment_name=str(
-                    seeded_uuid(f"{stack_name} IP Reader for Job {dns_record_name}")
+                    seeded_uuid(
+                        f"{stack_name} IP Reader for Job {container_instance.dns_record_name}"
+                    )
                 ),
                 role_definition_id=container_group_role_definition.id,
-                scope=container_group_id,
+                scope=container_instance.container_group.id,
                 opts=child_opts,
             )
 
@@ -265,8 +274,8 @@ class DnsSidecarComponent(ComponentResource):
                                 name="RECORD_NAMES_CONTAINER_GROUPS",
                                 value=",".join(
                                     [
-                                        f"{dns_record_name} {container_group_name}"
-                                        for dns_record_name, container_group_name, _, _ in props.container_instance_information
+                                        f"{container_instance.dns_record_name} {container_instance.container_group_name}"
+                                        for container_instance in props.container_instances
                                     ]
                                 ),
                             ),

@@ -13,6 +13,7 @@ from data_safe_haven.infrastructure.common import (
 from data_safe_haven.infrastructure.programs.sre.dns_sidecar import (
     DnsSidecarComponent,
     DnsSidecarProps,
+    SupportsDnsMonitoring,
 )
 
 from .sre.application_gateway import (
@@ -437,52 +438,20 @@ class DeclarativeSRE:
         )
 
         # Deploy the DNS Sidecar
-        container_instance_information: list[
-            tuple[str, str, Input[str], Input[str]]
-        ] = [
-            (
-                user_services.gitea_server.dns_record_name,
-                user_services.gitea_server.container_group_name,
-                user_services.gitea_server.local_dns.private_record_set_id,
-                user_services.gitea_server.container_group.id,
-            ),
-            (
-                user_services.hedgedoc_server.dns_record_name,
-                user_services.hedgedoc_server.container_group_name,
-                user_services.hedgedoc_server.local_dns.private_record_set_id,
-                user_services.hedgedoc_server.container_group.id,
-            ),
-            (
-                user_services.software_repositories.dns_record_name,
-                user_services.software_repositories.container_group_name,
-                user_services.software_repositories.local_dns.private_record_set_id,
-                user_services.software_repositories.container_group.id,
-            ),
-            (
-                apt_proxy_server.dns_record_name,
-                apt_proxy_server.container_group_name,
-                apt_proxy_server.local_dns.private_record_set_id,
-                apt_proxy_server.container_group.id,
-            ),
-            (
-                clamav_mirror.dns_record_name,
-                clamav_mirror.container_group_name,
-                clamav_mirror.local_dns.private_record_set_id,
-                clamav_mirror.container_group.id,
-            ),
-            (
-                identity.dns_record_name,
-                identity.container_group_name,
-                identity.local_dns.private_record_set_id,
-                identity.container_group.id,
-            ),
+        container_instance_information: list[SupportsDnsMonitoring] = [
+            user_services.gitea_server,
+            user_services.hedgedoc_server,
+            user_services.software_repositories,
+            apt_proxy_server,
+            clamav_mirror,
+            identity,
         ]
 
         DnsSidecarComponent(
             "dns_monitor",
             self.stack_name,
             DnsSidecarProps(
-                container_instance_information=container_instance_information,
+                container_instances=container_instance_information,
                 infrastructure_subnet_id=Output.from_input(
                     networking.subnet_dns_sidecar
                 ).apply(get_id_from_subnet),
