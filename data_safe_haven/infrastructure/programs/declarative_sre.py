@@ -289,7 +289,6 @@ class DeclarativeSRE:
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
                 subnet_containers=networking.subnet_identity_containers,
-                subscription_id=self.config.azure.subscription_id,
             ),
             tags=self.tags,
         )
@@ -467,6 +466,12 @@ class DeclarativeSRE:
                 clamav_mirror.container_group_name,
                 clamav_mirror.local_dns.private_record_set_id,
                 clamav_mirror.container_group.id,
+            ),
+            (
+                identity.dns_record_name,
+                identity.container_group_name,
+                identity.local_dns.private_record_set_id,
+                identity.container_group.id,
             ),
         ]
 

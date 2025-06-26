@@ -291,16 +291,13 @@ class SREFirewallComponent(ComponentResource):
         # IMPORTANT: The subnets in this list will have access to the Azure Services with tags
         # AzureResourceManager and AzureActiveDirectory. If adding user-facing subnets, make sure
         # it's not possible to egress data via these services.
-        subnets_for_dns_monitoring = Output.all(
-            props.subnet_dns_sidecar_prefixes,
-        ).apply(lambda prefixes: list(itertools.chain.from_iterable(prefixes)))
 
         network_rule_collections = [
             network.AzureFirewallNetworkRuleCollectionArgs(
                 action=network.AzureFirewallRCActionArgs(
                     type=network.AzureFirewallRCActionType.ALLOW
                 ),
-                name="dns-monitor-allow",
+                name="dns-sidecar-allow",
                 priority=FirewallPriorities.ALL,
                 rules=[
                     network.AzureFirewallNetworkRuleArgs(
@@ -309,7 +306,7 @@ class SREFirewallComponent(ComponentResource):
                         destination_ports=[Ports.HTTPS],
                         name="allow-azure-resource-manager",
                         protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
-                        source_addresses=subnets_for_dns_monitoring,
+                        source_addresses=props.subnet_dns_sidecar_prefixes,
                     ),
                     network.AzureFirewallNetworkRuleArgs(
                         description="Enables access to the Azure Active Directory to user services containers.",
@@ -317,7 +314,7 @@ class SREFirewallComponent(ComponentResource):
                         destination_ports=[Ports.HTTPS],
                         name="allow-azure-active-directory",
                         protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
-                        source_addresses=subnets_for_dns_monitoring,
+                        source_addresses=props.subnet_dns_sidecar_prefixes,
                     ),
                 ],
             ),

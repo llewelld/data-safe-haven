@@ -35,7 +35,6 @@ class SREIdentityProps:
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
-        subscription_id: Input[str],
     ) -> None:
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
@@ -52,7 +51,6 @@ class SREIdentityProps:
         self.subnet_containers_id = Output.from_input(subnet_containers).apply(
             get_id_from_subnet
         )
-        self.subscription_id = subscription_id
 
 
 class SREIdentityComponent(ComponentResource):
@@ -86,12 +84,12 @@ class SREIdentityComponent(ComponentResource):
         )
 
         # Define the LDAP server container group with Apricot
-        container_group_name = f"{stack_name}-container-group-identity"
-        dns_record_name = "identity"
+        self.container_group_name = f"{stack_name}-container-group-identity"
+        self.dns_record_name = "identity"
 
-        container_group = containerinstance.ContainerGroup(
+        self.container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
-            container_group_name=container_group_name,
+            container_group_name=self.container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
                     image="ghcr.io/alan-turing-institute/apricot:0.1.1",
@@ -235,18 +233,20 @@ class SREIdentityComponent(ComponentResource):
         )
 
         # Register the container group in the SRE DNS zone
-        local_dns = LocalDnsRecordComponent(
+        self.local_dns = LocalDnsRecordComponent(
             f"{self._name}_dns_record_set",
             LocalDnsRecordProps(
                 base_fqdn=props.sre_fqdn,
-                private_ip_address=get_ip_address_from_container_group(container_group),
+                private_ip_address=get_ip_address_from_container_group(
+                    self.container_group
+                ),
                 record_name="identity",
                 resource_group_name=props.resource_group_name,
             ),
             opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=container_group)
+                child_opts, ResourceOptions(parent=self.container_group)
             ),
         )
 
         # Register outputs
-        self.hostname = local_dns.hostname
+        self.hostname = self.local_dns.hostname
