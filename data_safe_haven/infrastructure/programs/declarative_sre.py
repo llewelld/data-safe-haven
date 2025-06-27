@@ -13,7 +13,7 @@ from data_safe_haven.infrastructure.common import (
 from data_safe_haven.infrastructure.programs.sre.dns_sidecar import (
     DnsSidecarComponent,
     DnsSidecarProps,
-    SupportsDnsMonitoring,
+    SupportsDnsSidecar,
 )
 
 from .sre.application_gateway import (
@@ -437,7 +437,7 @@ class DeclarativeSRE:
         )
 
         # Deploy the DNS Sidecar
-        container_instance_information: list[SupportsDnsMonitoring] = [
+        container_instance_information: list[SupportsDnsSidecar] = [
             user_services.gitea_server,
             user_services.hedgedoc_server,
             user_services.software_repositories,
@@ -447,11 +447,11 @@ class DeclarativeSRE:
         ]
 
         DnsSidecarComponent(
-            "dns_monitor",
+            "dns_sidecar",
             self.stack_name,
             DnsSidecarProps(
                 container_instances=container_instance_information,
-                infrastructure_subnet_id=Output.from_input(
+                subnet_id=Output.from_input(
                     networking.subnet_dns_sidecar
                 ).apply(get_id_from_subnet),
                 log_analytics_workspace=monitoring.log_analytics,

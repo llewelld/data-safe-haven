@@ -39,7 +39,7 @@ from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
 
-class SupportsDnsMonitoring(Protocol):
+class SupportsDnsSidecar(Protocol):
     dns_record_name: str
     container_group_name: str
     local_dns: LocalDnsRecordComponent
@@ -47,12 +47,12 @@ class SupportsDnsMonitoring(Protocol):
 
 
 class DnsSidecarProps:
-    """Properties of the DnsMonitorProps"""
+    """Properties of the DnsSidecarComponent"""
 
     def __init__(
         self,
-        container_instances: list[SupportsDnsMonitoring],
-        infrastructure_subnet_id: Input[str],
+        container_instances: list[SupportsDnsSidecar],
+        subnet_id: Input[str],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         resource_group_name: Input[str],
@@ -62,7 +62,7 @@ class DnsSidecarProps:
         storage_account_key: Input[str],
     ):
         self.container_instances = container_instances
-        self.infrastructure_subnet_id = infrastructure_subnet_id
+        self.subnet_id = subnet_id
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
         self.resource_group_name = resource_group_name
@@ -81,31 +81,31 @@ class DnsSidecarComponent(ComponentResource):
         props: DnsSidecarProps,
         opts: ResourceOptions | None = None,
     ):
-        super().__init__("dsh:sre:DnsMonitorComponent", name, {}, opts)
+        super().__init__("dsh:sre:DnsSidecarComponent", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
 
         file_share = storage.FileShare(
-            f"{self._name}_file_share_dnsmonitor",
+            f"{self._name}_file_share_dnssidecar",
             access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
             account_name=props.storage_account_name,
             resource_group_name=props.resource_group_name,
-            share_name="dnsmonitor-share",
+            share_name="dnssidecar-share",
             share_quota=1,
             signed_identifiers=[],
             opts=child_opts,
         )
 
         # Upload DNS Monitor Script
-        dns_monitor_script_reader = FileReader(
-            resources_path / "dns_monitor" / "init.sh"
+        dns_sidecar_script_reader = FileReader(
+            resources_path / "dns_sidecar" / "init.sh"
         )
 
-        self.file_share_dns_monitor_script = FileShareFile(
-            f"{self._name}_file_share_dnsmonitor_init",
+        self.file_share_dns_sidecar_script = FileShareFile(
+            f"{self._name}_file_share_dnssidecar_init",
             FileShareFileProps(
-                destination_path=dns_monitor_script_reader.name,
+                destination_path=dns_sidecar_script_reader.name,
                 share_name=file_share.name,
-                file_contents=Output.secret(dns_monitor_script_reader.file_contents()),
+                file_contents=Output.secret(dns_sidecar_script_reader.file_contents()),
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
             ),
@@ -113,10 +113,10 @@ class DnsSidecarComponent(ComponentResource):
         )
 
         user_assigned_identity = UserAssignedIdentity(
-            "identity_dns_monitor",
+            "identity_dns_sidecar",
             location=props.location,
             resource_group_name=props.resource_group_name,
-            resource_name_=f"{stack_name}-id-dns-monitor",
+            resource_name_=f"{stack_name}-id-dns-sidecar",
             opts=child_opts,
         )
 
@@ -124,7 +124,7 @@ class DnsSidecarComponent(ComponentResource):
 
             # Allowing the managed identity to update DNS Records
             dns_zone_role_definition = authorization.RoleDefinition(
-                f"{self._name}_{container_instance.dns_record_name}_dnsmonitor_dns_updater_role",
+                f"{self._name}_{container_instance.dns_record_name}_dnssidecar_dns_updater_role",
                 role_name=f"DNS Zone updater for {container_instance.dns_record_name} ({stack_name})",
                 scope=container_instance.local_dns.private_record_set_id,
                 description=f"Role for updating {container_instance.dns_record_name}'s DNS records",
@@ -141,7 +141,7 @@ class DnsSidecarComponent(ComponentResource):
             )
 
             self.dns_zone_role_assignment = authorization.RoleAssignment(
-                f"{self._name}_{container_instance.dns_record_name}_dnsmonitor_dns_updater_job_role_assignment",
+                f"{self._name}_{container_instance.dns_record_name}_dnssidecar_dns_updater_job_role_assignment",
                 principal_id=user_assigned_identity.principal_id,
                 principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
                 role_assignment_name=str(
@@ -157,7 +157,7 @@ class DnsSidecarComponent(ComponentResource):
             # Allowing the managed identity to retrieve the container group IP
 
             container_group_role_definition = authorization.RoleDefinition(
-                f"{self._name}_{container_instance.dns_record_name}_dnsmonitor_ip_reader_role",
+                f"{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_role",
                 role_name=f"Container group reader for {container_instance.dns_record_name} ({stack_name})",
                 scope=container_instance.container_group.id,
                 description=f"Role for reading {container_instance.dns_record_name}'s container group",
@@ -173,7 +173,7 @@ class DnsSidecarComponent(ComponentResource):
             )
 
             self.container_group_role_assignment = authorization.RoleAssignment(
-                f"{self._name}_{container_instance.dns_record_name}_dnsmonitor_ip_reader_job_role_assignment",
+                f"{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_job_role_assignment",
                 principal_id=user_assigned_identity.principal_id,
                 principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
                 role_assignment_name=str(
@@ -199,7 +199,7 @@ class DnsSidecarComponent(ComponentResource):
             resource_group_name=props.resource_group_name,
             location=props.location,
             vnet_configuration=VnetConfigurationArgs(
-                infrastructure_subnet_id=props.infrastructure_subnet_id,
+                infrastructure_subnet_id=props.subnet_id,
                 internal=True,
             ),
             workload_profiles=[
@@ -247,7 +247,7 @@ class DnsSidecarComponent(ComponentResource):
                 containers=[
                     ContainerArgs(
                         image="mcr.microsoft.com/azure-cli:2.74.0",
-                        name="dnsmonitor",
+                        name="dnssidecar",
                         command=("/bin/sh", "/mnt/init/init.sh"),
                         resources=ContainerResourcesArgs(
                             cpu=4,
