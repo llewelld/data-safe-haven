@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import managedidentity, network, resources
+from pulumi_azure_native import dns, managedidentity, network, resources
 
 from data_safe_haven.infrastructure.common import (
     get_available_ips_from_subnet,
@@ -78,7 +78,7 @@ class SREApplicationGatewayComponent(ComponentResource):
         )
 
         # Link the public IP address to the SRE domain
-        network.RecordSet(
+        dns.RecordSet(
             f"{self._name}_a_record",
             a_records=public_ip.ip_address.apply(
                 lambda ip: [network.ARecordArgs(ipv4_address=ip)] if ip else []

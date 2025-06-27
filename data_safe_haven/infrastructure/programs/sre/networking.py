@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, InvokeOptions, Output, ResourceOptions
-from pulumi_azure_native import network, provider
+from pulumi_azure_native import dns, network, provider
 
 from data_safe_haven.functions import alphanumeric, replace_separators
 from data_safe_haven.infrastructure.common import (
@@ -1878,7 +1878,7 @@ class SRENetworkingComponent(ComponentResource):
             opts=child_opts,
             tags=child_tags,
         )
-        shm_ns_record = network.RecordSet(
+        shm_ns_record = dns.RecordSet(
             f"{self._name}_ns_record",
             ns_records=sre_dns_zone.name_servers.apply(
                 lambda servers: [network.NsRecordArgs(nsdname=ns) for ns in servers]
@@ -1896,7 +1896,7 @@ class SRENetworkingComponent(ComponentResource):
                 ),
             ),
         )
-        network.RecordSet(
+        dns.RecordSet(
             f"{self._name}_caa_record",
             caa_records=[
                 network.CaaRecordArgs(

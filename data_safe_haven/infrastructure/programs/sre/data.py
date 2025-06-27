@@ -7,6 +7,7 @@ import pulumi_random
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import (
     authorization,
+    dns,
     insights,
     keyvault,
     managedidentity,
@@ -51,7 +52,7 @@ class SREDataProps:
         admin_ip_addresses: Input[Sequence[str]],
         data_provider_ip_addresses: Input[list[str]],
         dns_private_zones: Input[dict[str, network.PrivateZone]],
-        dns_record: Input[network.RecordSet],
+        dns_record: Input[dns.RecordSet],
         dns_server_admin_password: Input[pulumi_random.RandomPassword],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
