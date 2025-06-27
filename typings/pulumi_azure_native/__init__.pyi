@@ -6,6 +6,7 @@ import pulumi_azure_native.containerinstance as containerinstance
 import pulumi_azure_native.dataprotection as dataprotection
 import pulumi_azure_native.dbforpostgresql as dbforpostgresql
 import pulumi_azure_native.dns as dns
+import pulumi_azure_native.dnsresolver as dnsresolver
 import pulumi_azure_native.insights as insights
 import pulumi_azure_native.keyvault as keyvault
 import pulumi_azure_native.maintenance as maintenance
@@ -26,6 +27,7 @@ __all__ = [
     "dataprotection",
     "dbforpostgresql",
     "dns",
+    "dnsresolver",
     "insights",
     "keyvault",
     "maintenance",
