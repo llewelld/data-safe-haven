@@ -4,7 +4,7 @@
 # - appdirs==1.4.4
 # - azure-core==1.34.0
 # - azure-identity==1.23.0
-# - azure-keyvault-certificates==4.9.0
+# - azure-keyvault-certificates==4.10.0
 # - azure-keyvault-keys==4.10.0
 # - azure-keyvault-secrets==4.9.0
 # - azure-mgmt-compute==34.0.0
@@ -71,7 +71,7 @@ azure-core==1.34.0
     #   msrest
 azure-identity==1.23.0
     # via hatch.envs.default
-azure-keyvault-certificates==4.9.0
+azure-keyvault-certificates==4.10.0
     # via hatch.envs.default
 azure-keyvault-keys==4.10.0
     # via hatch.envs.default
