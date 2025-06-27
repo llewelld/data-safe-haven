@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Sequence
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import insights, storage
+from pulumi_azure_native import monitor, storage
 
 from data_safe_haven.external import AzureIPv4Range
 from data_safe_haven.infrastructure.components.wrapped import (
@@ -92,7 +92,7 @@ class NFSV3StorageAccountComponent(ComponentResource):
         )
 
         # Add diagnostic setting for blobs
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{self.storage_account._name}_diagnostic_setting",
             name=f"{self.storage_account._name}_diagnostic_setting",
             log_analytics_destination_type="Dedicated",

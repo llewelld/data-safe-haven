@@ -11,6 +11,7 @@ import pulumi_azure_native.insights as insights
 import pulumi_azure_native.keyvault as keyvault
 import pulumi_azure_native.maintenance as maintenance
 import pulumi_azure_native.managedidentity as managedidentity
+import pulumi_azure_native.monitor as monitor
 import pulumi_azure_native.network as network
 import pulumi_azure_native.privatedns as privatedns
 import pulumi_azure_native.operationalinsights as operationalinsights
@@ -33,6 +34,7 @@ __all__ = [
     "keyvault",
     "maintenance",
     "managedidentity",
+    "monitor",
     "network",
     "operationalinsights",
     "operationsmanagement",

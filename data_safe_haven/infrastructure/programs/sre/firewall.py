@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import insights, network
+from pulumi_azure_native import monitor, network
 
 from data_safe_haven.infrastructure.common import (
     get_address_prefixes_from_subnet,
@@ -371,7 +371,7 @@ class SREFirewallComponent(ComponentResource):
 
         # Add diagnostic settings for firewall
         # This links the firewall to the log analytics workspace
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{self._name}_firewall_diagnostic_settings",
             name="firewall_diagnostic_settings",
             log_analytics_destination_type="Dedicated",

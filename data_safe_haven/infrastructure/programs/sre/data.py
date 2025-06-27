@@ -8,9 +8,9 @@ from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import (
     authorization,
     dns,
-    insights,
     keyvault,
     managedidentity,
+    monitor,
     network,
     privatedns,
     resources,
@@ -424,7 +424,7 @@ class SREDataComponent(ComponentResource):
             )
         )
         # Add diagnostic setting for files
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{storage_account_data_configuration._name}_diagnostic_setting",
             name=f"{storage_account_data_configuration._name}_diagnostic_setting",
             log_analytics_destination_type="Dedicated",
@@ -662,7 +662,7 @@ class SREDataComponent(ComponentResource):
             tags=child_tags,
         )
         # Add diagnostic setting for files
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{storage_account_data_private_user._name}_diagnostic_setting",
             name=f"{storage_account_data_private_user._name}_diagnostic_setting",
             log_analytics_destination_type="Dedicated",
