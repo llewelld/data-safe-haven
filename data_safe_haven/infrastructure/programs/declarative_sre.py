@@ -451,9 +451,9 @@ class DeclarativeSRE:
             self.stack_name,
             DnsSidecarProps(
                 container_instances=container_instance_information,
-                subnet_id=Output.from_input(
-                    networking.subnet_dns_sidecar
-                ).apply(get_id_from_subnet),
+                subnet_id=Output.from_input(networking.subnet_dns_sidecar).apply(
+                    get_id_from_subnet
+                ),
                 log_analytics_workspace=monitoring.log_analytics,
                 location=self.config.azure.location,
                 resource_group_name=resource_group.name,
