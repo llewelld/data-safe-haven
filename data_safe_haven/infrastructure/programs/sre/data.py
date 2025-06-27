@@ -12,6 +12,7 @@ from pulumi_azure_native import (
     keyvault,
     managedidentity,
     network,
+    privatedns,
     resources,
     storage,
 )
@@ -51,7 +52,7 @@ class SREDataProps:
         admin_group_id: Input[str],
         admin_ip_addresses: Input[Sequence[str]],
         data_provider_ip_addresses: Input[list[str]],
-        dns_private_zones: Input[dict[str, network.PrivateZone]],
+        dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
         dns_record: Input[dns.RecordSet],
         dns_server_admin_password: Input[pulumi_random.RandomPassword],
         location: Input[str],

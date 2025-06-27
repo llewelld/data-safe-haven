@@ -13,6 +13,7 @@ from pulumi import (
 )
 from pulumi_azure_native import (
     network,
+    privatedns,
     resources,
     storage,
 )
@@ -47,7 +48,7 @@ class SREDesiredStateProps:
         admin_ip_addresses: Input[Sequence[str]],
         clamav_mirror_hostname: Input[str],
         database_service_admin_password: Input[str],
-        dns_private_zones: Input[dict[str, network.PrivateZone]],
+        dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
         gitea_hostname: Input[str],
         hedgedoc_hostname: Input[str],
         ldap_group_filter: Input[str],

@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, InvokeOptions, Output, ResourceOptions
-from pulumi_azure_native import dns, network, provider
+from pulumi_azure_native import dns, network, privatedns, provider
 
 from data_safe_haven.functions import alphanumeric, replace_separators
 from data_safe_haven.infrastructure.common import (
@@ -20,7 +20,7 @@ class SRENetworkingProps:
 
     def __init__(
         self,
-        dns_private_zones: Input[dict[str, network.PrivateZone]],
+        dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
         dns_server_ip: Input[str],
         dns_virtual_network: Input[network.VirtualNetwork],
         location: Input[str],

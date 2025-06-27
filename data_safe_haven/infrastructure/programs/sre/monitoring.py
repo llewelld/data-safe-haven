@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import insights, maintenance, network, operationalinsights
+from pulumi_azure_native import insights, maintenance, network, operationalinsights, privatedns
 
 from data_safe_haven.functions import next_occurrence, replace_separators
 from data_safe_haven.infrastructure.common import get_id_from_subnet
@@ -16,7 +16,7 @@ class SREMonitoringProps:
 
     def __init__(
         self,
-        dns_private_zones: Input[dict[str, network.PrivateZone]],
+        dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
         location: Input[str],
         resource_group_name: Input[str],
         subnet: Input[network.GetSubnetResult],

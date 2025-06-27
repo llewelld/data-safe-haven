@@ -12,6 +12,7 @@ import pulumi_azure_native.keyvault as keyvault
 import pulumi_azure_native.maintenance as maintenance
 import pulumi_azure_native.managedidentity as managedidentity
 import pulumi_azure_native.network as network
+import pulumi_azure_native.privatedns as privatedns
 import pulumi_azure_native.operationalinsights as operationalinsights
 import pulumi_azure_native.operationsmanagement as operationsmanagement
 import pulumi_azure_native.provider as provider
@@ -35,6 +36,7 @@ __all__ = [
     "network",
     "operationalinsights",
     "operationsmanagement",
+    "privatedns",
     "provider",
     "resources",
     "sql",
