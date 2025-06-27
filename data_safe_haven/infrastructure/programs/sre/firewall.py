@@ -296,7 +296,7 @@ class SREFirewallComponent(ComponentResource):
                 priority=FirewallPriorities.ALL,
                 rules=[
                     network.AzureFirewallNetworkRuleArgs(
-                        description="Enables access to the Azure Resource Manager to container instances.",
+                        description="Enables access to the Azure Resource Manager from the DNS Sidecar.",
                         destination_addresses=[AzureServiceTag.AZURE_RESOURCE_MANAGER],
                         destination_ports=[Ports.HTTPS],
                         name="allow-azure-resource-manager",
@@ -304,7 +304,7 @@ class SREFirewallComponent(ComponentResource):
                         source_addresses=props.subnet_dns_sidecar_prefixes,
                     ),
                     network.AzureFirewallNetworkRuleArgs(
-                        description="Enables access to the Azure Active Directory to user services containers.",
+                        description="Enables access to the Azure Active Directory from the DNS Sidecar.",
                         destination_addresses=[AzureServiceTag.AZURE_ACTIVE_DIRECTORY],
                         destination_ports=[Ports.HTTPS],
                         name="allow-azure-active-directory",

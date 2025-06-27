@@ -69,8 +69,10 @@ class SREClamAVMirrorComponent(ComponentResource):
         )
 
         # Define the container group with ClamAV
-        self.container_group_name = f"{stack_name}-container-group-clamav"
         self.dns_record_name = "clamav"
+        self.container_group_name = (
+            f"{stack_name}-container-group-{self.dns_record_name}"
+        )
         self.container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
             container_group_name=self.container_group_name,
@@ -162,7 +164,7 @@ class SREClamAVMirrorComponent(ComponentResource):
                 private_ip_address=get_ip_address_from_container_group(
                     self.container_group
                 ),
-                record_name="clamav",
+                record_name=self.dns_record_name,
                 resource_group_name=props.resource_group_name,
             ),
             opts=ResourceOptions.merge(

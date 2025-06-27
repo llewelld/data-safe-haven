@@ -240,7 +240,7 @@ class DnsSidecarComponent(ComponentResource):
                 trigger_type=TriggerType.SCHEDULE,
                 replica_timeout=1800,
                 schedule_trigger_config=JobConfigurationScheduleTriggerConfigArgs(
-                    cron_expression="*/1 * * * *"
+                    cron_expression="*/1 * * * *"  # This job runs every minute.
                 ),
             ),
             template=JobTemplateArgs(
@@ -250,8 +250,8 @@ class DnsSidecarComponent(ComponentResource):
                         name="dnsmonitor",
                         command=("/bin/sh", "/mnt/init/init.sh"),
                         resources=ContainerResourcesArgs(
-                            cpu=0.25,
-                            memory="0.5Gi",
+                            cpu=4,
+                            memory="16Gi",
                         ),
                         env=[
                             EnvironmentVarArgs(
