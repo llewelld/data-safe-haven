@@ -3,7 +3,13 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import maintenance, monitor, network, operationalinsights, privatedns
+from pulumi_azure_native import (
+    maintenance,
+    monitor,
+    network,
+    operationalinsights,
+    privatedns,
+)
 
 from data_safe_haven.functions import next_occurrence, replace_separators
 from data_safe_haven.infrastructure.common import get_id_from_subnet
@@ -284,9 +290,7 @@ class SREMonitoringComponent(ComponentResource):
                             monitor.KnownSyslogDataSourceLogLevels.EMERGENCY,
                         ],
                         name="LinuxSyslog",
-                        streams=[
-                            monitor.KnownSyslogDataSourceStreams.MICROSOFT_SYSLOG
-                        ],
+                        streams=[monitor.KnownSyslogDataSourceStreams.MICROSOFT_SYSLOG],
                     ),
                 ],
             ),
