@@ -17,7 +17,10 @@ from data_safe_haven.infrastructure.components import (
     WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
-from data_safe_haven.types import Ports, SoftwarePackageCategory
+from data_safe_haven.types import (
+    Ports,
+    SoftwarePackageCategory,
+)
 from data_safe_haven.utility import FileReader
 
 
@@ -163,9 +166,13 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
 
         # Define the container group with nexus and caddy
         if props.nexus_packages:
-            container_group = containerinstance.ContainerGroup(
+            self.dns_record_name = "nexus"
+            self.container_group_name = (
+                f"{stack_name}-container-group-{self.dns_record_name}"
+            )
+            self.container_group = containerinstance.ContainerGroup(
                 f"{self._name}_container_group",
-                container_group_name=f"{stack_name}-container-group-software-repositories",
+                container_group_name=self.container_group_name,
                 containers=[
                     containerinstance.ContainerArgs(
                         image="caddy:2.10.0",
@@ -322,29 +329,30 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 opts=ResourceOptions.merge(
                     child_opts,
                     ResourceOptions(
-                        delete_before_replace=True, replace_on_changes=["containers"]
+                        delete_before_replace=True,
+                        replace_on_changes=["containers"],
                     ),
                 ),
                 tags=child_tags,
             )
 
             # Register the container group in the SRE DNS zone
-            local_dns = LocalDnsRecordComponent(
+            self.local_dns = LocalDnsRecordComponent(
                 f"{self._name}_nexus_dns_record_set",
                 LocalDnsRecordProps(
                     base_fqdn=props.sre_fqdn,
                     private_ip_address=get_ip_address_from_container_group(
-                        container_group
+                        self.container_group
                     ),
-                    record_name="nexus",
+                    record_name=self.dns_record_name,
                     resource_group_name=props.resource_group_name,
                 ),
                 opts=ResourceOptions.merge(
-                    child_opts, ResourceOptions(parent=container_group)
+                    child_opts, ResourceOptions(parent=self.container_group)
                 ),
             )
 
-            hostname = local_dns.hostname
+            hostname = self.local_dns.hostname
 
         # Register outputs
         self.hostname = hostname
