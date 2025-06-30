@@ -85,7 +85,7 @@ class DnsSidecarComponent(ComponentResource):
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
 
         file_share = storage.FileShare(
-            f"{self._name}_file_share_dnssidecar",
+            f"{self._name}_file_share",
             access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
             account_name=props.storage_account_name,
             resource_group_name=props.resource_group_name,
@@ -113,7 +113,7 @@ class DnsSidecarComponent(ComponentResource):
         )
 
         user_assigned_identity = UserAssignedIdentity(
-            "identity_dns_sidecar",
+            f"{self._name}_sidecar",
             location=props.location,
             resource_group_name=props.resource_group_name,
             resource_name_=f"{stack_name}-id-dns-sidecar",
@@ -124,7 +124,7 @@ class DnsSidecarComponent(ComponentResource):
 
             # Allowing the managed identity to update DNS Records
             dns_zone_role_definition = authorization.RoleDefinition(
-                f"{self._name}_{container_instance.dns_record_name}_dnssidecar_dns_updater_role",
+                f"{self._name}_{container_instance.dns_record_name}_dns_updater_role",
                 role_name=f"DNS Zone updater for {container_instance.dns_record_name} ({stack_name})",
                 scope=container_instance.local_dns.private_record_set_id,
                 description=f"Role for updating {container_instance.dns_record_name}'s DNS records",
@@ -188,7 +188,7 @@ class DnsSidecarComponent(ComponentResource):
 
         workload_profile_name: str = "dnssidecarprof"
         managed_environment = ManagedEnvironment(
-            "env-jobs-dns-sidecar",
+            f"{self._name}_managed-environment".replace("_", "-"),
             app_logs_configuration=AppLogsConfigurationArgs(
                 destination="log-analytics",
                 log_analytics_configuration=LogAnalyticsConfigurationArgs(
@@ -214,7 +214,7 @@ class DnsSidecarComponent(ComponentResource):
         )
 
         managed_environment_storage = ManagedEnvironmentsStorage(
-            "env-storage-dns-sidecar",
+            f"{self._name}_managed_environment_storage".replace("_", "-")[:24],
             environment_name=managed_environment.name,
             resource_group_name=props.resource_group_name,
             properties=ManagedEnvironmentStoragePropertiesArgs(
@@ -229,7 +229,7 @@ class DnsSidecarComponent(ComponentResource):
 
         volume_name: str = "dns-sidecar-volume"
         self.job = Job(
-            "job-dns-sidecar",
+            f"{self._name}-job-dns-sidecar".replace("_", "-")[:24],
             resource_group_name=props.resource_group_name,
             environment_id=managed_environment.id,
             identity=ManagedServiceIdentityArgs(
