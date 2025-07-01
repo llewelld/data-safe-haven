@@ -2018,7 +2018,7 @@ class SRENetworkingComponent(ComponentResource):
         )
 
         # Define SRE internal DNS zone
-        sre_private_dns_zone = network.PrivateZone(
+        sre_private_dns_zone = privatedns.PrivateZone(
             f"{self._name}_private_zone",
             location="Global",
             private_zone_name=Output.concat("privatelink.", sre_fqdn),
@@ -2030,7 +2030,7 @@ class SRENetworkingComponent(ComponentResource):
         )
 
         # Link SRE private DNS zone to DNS virtual network
-        network.VirtualNetworkLink(
+        privatedns.VirtualNetworkLink(
             f"{self._name}_private_zone_internal_vnet_link",
             location="Global",
             private_zone_name=sre_private_dns_zone.name,
@@ -2051,7 +2051,7 @@ class SRENetworkingComponent(ComponentResource):
         # must use default Azure DNS when setting up file mounts. This means that we
         # need to be able to resolve the "Storage Account" private DNS zones.
         for dns_zone_name, private_dns_zone in props.dns_private_zones.items():
-            network.VirtualNetworkLink(
+            privatedns.VirtualNetworkLink(
                 replace_separators(
                     f"{self._name}_private_zone_{dns_zone_name}_vnet_link", "_"
                 ),
