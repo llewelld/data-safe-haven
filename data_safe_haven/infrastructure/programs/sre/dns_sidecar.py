@@ -2,7 +2,7 @@ from typing import Protocol
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import authorization, containerinstance, storage
-from pulumi_azure_native.app.v20250101 import (
+from pulumi_azure_native.app import (
     AccessMode,
     AppLogsConfigurationArgs,
     AzureFilePropertiesArgs,
