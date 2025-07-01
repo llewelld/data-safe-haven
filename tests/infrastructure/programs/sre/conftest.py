@@ -145,6 +145,14 @@ def subnet_user_services_software_repositories() -> network.GetSubnetResult:
 
 
 @fixture
+def subnet_user_services_containers() -> network.GetSubnetResult:
+    return network.GetSubnetResult(
+        address_prefix=SREIpRanges.user_services_containers.prefix,
+        id="subnet_user_services_containers_id",
+    )
+
+
+@fixture
 def subnet_workspaces() -> network.GetSubnetResult:
     return network.GetSubnetResult(
         address_prefix=SREIpRanges.workspaces.prefix,
@@ -157,4 +165,12 @@ def subnet_monitoring() -> network.GetSubnetResult:
     return network.GetSubnetResult(
         address_prefix=SREIpRanges.monitoring.prefix,
         id="subnet_monitoring_id",
+    )
+
+
+@fixture
+def subnet_dns_sidecar() -> network.GetSubnetResult:
+    return network.GetSubnetResult(
+        address_prefix=SREIpRanges.dns_sidecar.prefix,
+        id="subnet_dns_sidecar_id",
     )

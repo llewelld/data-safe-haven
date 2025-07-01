@@ -7,7 +7,9 @@ from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_id_from_subnet,
 )
-from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
+from data_safe_haven.infrastructure.components import (
+    WrappedLogAnalyticsWorkspace,
+)
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps

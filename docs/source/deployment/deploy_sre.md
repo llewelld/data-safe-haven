@@ -14,6 +14,13 @@ $ az feature register --name "AllowApplicationGatewayBasicSku" \
 $ az provider register --name Microsoft.Network
 :::
 
+Also, for supporting Container App Jobs, please register the additional resource providers by running these commands:
+
+:::{code} shell
+$ az provider register --name Microsoft.App
+$ az provider register --name Microsoft.ContainerService
+:::
+
 ::::
 
 ## Requirements

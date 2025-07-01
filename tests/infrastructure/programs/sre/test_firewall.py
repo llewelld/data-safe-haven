@@ -60,6 +60,7 @@ def firewall_props_internet_enabled(
     subnet_firewall_management: network.GetSubnetResult,
     subnet_guacamole_containers: network.GetSubnetResult,
     subnet_identity_containers: network.GetSubnetResult,
+    subnet_dns_sidecar: network.GetSubnetResult,
     subnet_user_services_software_repositories: network.GetSubnetResult,
     subnet_workspaces: network.GetSubnetResult,
 ) -> SREFirewallProps:
@@ -71,6 +72,7 @@ def firewall_props_internet_enabled(
         route_table_name=f"{stack_name}-route-table",
         subnet_apt_proxy_server=subnet_apt_proxy_server,
         subnet_clamav_mirror=subnet_clamav_mirror,
+        subnet_dns_sidecar=subnet_dns_sidecar,
         subnet_firewall=subnet_firewall,
         subnet_firewall_management=subnet_firewall_management,
         subnet_guacamole_containers=subnet_guacamole_containers,
@@ -88,6 +90,7 @@ def firewall_props_internet_disabled(
     sre_monitoring_component: SREMonitoringComponent,
     subnet_apt_proxy_server: network.GetSubnetResult,
     subnet_clamav_mirror: network.GetSubnetResult,
+    subnet_dns_sidecar: network.GetSubnetResult,
     subnet_firewall: network.GetSubnetResult,
     subnet_firewall_management: network.GetSubnetResult,
     subnet_guacamole_containers: network.GetSubnetResult,
@@ -103,6 +106,7 @@ def firewall_props_internet_disabled(
         route_table_name=f"{stack_name}-route-table",
         subnet_apt_proxy_server=subnet_apt_proxy_server,
         subnet_clamav_mirror=subnet_clamav_mirror,
+        subnet_dns_sidecar=subnet_dns_sidecar,
         subnet_firewall=subnet_firewall,
         subnet_firewall_management=subnet_firewall_management,
         subnet_guacamole_containers=subnet_guacamole_containers,
@@ -142,7 +146,9 @@ class TestSREFirewallComponent:
                 if rule_collection["name"] == "workspaces-allow-all"
             ]
 
-            assert len(application_rule_collections) == 5
+            assert (
+                len(application_rule_collections) == 6
+            )  # There are application rules for: 1) dns-sidecar, 2) apt, 3) clamav, 4) guacamole, 5) identity, and 6) nexus
             assert len(allow_internet_collection) == 1
 
         pulumi.Output.all(
@@ -170,8 +176,9 @@ class TestSREFirewallComponent:
             application_rule_collections = args[0]
             network_rule_collections = args[1]
 
+            expected_network_rules = 1
             assert len(application_rule_collections) > 0
-            assert network_rule_collections is None
+            assert len(network_rule_collections) == expected_network_rules
 
         pulumi.Output.all(
             firewall_component.firewall.application_rule_collections,

@@ -29,6 +29,8 @@ class AzureSdkCredentialScope(str, Enum):
 @verify(UNIQUE)
 class AzureServiceTag(str, Enum):
     INTERNET = "Internet"
+    AZURE_RESOURCE_MANAGER = "AzureResourceManager"
+    AZURE_ACTIVE_DIRECTORY = "AzureActiveDirectory"
 
 
 @verify(UNIQUE)
@@ -67,11 +69,12 @@ class FirewallPriorities(int, Enum):
     # SRE sources: 3000-3999
     SRE_APT_PROXY_SERVER = 3000
     SRE_CLAMAV_MIRROR = 3100
-    SRE_GUACAMOLE_CONTAINERS = 3200
-    SRE_IDENTITY_CONTAINERS = 3300
-    SRE_USER_SERVICES_SOFTWARE_REPOSITORIES = 3400
-    SRE_WORKSPACES = 3500
-    SRE_WORKSPACES_DENY = 3550
+    SRE_DNS_SIDECAR = 3200
+    SRE_GUACAMOLE_CONTAINERS = 3300
+    SRE_IDENTITY_CONTAINERS = 3400
+    SRE_USER_SERVICES_SOFTWARE_REPOSITORIES = 3500
+    SRE_WORKSPACES = 3600
+    SRE_WORKSPACES_DENY = 3650
 
 
 @verify(UNIQUE)
@@ -95,10 +98,12 @@ class NetworkingPriorities(int, Enum):
     """Priorities for network security group rules."""
 
     # Azure services: 100 - 999
-    AZURE_GATEWAY_MANAGER = 100
-    AZURE_LOAD_BALANCER = 200
-    AZURE_MONITORING_SOURCES = 300
-    AZURE_PLATFORM_DNS = 400
+    AZURE_ACTIVE_DIRECTORY = 100
+    AZURE_GATEWAY_MANAGER = 200
+    AZURE_LOAD_BALANCER = 300
+    AZURE_MONITORING_SOURCES = 400
+    AZURE_PLATFORM_DNS = 500
+    AZURE_RESOURCE_MANAGER = 600
     # DNS connections: 1000-1499
     INTERNAL_SRE_DNS_SERVERS = 1000
     # SRE connections: 1500-2999
@@ -149,6 +154,7 @@ class PermittedDomains(tuple[str, ...], Enum):
         # "ubuntu.qgis.org"
     )
     AZURE_DNS_ZONES = AzureDnsZoneNames.ALL
+    AZURE_RESOURCE_MANAGER = ("management.azure.com",)
     CLAMAV_UPDATES = (
         "clamav.net",
         "current.cvd.clamav.net",
@@ -157,7 +163,15 @@ class PermittedDomains(tuple[str, ...], Enum):
     )
     MICROSOFT_GRAPH_API = ("graph.microsoft.com",)
     MICROSOFT_LOGIN = ("login.microsoftonline.com",)
+    MICROSOFT_CONTAINER_REGISTRY = ("mcr.microsoft.com", "*.data.mcr.microsoft.com")
     MICROSOFT_IDENTITY = MICROSOFT_GRAPH_API + MICROSOFT_LOGIN
+    AZURE_MANAGED_IDENTITIES = (
+        *MICROSOFT_LOGIN,
+        "*.identity.azure.net",
+        "*.login.microsoftonline.com",
+        "*.login.microsoft.com",
+    )
+
     RSTUDIO_DEB = ("download1.rstudio.org",)
     SOFTWARE_REPOSITORIES_PYTHON = (
         "files.pythonhosted.org",
@@ -175,7 +189,10 @@ class PermittedDomains(tuple[str, ...], Enum):
             set(
                 APT_REPOSITORIES
                 + AZURE_DNS_ZONES
+                + AZURE_RESOURCE_MANAGER
                 + CLAMAV_UPDATES
+                + AZURE_MANAGED_IDENTITIES
+                + MICROSOFT_CONTAINER_REGISTRY
                 + MICROSOFT_GRAPH_API
                 + MICROSOFT_LOGIN
                 + RSTUDIO_DEB
