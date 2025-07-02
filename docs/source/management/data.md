@@ -43,7 +43,7 @@ The {ref}`role_system_manager` creates a time-limited and IP restricted link to 
 
 - In the Azure portal select **Subscriptions** then navigate to the subscription containing the relevant SHM
 - Search for the resource group: `shm-<YOUR_SHM_NAME>-sre-<YOUR_SRE_NAME>-rg`, then click through to the storage account ending with `sensitivedata`
-- Browse to **{menuselection}`Settings --> Networking`** and check the list of pre-approved IP addresses allowed under the **Firewall** header
+- Browse to **{menuselection}`Security + networking --> Networking`** and check the list of pre-approved IP addresses allowed under the **Firewall** header
     - Ensure that the IP address of the person to receive the outputs is listed
     - If it is not listed, modify and reupload the SRE configuration and redeploy the SRE using the `dsh` CLI, as per {ref}`deploy_sre`
 - Browse to **{menuselection}`Data storage --> Containers`**
