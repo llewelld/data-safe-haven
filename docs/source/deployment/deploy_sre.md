@@ -254,6 +254,13 @@ The impact of setting each of these options is detailed in the following table.
     </tbody>
 </table>
 
+:::{important}
+For controlling clipboard access, DSH relies entirely on the functionality offered by Guacamole.
+To the best of our knowledge, it is not possible to egress information from a remote workspace to a user computer when Guacamole's clipboard controls are in place.
+However, at the moment of writing, [it is possible to circumvent these controls to ingress data from a user's computer into the remote workspace](https://issues.apache.org/jira/browse/GUACAMOLE-1965).
+If ingress control is critical for your use case, we strongly recommend implementing policy and training controls given these technical control limitations.
+:::
+
 ## Upload the configuration file
 
 - Upload the config to Azure. This will validate your file and report any problems.
