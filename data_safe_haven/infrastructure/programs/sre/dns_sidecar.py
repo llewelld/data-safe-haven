@@ -238,9 +238,10 @@ class DnsSidecarComponent(ComponentResource):
             ),
             configuration=JobConfigurationArgs(
                 trigger_type=TriggerType.SCHEDULE,
-                replica_timeout=1800,
+                replica_timeout=10 * 60,  # 10 minutes before timeout
+                replica_retry_limit=0,
                 schedule_trigger_config=JobConfigurationScheduleTriggerConfigArgs(
-                    cron_expression="*/5 * * * *"  # This job runs every five-minutes.
+                    cron_expression="*/30 * * * *"  # This job runs every half an hour.
                 ),
             ),
             template=JobTemplateArgs(
