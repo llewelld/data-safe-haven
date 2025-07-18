@@ -31,8 +31,8 @@ from azure.mgmt.dns.models import (
     Zone,
     ZoneType,
 )
-from azure.mgmt.keyvault.v2021_06_01_preview import KeyVaultManagementClient
-from azure.mgmt.keyvault.v2021_06_01_preview.models import (
+from azure.mgmt.keyvault import KeyVaultManagementClient
+from azure.mgmt.keyvault.models import (
     AccessPolicyEntry,
     Permissions,
     Sku as KeyVaultSku,

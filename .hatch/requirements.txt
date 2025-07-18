@@ -10,7 +10,7 @@
 # - azure-mgmt-compute==34.1.0
 # - azure-mgmt-containerinstance==10.1.0
 # - azure-mgmt-dns==9.0.0
-# - azure-mgmt-keyvault==10.3.1
+# - azure-mgmt-keyvault==11.0.0
 # - azure-mgmt-msi==7.0.0
 # - azure-mgmt-rdbms==10.1.0
 # - azure-mgmt-resource==23.3.0
@@ -93,7 +93,7 @@ azure-mgmt-core==1.6.0
     #   azure-mgmt-storage
 azure-mgmt-dns==9.0.0
     # via hatch.envs.default
-azure-mgmt-keyvault==10.3.1
+azure-mgmt-keyvault==11.0.0
     # via hatch.envs.default
 azure-mgmt-msi==7.0.0
     # via hatch.envs.default
