@@ -7,10 +7,12 @@ import pulumi_random
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import (
     authorization,
-    insights,
+    dns,
     keyvault,
     managedidentity,
+    monitor,
     network,
+    privatedns,
     resources,
     storage,
 )
@@ -50,8 +52,8 @@ class SREDataProps:
         admin_group_id: Input[str],
         admin_ip_addresses: Input[Sequence[str]],
         data_provider_ip_addresses: Input[list[str]],
-        dns_private_zones: Input[dict[str, network.PrivateZone]],
-        dns_record: Input[network.RecordSet],
+        dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
+        dns_record: Input[dns.RecordSet],
         dns_server_admin_password: Input[pulumi_random.RandomPassword],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
@@ -422,7 +424,7 @@ class SREDataComponent(ComponentResource):
             )
         )
         # Add diagnostic setting for files
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{storage_account_data_configuration._name}_diagnostic_setting",
             name=f"{storage_account_data_configuration._name}_diagnostic_setting",
             log_analytics_destination_type="Dedicated",
@@ -660,7 +662,7 @@ class SREDataComponent(ComponentResource):
             tags=child_tags,
         )
         # Add diagnostic setting for files
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{storage_account_data_private_user._name}_diagnostic_setting",
             name=f"{storage_account_data_private_user._name}_diagnostic_setting",
             log_analytics_destination_type="Dedicated",

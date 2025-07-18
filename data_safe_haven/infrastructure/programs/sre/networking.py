@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, InvokeOptions, Output, ResourceOptions
-from pulumi_azure_native import network, provider
+from pulumi_azure_native import dns, network, privatedns, provider
 
 from data_safe_haven.functions import alphanumeric, replace_separators
 from data_safe_haven.infrastructure.common import (
@@ -20,7 +20,7 @@ class SRENetworkingProps:
 
     def __init__(
         self,
-        dns_private_zones: Input[dict[str, network.PrivateZone]],
+        dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
         dns_server_ip: Input[str],
         dns_virtual_network: Input[network.VirtualNetwork],
         location: Input[str],
@@ -1980,7 +1980,7 @@ class SRENetworkingComponent(ComponentResource):
             opts=child_opts,
             tags=child_tags,
         )
-        shm_ns_record = network.RecordSet(
+        shm_ns_record = dns.RecordSet(
             f"{self._name}_ns_record",
             ns_records=sre_dns_zone.name_servers.apply(
                 lambda servers: [network.NsRecordArgs(nsdname=ns) for ns in servers]
@@ -1998,7 +1998,7 @@ class SRENetworkingComponent(ComponentResource):
                 ),
             ),
         )
-        network.RecordSet(
+        dns.RecordSet(
             f"{self._name}_caa_record",
             caa_records=[
                 network.CaaRecordArgs(
@@ -2018,7 +2018,7 @@ class SRENetworkingComponent(ComponentResource):
         )
 
         # Define SRE internal DNS zone
-        sre_private_dns_zone = network.PrivateZone(
+        sre_private_dns_zone = privatedns.PrivateZone(
             f"{self._name}_private_zone",
             location="Global",
             private_zone_name=Output.concat("privatelink.", sre_fqdn),
@@ -2030,7 +2030,7 @@ class SRENetworkingComponent(ComponentResource):
         )
 
         # Link SRE private DNS zone to DNS virtual network
-        network.VirtualNetworkLink(
+        privatedns.VirtualNetworkLink(
             f"{self._name}_private_zone_internal_vnet_link",
             location="Global",
             private_zone_name=sre_private_dns_zone.name,
@@ -2051,7 +2051,7 @@ class SRENetworkingComponent(ComponentResource):
         # must use default Azure DNS when setting up file mounts. This means that we
         # need to be able to resolve the "Storage Account" private DNS zones.
         for dns_zone_name, private_dns_zone in props.dns_private_zones.items():
-            network.VirtualNetworkLink(
+            privatedns.VirtualNetworkLink(
                 replace_separators(
                     f"{self._name}_private_zone_{dns_zone_name}_vnet_link", "_"
                 ),

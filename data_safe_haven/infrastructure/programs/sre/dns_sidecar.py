@@ -2,7 +2,7 @@ from typing import Protocol
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import authorization, containerinstance, storage
-from pulumi_azure_native.app.v20250101 import (
+from pulumi_azure_native.app import (
     AccessMode,
     AppLogsConfigurationArgs,
     AzureFilePropertiesArgs,
@@ -160,8 +160,7 @@ class DnsSidecarComponent(ComponentResource):
                 opts=child_opts,
             )
 
-            # Allowing the managed identity to retrieve the container group IP
-
+            # Allow the managed identity to retrieve the container group IP
             container_group_role_definition = authorization.RoleDefinition(
                 f"{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_role",
                 role_name=f"Container group reader for {container_instance.dns_record_name} ({stack_name})",

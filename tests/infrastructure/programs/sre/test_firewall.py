@@ -1,6 +1,6 @@
 import pulumi
 import pulumi.runtime
-from pulumi_azure_native import network
+from pulumi_azure_native import network, privatedns
 from pytest import fixture
 
 from data_safe_haven.functions import replace_separators
@@ -28,7 +28,7 @@ def sre_monitoring_component(
         stack_name,
         SREMonitoringProps(
             dns_private_zones={
-                dns_zone_name: network.PrivateZone(
+                dns_zone_name: privatedns.PrivateZone(
                     replace_separators(
                         f"test_sre_dns_server_private_zone_{dns_zone_name}", "_"
                     ),
