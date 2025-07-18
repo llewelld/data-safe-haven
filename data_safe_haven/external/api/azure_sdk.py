@@ -40,8 +40,8 @@ from azure.mgmt.keyvault.models import (
     VaultCreateOrUpdateParameters,
     VaultProperties,
 )
-from azure.mgmt.msi.v2022_01_31_preview import ManagedServiceIdentityClient
-from azure.mgmt.msi.v2022_01_31_preview.models import Identity
+from azure.mgmt.msi import ManagedServiceIdentityClient
+from azure.mgmt.msi.models import Identity
 from azure.mgmt.resource.resources.v2021_04_01 import ResourceManagementClient
 from azure.mgmt.resource.resources.v2021_04_01.models import ResourceGroup
 from azure.mgmt.resource.subscriptions import SubscriptionClient
