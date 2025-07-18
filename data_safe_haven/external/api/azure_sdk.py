@@ -42,8 +42,8 @@ from azure.mgmt.keyvault.models import (
 )
 from azure.mgmt.msi import ManagedServiceIdentityClient
 from azure.mgmt.msi.models import Identity
-from azure.mgmt.resource.resources.v2021_04_01 import ResourceManagementClient
-from azure.mgmt.resource.resources.v2021_04_01.models import ResourceGroup
+from azure.mgmt.resource.resources import ResourceManagementClient
+from azure.mgmt.resource.resources.models import ResourceGroup
 from azure.mgmt.resource.subscriptions import SubscriptionClient
 from azure.mgmt.resource.subscriptions.models import Location, Subscription
 from azure.mgmt.storage.v2024_01_01 import StorageManagementClient
