@@ -83,6 +83,7 @@ Additionally, a production instance of DSH is maintained for use by research pro
 | 2025      | [v5.3.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.3.0)           |
 | 2025      | [v5.4.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.4.0)           |
 | 2025      | [v5.4.1](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.4.1)           |
+| 2025      | [v5.5.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.5.0)           |
 
 ## Versions that have undergone formal security evaluation
 

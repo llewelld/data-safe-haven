@@ -52,20 +52,26 @@ class DnsSidecarProps:
     def __init__(
         self,
         container_instances: list[SupportsDnsSidecar],
+        cron_expression: str,
         subnet_id: Input[str],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         resource_group_name: Input[str],
+        replica_timeout: int,
+        retry_limit: int,
         sre_fqdn: Input[str],
         subscription_id: Input[str],
         storage_account_name: Input[str],
         storage_account_key: Input[str],
     ):
         self.container_instances = container_instances
+        self.cron_expression = cron_expression
         self.subnet_id = subnet_id
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
         self.resource_group_name = resource_group_name
+        self.replica_timeout = replica_timeout
+        self.retry_limit = retry_limit
         self.sre_fqdn = sre_fqdn
         self.subscription_id = subscription_id
         self.storage_account_name = storage_account_name
@@ -238,9 +244,10 @@ class DnsSidecarComponent(ComponentResource):
             ),
             configuration=JobConfigurationArgs(
                 trigger_type=TriggerType.SCHEDULE,
-                replica_timeout=1800,
+                replica_timeout=props.replica_timeout,
+                replica_retry_limit=props.retry_limit,
                 schedule_trigger_config=JobConfigurationScheduleTriggerConfigArgs(
-                    cron_expression="*/5 * * * *"  # This job runs every five-minutes.
+                    cron_expression=props.cron_expression
                 ),
             ),
             template=JobTemplateArgs(
