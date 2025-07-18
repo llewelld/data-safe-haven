@@ -6,7 +6,7 @@
 # - azure-identity==1.23.0
 # - azure-keyvault-certificates==4.10.0
 # - azure-keyvault-keys==4.11.0
-# - azure-keyvault-secrets==4.9.0
+# - azure-keyvault-secrets==4.10.0
 # - azure-mgmt-compute==34.0.0
 # - azure-mgmt-containerinstance==10.1.0
 # - azure-mgmt-dns==8.2.0
@@ -75,13 +75,13 @@ azure-keyvault-certificates==4.10.0
     # via hatch.envs.default
 azure-keyvault-keys==4.11.0
     # via hatch.envs.default
-azure-keyvault-secrets==4.9.0
+azure-keyvault-secrets==4.10.0
     # via hatch.envs.default
 azure-mgmt-compute==34.0.0
     # via hatch.envs.default
 azure-mgmt-containerinstance==10.1.0
     # via hatch.envs.default
-azure-mgmt-core==1.5.0
+azure-mgmt-core==1.6.0
     # via
     #   azure-mgmt-compute
     #   azure-mgmt-containerinstance
@@ -111,7 +111,7 @@ azure-storage-file-datalake==12.18.1
     # via hatch.envs.default
 azure-storage-file-share==12.20.1
     # via hatch.envs.default
-certifi==2025.6.15
+certifi==2025.7.14
     # via
     #   msrest
     #   requests
@@ -137,7 +137,7 @@ cryptography==44.0.2
     #   msal
     #   pyjwt
     #   pyopenssl
-debugpy==1.8.14
+debugpy==1.8.15
     # via pulumi
 dill==0.4.0
     # via pulumi
@@ -258,7 +258,7 @@ six==1.17.0
     # via azure-core
 typer==0.15.2
     # via hatch.envs.default
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via
     #   azure-core
     #   azure-identity

@@ -6,7 +6,7 @@
 # - azure-identity==1.23.0
 # - azure-keyvault-certificates==4.10.0
 # - azure-keyvault-keys==4.11.0
-# - azure-keyvault-secrets==4.9.0
+# - azure-keyvault-secrets==4.10.0
 # - azure-mgmt-compute==34.0.0
 # - azure-mgmt-containerinstance==10.1.0
 # - azure-mgmt-dns==8.2.0
@@ -85,13 +85,13 @@ azure-keyvault-certificates==4.10.0
     # via hatch.envs.docs
 azure-keyvault-keys==4.11.0
     # via hatch.envs.docs
-azure-keyvault-secrets==4.9.0
+azure-keyvault-secrets==4.10.0
     # via hatch.envs.docs
 azure-mgmt-compute==34.0.0
     # via hatch.envs.docs
 azure-mgmt-containerinstance==10.1.0
     # via hatch.envs.docs
-azure-mgmt-core==1.5.0
+azure-mgmt-core==1.6.0
     # via
     #   azure-mgmt-compute
     #   azure-mgmt-containerinstance
@@ -127,7 +127,7 @@ babel==2.17.0
     #   sphinx
 beautifulsoup4==4.13.4
     # via pydata-sphinx-theme
-certifi==2025.6.15
+certifi==2025.7.14
     # via
     #   msrest
     #   requests
@@ -154,7 +154,7 @@ cryptography==44.0.2
     #   msal
     #   pyjwt
     #   pyopenssl
-debugpy==1.8.14
+debugpy==1.8.15
     # via pulumi
 dill==0.4.0
     # via pulumi
@@ -342,7 +342,7 @@ typer==0.15.2
     # via hatch.envs.docs
 typer-slim==0.16.0
     # via sphinxcontrib-typer
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via
     #   azure-core
     #   azure-identity
