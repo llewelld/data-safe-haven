@@ -22,8 +22,8 @@ from azure.mgmt.compute.models import (
     RunCommandInputParameter,
     RunCommandResult,
 )
-from azure.mgmt.dns.v2018_05_01 import DnsManagementClient
-from azure.mgmt.dns.v2018_05_01.models import (
+from azure.mgmt.dns import DnsManagementClient
+from azure.mgmt.dns.models import (
     CaaRecord,
     RecordSet,
     RecordType,
