@@ -212,7 +212,7 @@ class SREDnsServerComponent(ComponentResource):
             container_group_name=f"{stack_name}-container-group-dns",
             containers=[
                 containerinstance.ContainerArgs(
-                    image="adguard/adguardhome:v0.107.62",
+                    image="adguard/adguardhome:v0.107.63",
                     name="adguard",
                     # Providing "command" overwrites the CMD arguments in the Docker
                     # image, so we can either provide them here or set defaults in our

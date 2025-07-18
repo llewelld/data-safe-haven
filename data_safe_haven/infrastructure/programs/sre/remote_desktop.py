@@ -193,7 +193,7 @@ class SRERemoteDesktopComponent(ComponentResource):
                 # Note that the environment variables are not all documented.
                 # More information at https://github.com/apache/guacamole-client/blob/master/guacamole-docker/bin/start.sh
                 containerinstance.ContainerArgs(
-                    image="guacamole/guacamole:1.5.5",
+                    image="guacamole/guacamole:1.6.0",
                     name="guacamole"[:63],
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
@@ -270,7 +270,7 @@ class SRERemoteDesktopComponent(ComponentResource):
                     ),
                 ),
                 containerinstance.ContainerArgs(
-                    image="guacamole/guacd:1.5.5",
+                    image="guacamole/guacd:1.6.0",
                     name="guacd"[:63],
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
