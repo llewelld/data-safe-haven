@@ -15,7 +15,7 @@
 # - azure-mgmt-rdbms==10.1.0
 # - azure-mgmt-resource==24.0.0
 # - azure-mgmt-storage==23.0.1
-# - azure-storage-blob==12.24.1
+# - azure-storage-blob==12.26.0
 # - azure-storage-file-datalake==12.18.1
 # - azure-storage-file-share==12.20.1
 # - chevron==0.14.0
@@ -103,7 +103,7 @@ azure-mgmt-resource==24.0.0
     # via hatch.envs.default
 azure-mgmt-storage==23.0.1
     # via hatch.envs.default
-azure-storage-blob==12.24.1
+azure-storage-blob==12.26.0
     # via
     #   hatch.envs.default
     #   azure-storage-file-datalake
