@@ -451,12 +451,15 @@ class DeclarativeSRE:
             self.stack_name,
             DnsSidecarProps(
                 container_instances=container_instance_information,
+                cron_expression=self.config.user_services.dns_sidecar.cron_expression,
                 subnet_id=Output.from_input(networking.subnet_dns_sidecar).apply(
                     get_id_from_subnet
                 ),
                 log_analytics_workspace=monitoring.log_analytics,
                 location=self.config.azure.location,
                 resource_group_name=resource_group.name,
+                replica_timeout=self.config.user_services.dns_sidecar.replica_timeout,
+                retry_limit=self.config.user_services.dns_sidecar.retry_limit,
                 sre_fqdn=networking.sre_fqdn,
                 subscription_id=self.config.azure.subscription_id,
                 storage_account_key=data.storage_account_data_configuration_key,

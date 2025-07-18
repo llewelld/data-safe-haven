@@ -55,8 +55,17 @@ class ConfigSubsectionNexus(BaseModel, validate_assignment=True):
     persistent_quota_gb: PositiveInt
 
 
+class ConfigSubsectionDnsSidecar(BaseModel, validate_assignment=True):
+    cron_expression: str
+    replica_timeout: PositiveInt
+    retry_limit: int
+
+
 class ConfigSectionUserServices(BaseModel, validate_assignment=True):
     nexus: ConfigSubsectionNexus = ConfigSubsectionNexus(persistent_quota_gb=10)
+    dns_sidecar: ConfigSubsectionDnsSidecar = ConfigSubsectionDnsSidecar(
+        cron_expression="*/30 * * * *", replica_timeout=10 * 60, retry_limit=0
+    )
 
 
 class ConfigSectionSRE(BaseModel, validate_assignment=True):

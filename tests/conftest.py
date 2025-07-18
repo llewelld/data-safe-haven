@@ -546,6 +546,10 @@ def sre_config_yaml(request):
     user_services:
         nexus:
             persistent_quota_gb: 10
+        dns_sidecar:
+            cron_expression: "*/30 * * * *"
+            replica_timeout: 600
+            retry_limit: 0
     """.replace(
         "guid_subscription", request.config.guid_subscription
     ).replace(
