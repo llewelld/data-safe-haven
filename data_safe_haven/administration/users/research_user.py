@@ -24,6 +24,21 @@ class ResearchUser:
         self.surname = surname
         self.user_principal_name = user_principal_name
 
+    def __hash__(self) -> int:
+        return hash(
+            (
+                self.account_enabled,
+                self.country,
+                self.domain,
+                self.email_address,
+                self.given_name,
+                self.phone_number,
+                self.sam_account_name,
+                self.surname,
+                self.user_principal_name,
+            )
+        )
+
     @property
     def display_name(self) -> str:
         return f"{self.given_name} {self.surname}"
