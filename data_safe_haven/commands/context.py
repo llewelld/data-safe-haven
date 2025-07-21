@@ -125,27 +125,27 @@ def add(
 @context_command_group.command()
 def update(
     admin_group_name: Annotated[
-        Optional[str],  # noqa: UP007
+        Optional[str],  # noqa: UP045
         typer.Option(
             help="Name of a security group that contains all Azure infrastructure admins.",
             callback=validators.typer_entra_group_name,
         ),
     ] = None,
     description: Annotated[
-        Optional[str],  # noqa: UP007
+        Optional[str],  # noqa: UP045
         typer.Option(
             help="The human friendly name to give this Data Safe Haven deployment.",
         ),
     ] = None,
     name: Annotated[
-        Optional[str],  # noqa: UP007
+        Optional[str],  # noqa: UP045
         typer.Option(
             help="A name for this context which consists only of letters, numbers and underscores.",
             callback=validators.typer_safe_string,
         ),
     ] = None,
     subscription: Annotated[
-        Optional[str],  # noqa: UP007
+        Optional[str],  # noqa: UP045
         typer.Option(
             help="The name of an Azure subscription to deploy resources into.",
             callback=validators.typer_azure_subscription_name,

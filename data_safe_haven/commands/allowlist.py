@@ -27,7 +27,7 @@ def show(
         typer.Argument(help="Name of the repository to show the allowlist for."),
     ],
     file: Annotated[
-        Optional[str],  # noqa: UP007
+        Optional[str],  # noqa: UP045
         typer.Option(help="File path to write the allowlist to."),
     ] = None,
 ) -> None:
@@ -83,7 +83,7 @@ def template(
         typer.Argument(help="Name of the repository to show the allowlist for."),
     ],
     file: Annotated[
-        Optional[Path],  # noqa: UP007
+        Optional[Path],  # noqa: UP045
         typer.Option(help="File path to write allowlist template to."),
     ] = None,
 ) -> None:
