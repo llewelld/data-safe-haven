@@ -5,7 +5,7 @@ from typing import Any, Generic, TypeVar
 T = TypeVar("T")
 
 
-class Singleton(type, Generic[T]):
+class Singleton(type, Generic[T]):  # noqa: UP046
     # It is not possible to wrap generics in ClassVar (https://github.com/python/mypy/issues/5144)
     _instances: dict["Singleton[T]", T] = {}  # noqa: RUF012
 
