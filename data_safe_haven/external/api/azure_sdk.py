@@ -16,12 +16,7 @@ from azure.keyvault.certificates import CertificateClient, KeyVaultCertificate
 from azure.keyvault.keys import KeyClient, KeyVaultKey
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
 from azure.mgmt.compute import ComputeManagementClient
-from azure.mgmt.compute.models import (
-    ResourceSkuCapabilities,
-    RunCommandInput,
-    RunCommandInputParameter,
-    RunCommandResult,
-)
+from azure.mgmt.compute.models import ResourceSkuCapabilities
 from azure.mgmt.dns import DnsManagementClient
 from azure.mgmt.dns.models import (
     CaaRecord,
