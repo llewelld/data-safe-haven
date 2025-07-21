@@ -15,15 +15,15 @@ from azure.core.exceptions import (
 from azure.keyvault.certificates import CertificateClient, KeyVaultCertificate
 from azure.keyvault.keys import KeyClient, KeyVaultKey
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
-from azure.mgmt.compute.v2021_07_01 import ComputeManagementClient
-from azure.mgmt.compute.v2021_07_01.models import (
+from azure.mgmt.compute import ComputeManagementClient
+from azure.mgmt.compute.models import (
     ResourceSkuCapabilities,
     RunCommandInput,
     RunCommandInputParameter,
     RunCommandResult,
 )
-from azure.mgmt.dns.v2018_05_01 import DnsManagementClient
-from azure.mgmt.dns.v2018_05_01.models import (
+from azure.mgmt.dns import DnsManagementClient
+from azure.mgmt.dns.models import (
     CaaRecord,
     RecordSet,
     RecordType,
@@ -31,8 +31,8 @@ from azure.mgmt.dns.v2018_05_01.models import (
     Zone,
     ZoneType,
 )
-from azure.mgmt.keyvault.v2021_06_01_preview import KeyVaultManagementClient
-from azure.mgmt.keyvault.v2021_06_01_preview.models import (
+from azure.mgmt.keyvault import KeyVaultManagementClient
+from azure.mgmt.keyvault.models import (
     AccessPolicyEntry,
     Permissions,
     Sku as KeyVaultSku,
@@ -40,14 +40,14 @@ from azure.mgmt.keyvault.v2021_06_01_preview.models import (
     VaultCreateOrUpdateParameters,
     VaultProperties,
 )
-from azure.mgmt.msi.v2022_01_31_preview import ManagedServiceIdentityClient
-from azure.mgmt.msi.v2022_01_31_preview.models import Identity
-from azure.mgmt.resource.resources.v2021_04_01 import ResourceManagementClient
-from azure.mgmt.resource.resources.v2021_04_01.models import ResourceGroup
+from azure.mgmt.msi import ManagedServiceIdentityClient
+from azure.mgmt.msi.models import Identity
+from azure.mgmt.resource.resources import ResourceManagementClient
+from azure.mgmt.resource.resources.models import ResourceGroup
 from azure.mgmt.resource.subscriptions import SubscriptionClient
 from azure.mgmt.resource.subscriptions.models import Location, Subscription
-from azure.mgmt.storage.v2024_01_01 import StorageManagementClient
-from azure.mgmt.storage.v2024_01_01.models import (
+from azure.mgmt.storage import StorageManagementClient
+from azure.mgmt.storage.models import (
     BlobContainer,
     Kind as StorageAccountKind,
     MinimumTlsVersion,

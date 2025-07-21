@@ -1,11 +1,9 @@
 import pytest
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
-from azure.mgmt.keyvault.v2023_07_01.models import DeletedVault
+from azure.mgmt.keyvault.models import DeletedVault
 from azure.mgmt.resource.subscriptions import SubscriptionClient
 from azure.mgmt.resource.subscriptions.models import Subscription
-from azure.mgmt.storage.v2024_01_01.models import (
-    StorageAccountListKeysResult,
-)
+from azure.mgmt.storage.models import StorageAccountListKeysResult
 from pytest import fixture
 
 import data_safe_haven.external.api.azure_sdk
