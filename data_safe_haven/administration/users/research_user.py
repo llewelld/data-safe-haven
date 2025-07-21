@@ -4,7 +4,7 @@ from typing import Any
 class ResearchUser:
     def __init__(
         self,
-        account_enabled: bool | None = None,
+        account_enabled: bool | None = None,  # noqa: FBT001
         country: str | None = None,
         domain: str | None = None,
         email_address: str | None = None,
