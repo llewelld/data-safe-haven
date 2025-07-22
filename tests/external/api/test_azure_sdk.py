@@ -312,11 +312,6 @@ class TestAzureSdk:
             "storage_account",
         )
 
-    def test_file_share_list(self, mock_share_service_client):  # noqa: ARG002
-        sdk = AzureSdk("subscription name")
-        shares = sdk.list_shares("resource_group", "storage_account")
-        assert shares == ["file_share_name", "file_share_name2"]
-
     def test_get_keyvault_key(self, mock_key_client):  # noqa: ARG002
         sdk = AzureSdk("subscription name")
         key = sdk.get_keyvault_key("exists", "key vault name")

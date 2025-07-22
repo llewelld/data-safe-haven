@@ -158,24 +158,6 @@ class AzureSdk:
         )
         return exists
 
-    def list_shares(
-        self,
-        resource_group_name: str,
-        storage_account_name: str,
-    ) -> list[str]:
-        """List all shares in a container
-
-        Returns:
-            List[str]: The list of share names
-        """
-
-        share_client = self.share_service_client(
-            resource_group_name=resource_group_name,
-            storage_account_name=storage_account_name,
-        )
-        share_list = share_client.list_shares()
-        return list(share_list)
-
     def share_client(
         self, resource_group_name: str, storage_account_name: str, file_share_name: str
     ) -> ShareClient:
