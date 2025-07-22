@@ -97,7 +97,7 @@ def mock_share_client(monkeypatch):
 
     monkeypatch.setattr(
         data_safe_haven.external.api.azure_sdk.AzureSdk,
-        "share_client",
+        "share_client_",
         mock_share_client,
     )
 
@@ -114,7 +114,7 @@ def mock_share_service_client(monkeypatch):
 
     monkeypatch.setattr(
         data_safe_haven.external.api.azure_sdk.AzureSdk,
-        "share_service_client",
+        "share_service_client_",
         MockShareServiceClient,
     )
 

@@ -158,29 +158,6 @@ class AzureSdk:
         )
         return exists
 
-    def share_client(
-        self, resource_group_name: str, storage_account_name: str, file_share_name: str
-    ) -> ShareClient:
-
-        share_service_client = self.share_service_client(
-            resource_group_name, storage_account_name
-        )
-        share_client = share_service_client.get_share_client(share=file_share_name)
-        return share_client
-
-    def share_service_client(
-        self, resource_group_name: str, storage_account_name: str
-    ) -> ShareServiceClient:
-        storage_account_keys = self.get_storage_account_keys(
-            resource_group_name, storage_account_name
-        )
-
-        share_service_client = ShareServiceClient(
-            account_url=f"https://{storage_account_name}.file.core.windows.net",
-            credential=storage_account_keys[0].value,
-        )
-        return share_service_client
-
     def download_share_file(
         self,
         file_name: str,
@@ -198,7 +175,7 @@ class AzureSdk:
         """
         try:
             # Get the share client
-            share_client = self.share_client(
+            share_client = self.share_client_(
                 resource_group_name,
                 storage_account_name,
                 file_share_name,
@@ -232,7 +209,7 @@ class AzureSdk:
             raise DataSafeHavenAzureStorageError(msg)
 
         try:
-            share_client = self.share_client(
+            share_client = self.share_client_(
                 resource_group_name,
                 storage_account_name,
                 storage_share_name,
@@ -1311,6 +1288,29 @@ class AzureSdk:
             )
             raise DataSafeHavenAzureError(msg) from exc
 
+    def share_client_(
+        self, resource_group_name: str, storage_account_name: str, file_share_name: str
+    ) -> ShareClient:
+
+        share_service_client = self.share_service_client_(
+            resource_group_name, storage_account_name
+        )
+        share_client = share_service_client.get_share_client(share=file_share_name)
+        return share_client
+
+    def share_service_client_(
+        self, resource_group_name: str, storage_account_name: str
+    ) -> ShareServiceClient:
+        storage_account_keys = self.get_storage_account_keys(
+            resource_group_name, storage_account_name
+        )
+
+        share_service_client = ShareServiceClient(
+            account_url=f"https://{storage_account_name}.file.core.windows.net",
+            credential=storage_account_keys[0].value,
+        )
+        return share_service_client
+
     def storage_exists(
         self,
         storage_account_name: str,
@@ -1378,7 +1378,7 @@ class AzureSdk:
         """
         try:
             # Get the share client
-            share_client = self.share_client(
+            share_client = self.share_client_(
                 resource_group_name,
                 storage_account_name,
                 file_share_name,
