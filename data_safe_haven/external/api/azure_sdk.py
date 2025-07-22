@@ -103,7 +103,7 @@ class AzureSdk:
             )
         return self.tenant_id_
 
-    def blob_client(
+    def blob_client_(
         self,
         resource_group_name: str,
         storage_account_name: str,
@@ -112,7 +112,7 @@ class AzureSdk:
     ) -> BlobClient:
         try:
             # Get the blob client from the blob service client
-            blob_service_client = self.blob_service_client(
+            blob_service_client = self.blob_service_client_(
                 resource_group_name, storage_account_name
             )
             blob_client = blob_service_client.get_blob_client(
@@ -143,7 +143,7 @@ class AzureSdk:
             msg = f"Storage account '{storage_account_name}' could not be found."
             raise DataSafeHavenAzureStorageError(msg)
         try:
-            blob_client = self.blob_client(
+            blob_client = self.blob_client_(
                 resource_group_name,
                 storage_account_name,
                 storage_container_name,
@@ -247,7 +247,7 @@ class AzureSdk:
         )
         return exists
 
-    def blob_service_client(
+    def blob_service_client_(
         self,
         resource_group_name: str,
         storage_account_name: str,
@@ -303,7 +303,7 @@ class AzureSdk:
         """
         try:
             # Get the blob client
-            blob_client = self.blob_client(
+            blob_client = self.blob_client_(
                 resource_group_name,
                 storage_account_name,
                 storage_container_name,
@@ -941,14 +941,13 @@ class AzureSdk:
         """List all blobs with a given prefix in a container
 
         Returns:
-            List[str]: The list of blob names
+            list[str]: The list of blob names
         """
-
-        blob_client = self.blob_service_client(
+        blob_service_client = self.blob_service_client_(
             resource_group_name=resource_group_name,
             storage_account_name=storage_account_name,
         )
-        container_client = blob_client.get_container_client(container=container_name)
+        container_client = blob_service_client.get_container_client(container_name)
         blob_list = container_client.list_blob_names(name_starts_with=prefix)
         return list(blob_list)
 
@@ -1066,7 +1065,7 @@ class AzureSdk:
         """
         try:
             # Get the blob client
-            blob_client = self.blob_client(
+            blob_client = self.blob_client_(
                 resource_group_name=resource_group_name,
                 storage_account_name=storage_account_name,
                 storage_container_name=storage_container_name,
@@ -1346,7 +1345,7 @@ class AzureSdk:
         """
         try:
             # Get the blob client
-            blob_client = self.blob_client(
+            blob_client = self.blob_client_(
                 resource_group_name,
                 storage_account_name,
                 storage_container_name,

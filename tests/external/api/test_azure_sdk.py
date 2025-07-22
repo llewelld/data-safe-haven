@@ -49,7 +49,9 @@ def mock_blob_client(monkeypatch):
         )
 
     monkeypatch.setattr(
-        data_safe_haven.external.api.azure_sdk.AzureSdk, "blob_client", mock_blob_client
+        data_safe_haven.external.api.azure_sdk.AzureSdk,
+        "blob_client_",
+        mock_blob_client,
     )
 
 
