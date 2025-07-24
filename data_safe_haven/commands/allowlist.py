@@ -16,6 +16,24 @@ from data_safe_haven.types import AllowlistRepository, SoftwarePackageCategory
 allowlist_command_group = typer.Typer()
 
 
+def is_allowlist_required(sre_config: SREConfig) -> tuple[bool, str | None]:
+    """Validates if the SRE configuration requires an allowlist."""
+
+    if sre_config.sre.software_packages == SoftwarePackageCategory.ANY:
+        return (
+            False,
+            "No package allowlist is required for this SRE. All packages are allowed.",
+        )
+
+    elif sre_config.sre.software_packages == SoftwarePackageCategory.NONE:
+        return (
+            False,
+            "No package allowlist is required for this SRE. No packages are allowed.",
+        )
+
+    return True, None
+
+
 @allowlist_command_group.command()
 def show(
     name: Annotated[
@@ -44,17 +62,9 @@ def show(
         raise typer.Exit(1) from exc
 
     sre_config = SREConfig.from_remote_by_name(context, name)
-
-    if sre_config.sre.software_packages == SoftwarePackageCategory.ANY:
-        logger.info(
-            "No package allowlist is required for this SRE. "
-            "All packages are allowed."
-        )
-        raise typer.Exit()
-    elif sre_config.sre.software_packages == SoftwarePackageCategory.NONE:
-        logger.info(
-            "No package allowlist is required for this SRE. No packages are allowed."
-        )
+    allowlist_required, error_message = is_allowlist_required(sre_config)
+    if not allowlist_required:
+        logger.info(error_message)
         raise typer.Exit()
 
     # Load Pulumi config
@@ -148,17 +158,11 @@ def upload(
         raise typer.Exit(1)
     sre_config = SREConfig.from_remote_by_name(context, name)
 
-    if sre_config.sre.software_packages == "ANY":
-        logger.info(
-            "No package allowlist is required for this SRE. "
-            "All packages are allowed."
-        )
+    allowlist_required, error_message = is_allowlist_required(sre_config)
+    if not allowlist_required:
+        logger.info(error_message)
         raise typer.Exit()
-    elif sre_config.sre.software_packages == "NONE":
-        logger.info(
-            "No package allowlist is required for this SRE. No packages are allowed."
-        )
-        raise typer.Exit()
+
     # Load Pulumi config
     pulumi_config = DSHPulumiConfig.from_remote(context)
 
