@@ -87,7 +87,10 @@ class TestShowAllowlist:
             ["show", sre_name, repository],
         )
         assert result.exit_code == 0
-        assert "required" in result.output
+        assert (
+            "No package allowlist is required for this SRE. All packages are allowed."
+            == result.output.strip()
+        )
 
 
 class TestTemplateAllowlist:
