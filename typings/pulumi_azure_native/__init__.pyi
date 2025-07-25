@@ -5,11 +5,14 @@ import pulumi_azure_native.compute as compute
 import pulumi_azure_native.containerinstance as containerinstance
 import pulumi_azure_native.dataprotection as dataprotection
 import pulumi_azure_native.dbforpostgresql as dbforpostgresql
-import pulumi_azure_native.insights as insights
+import pulumi_azure_native.dns as dns
+import pulumi_azure_native.dnsresolver as dnsresolver
 import pulumi_azure_native.keyvault as keyvault
 import pulumi_azure_native.maintenance as maintenance
 import pulumi_azure_native.managedidentity as managedidentity
+import pulumi_azure_native.monitor as monitor
 import pulumi_azure_native.network as network
+import pulumi_azure_native.privatedns as privatedns
 import pulumi_azure_native.operationalinsights as operationalinsights
 import pulumi_azure_native.operationsmanagement as operationsmanagement
 import pulumi_azure_native.provider as provider
@@ -24,13 +27,16 @@ __all__ = [
     "containerinstance",
     "dataprotection",
     "dbforpostgresql",
-    "insights",
+    "dns",
+    "dnsresolver",
     "keyvault",
     "maintenance",
     "managedidentity",
+    "monitor",
     "network",
     "operationalinsights",
     "operationsmanagement",
+    "privatedns",
     "provider",
     "resources",
     "sql",

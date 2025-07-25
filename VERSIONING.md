@@ -81,6 +81,9 @@ Additionally, a production instance of DSH is maintained for use by research pro
 | 2023–2024 | [v4.1.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v4.1.0)           |
 | 2024      | [v4.2.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v4.2.0)           |
 | 2025      | [v5.3.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.3.0)           |
+| 2025      | [v5.4.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.4.0)           |
+| 2025      | [v5.4.1](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.4.1)           |
+| 2025      | [v5.5.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.5.0)           |
 
 ## Versions that have undergone formal security evaluation
 
@@ -95,7 +98,7 @@ The following versions have been evaluated by third party security consultants p
 | [v5.0.0-rc1](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.0.0-rc.1) | 18 September 2023 | Penetration test evaluating ability to infiltrate/exfiltrate data from the system. Testing next codebase, using Python and Pulumi.                                                                 | No major security issues identified. |
 | [v4.2.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v4.2.0)          | 22 March 2024     | Penetration test evaluating ability to infiltrate/exfiltrate data from the system. Repeat tests for v4.0.0 vulnerabilities.                                                                        | No major security issues identified. |
 | [v5.0.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.0.0)          | 9 August 2024     | Penetration test evaluating ability to infiltrate/exfiltrate data from the system.                                                                                                                 | No major security issues identified. |
-| [v5.2.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.0.0)          | 2 January 2025    | Penetration test evaluating ability to infiltrate/exfiltrate data from the system.                                                                                                                 | No security issues identified. |
+| [v5.2.0](https://github.com/alan-turing-institute/data-safe-haven/releases/tag/v5.2.0)          | 2 January 2025    | Penetration test evaluating ability to infiltrate/exfiltrate data from the system.                                                                                                                 | No security issues identified. |
 
 ## Questions
 

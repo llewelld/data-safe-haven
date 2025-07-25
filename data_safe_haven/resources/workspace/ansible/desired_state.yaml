@@ -47,6 +47,10 @@
       tags: package_proxies
       when: not allow_workspace_internet | bool
 
+    - name: Configure scratchpad
+      ansible.builtin.import_tasks: tasks/scratchpad.yaml
+      tags: scratchpad
+
     - name: Provision smoke tests
       ansible.builtin.import_tasks: tasks/smoke_tests.yaml
       tags: smoke_tests

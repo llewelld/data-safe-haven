@@ -49,6 +49,7 @@ class SREGiteaServerProps:
         self.database_username = (
             database_username if database_username else "postgresadmin"
         )
+
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.ldap_server_hostname = ldap_server_hostname
@@ -90,6 +91,18 @@ class SREGiteaServerComponent(ComponentResource):
             signed_identifiers=[],
             opts=child_opts,
         )
+
+        file_share_gitea = storage.FileShare(
+            f"{self._name}_file_share_gitea_data",
+            access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
+            account_name=props.storage_account_name,
+            resource_group_name=props.resource_group_name,
+            share_name="gitea-data",
+            share_quota=2,
+            signed_identifiers=[],
+            opts=child_opts,
+        )
+
         file_share_gitea_gitea = storage.FileShare(
             f"{self._name}_file_share_gitea_gitea",
             access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
@@ -185,13 +198,17 @@ class SREGiteaServerComponent(ComponentResource):
             tags=child_tags,
         )
 
-        # Define the container group with guacd, guacamole and caddy
-        container_group = containerinstance.ContainerGroup(
+        # Define the container group with a dns monitor, guacd, guacamole and caddy
+        self.dns_record_name = "gitea"
+        self.container_group_name = (
+            f"{stack_name}-container-group-{self.dns_record_name }"
+        )
+        self.container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
-            container_group_name=f"{stack_name}-container-group-gitea",
+            container_group_name=self.container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image="caddy:2.9.1",
+                    image="caddy:2.10.0",
                     name="caddy"[:63],
                     ports=[
                         containerinstance.ContainerPortArgs(
@@ -214,7 +231,7 @@ class SREGiteaServerComponent(ComponentResource):
                     ],
                 ),
                 containerinstance.ContainerArgs(
-                    image="gitea/gitea:1.23.1",
+                    image="gitea/gitea:1.24.2",
                     name="gitea"[:63],
                     command=["/app/custom/entrypoint.sh"],
                     environment_variables=[
@@ -272,6 +289,11 @@ class SREGiteaServerComponent(ComponentResource):
                             name="gitea-app-custom",
                             read_only=True,
                         ),
+                        containerinstance.VolumeMountArgs(
+                            mount_path="/data",
+                            name="gitea-gitea-data",
+                            read_only=False,
+                        ),
                     ],
                 ),
             ],
@@ -322,6 +344,14 @@ class SREGiteaServerComponent(ComponentResource):
                 ),
                 containerinstance.VolumeArgs(
                     azure_file=containerinstance.AzureFileVolumeArgs(
+                        share_name=file_share_gitea.name,
+                        storage_account_key=props.storage_account_key,
+                        storage_account_name=props.storage_account_name,
+                    ),
+                    name="gitea-gitea-data",
+                ),
+                containerinstance.VolumeArgs(
+                    azure_file=containerinstance.AzureFileVolumeArgs(
                         share_name=file_share_gitea_gitea.name,
                         storage_account_key=props.storage_account_key,
                         storage_account_name=props.storage_account_name,
@@ -345,18 +375,20 @@ class SREGiteaServerComponent(ComponentResource):
         )
 
         # Register the container group in the SRE DNS zone
-        local_dns = LocalDnsRecordComponent(
+        self.local_dns = LocalDnsRecordComponent(
             f"{self._name}_gitea_dns_record_set",
             LocalDnsRecordProps(
                 base_fqdn=props.sre_fqdn,
-                private_ip_address=get_ip_address_from_container_group(container_group),
-                record_name="gitea",
+                private_ip_address=get_ip_address_from_container_group(
+                    self.container_group
+                ),
+                record_name=self.dns_record_name,
                 resource_group_name=props.resource_group_name,
             ),
             opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=container_group)
+                child_opts, ResourceOptions(parent=self.container_group)
             ),
         )
 
         # Register outputs
-        self.hostname = local_dns.hostname
+        self.hostname = self.local_dns.hostname

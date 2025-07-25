@@ -45,7 +45,7 @@ def callback(
         ),
     ] = False,
     version: Annotated[
-        Optional[bool],  # noqa: UP007
+        Optional[bool],  # noqa: UP045
         typer.Option(
             "--version", "-V", help="Display the version of this application."
         ),

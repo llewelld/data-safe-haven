@@ -21,21 +21,21 @@ shm_command_group = typer.Typer()
 @shm_command_group.command()
 def deploy(
     entra_tenant_id: Annotated[
-        Optional[str],  # noqa: UP007
+        Optional[str],  # noqa: UP045
         typer.Option(
             help="Tenant ID for the Entra ID used to manage TRE users.",
             callback=typer_aad_guid,
         ),
     ] = None,
     fqdn: Annotated[
-        Optional[str],  # noqa: UP007
+        Optional[str],  # noqa: UP045
         typer.Option(
             help="Domain name you want your TRE to be accessible at.",
             callback=typer_fqdn,
         ),
     ] = None,
     location: Annotated[
-        Optional[str],  # noqa: UP007
+        Optional[str],  # noqa: UP045
         typer.Option(
             help="The Azure location to deploy resources into.",
         ),

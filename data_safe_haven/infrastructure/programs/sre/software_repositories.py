@@ -17,7 +17,10 @@ from data_safe_haven.infrastructure.components import (
     WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
-from data_safe_haven.types import Ports, SoftwarePackageCategory
+from data_safe_haven.types import (
+    Ports,
+    SoftwarePackageCategory,
+)
 from data_safe_haven.utility import FileReader
 
 
@@ -34,6 +37,7 @@ class SRESoftwareRepositoriesProps:
         resource_group_name: Input[str],
         software_packages: SoftwarePackageCategory,
         sre_fqdn: Input[str],
+        nexus_persistent_quota_gb: Input[int],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_id: Input[str],
@@ -49,6 +53,7 @@ class SRESoftwareRepositoriesProps:
             SoftwarePackageCategory.NONE: None,
         }[software_packages]
         self.resource_group_name = resource_group_name
+        self.nexus_persistent_quota_gb = nexus_persistent_quota_gb
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
@@ -90,7 +95,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
             account_name=props.storage_account_name,
             resource_group_name=props.resource_group_name,
             share_name="software-repositories-nexus",
-            share_quota=2,
+            share_quota=props.nexus_persistent_quota_gb,
             signed_identifiers=[],
             opts=child_opts,
         )
@@ -161,12 +166,16 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
 
         # Define the container group with nexus and caddy
         if props.nexus_packages:
-            container_group = containerinstance.ContainerGroup(
+            self.dns_record_name = "nexus"
+            self.container_group_name = (
+                f"{stack_name}-container-group-{self.dns_record_name}"
+            )
+            self.container_group = containerinstance.ContainerGroup(
                 f"{self._name}_container_group",
-                container_group_name=f"{stack_name}-container-group-software-repositories",
+                container_group_name=self.container_group_name,
                 containers=[
                     containerinstance.ContainerArgs(
-                        image="caddy:2.9.1",
+                        image="caddy:2.10.0",
                         name="caddy"[:63],
                         ports=[
                             containerinstance.ContainerPortArgs(
@@ -189,7 +198,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ],
                     ),
                     containerinstance.ContainerArgs(
-                        image="sonatype/nexus3:3.76.1",
+                        image="sonatype/nexus3:3.81.1",
                         name="nexus"[:63],
                         environment_variables=[],
                         ports=[],
@@ -208,7 +217,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ],
                     ),
                     containerinstance.ContainerArgs(
-                        image="ghcr.io/alan-turing-institute/nexus-allowlist:v0.11.0",
+                        image="ghcr.io/alan-turing-institute/nexus-allowlist:v0.12.0",
                         name="nexus-allowlist"[:63],
                         environment_variables=[
                             containerinstance.EnvironmentVariableArgs(
@@ -320,29 +329,30 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 opts=ResourceOptions.merge(
                     child_opts,
                     ResourceOptions(
-                        delete_before_replace=True, replace_on_changes=["containers"]
+                        delete_before_replace=True,
+                        replace_on_changes=["containers"],
                     ),
                 ),
                 tags=child_tags,
             )
 
             # Register the container group in the SRE DNS zone
-            local_dns = LocalDnsRecordComponent(
+            self.local_dns = LocalDnsRecordComponent(
                 f"{self._name}_nexus_dns_record_set",
                 LocalDnsRecordProps(
                     base_fqdn=props.sre_fqdn,
                     private_ip_address=get_ip_address_from_container_group(
-                        container_group
+                        self.container_group
                     ),
-                    record_name="nexus",
+                    record_name=self.dns_record_name,
                     resource_group_name=props.resource_group_name,
                 ),
                 opts=ResourceOptions.merge(
-                    child_opts, ResourceOptions(parent=container_group)
+                    child_opts, ResourceOptions(parent=self.container_group)
                 ),
             )
 
-            hostname = local_dns.hostname
+            hostname = self.local_dns.hostname
 
         # Register outputs
         self.hostname = hostname

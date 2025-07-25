@@ -52,10 +52,6 @@ These tiers are explained in the section [](design_security_objectives).
 Each organisation will need to decide how to use the available tiers and a process to decide what tier is appropriate for each project.
 This will require a careful consideration of the organisations risk appetite, balancing the value of enabling work against the risks of data disclosure.
 
-The project classification process used at the Turing is described [here](https://alan-turing-institute.github.io/trusted-research/tasks/setting_up_tre/project_initialisation/project_classification.html).
-This process considers work packages, which cover the combination of all input data and the planned work when making a classification.
-That approach better captures the risks associated with merging data sets and also considers the sensitivity of intended outputs.
-
 ## Role mapping
 
 The Data Safe Haven is designed with a number of [roles](roles) required for secure operation.

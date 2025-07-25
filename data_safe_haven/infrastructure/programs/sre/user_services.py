@@ -7,7 +7,9 @@ from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_id_from_subnet,
 )
-from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
+from data_safe_haven.infrastructure.components import (
+    WrappedLogAnalyticsWorkspace,
+)
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps
@@ -42,6 +44,7 @@ class SREUserServicesProps:
         resource_group_name: Input[str],
         software_packages: SoftwarePackageCategory,
         sre_fqdn: Input[str],
+        nexus_persistent_quota_gb: Input[int],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
@@ -65,6 +68,7 @@ class SREUserServicesProps:
         self.log_analytics_workspace = log_analytics_workspace
         self.nexus_admin_password = Output.secret(nexus_admin_password)
         self.resource_group_name = resource_group_name
+        self.nexus_persistent_quota_gb = nexus_persistent_quota_gb
         self.software_packages = software_packages
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
@@ -165,6 +169,7 @@ class SREUserServicesComponent(ComponentResource):
                     resource_group_name=props.resource_group_name,
                     sre_fqdn=props.sre_fqdn,
                     software_packages=props.software_packages,
+                    nexus_persistent_quota_gb=props.nexus_persistent_quota_gb,
                     storage_account_key=props.storage_account_key,
                     storage_account_name=props.storage_account_name,
                     subnet_id=props.subnet_software_repositories_id,

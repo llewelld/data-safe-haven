@@ -11,6 +11,9 @@ from .config_sections import (
     ConfigSectionAzure,
     ConfigSectionDockerHub,
     ConfigSectionSRE,
+    ConfigSectionUserServices,
+    ConfigSubsectionDnsSidecar,
+    ConfigSubsectionNexus,
     ConfigSubsectionRemoteDesktopOpts,
     ConfigSubsectionStorageQuotaGB,
 )
@@ -32,6 +35,7 @@ class SREConfig(AzureSerialisableModel):
     dockerhub: ConfigSectionDockerHub
     name: SafeSreName
     sre: ConfigSectionSRE
+    user_services: ConfigSectionUserServices = ConfigSectionUserServices()
 
     @property
     def filename(self) -> str:
@@ -121,5 +125,15 @@ class SREConfig(AzureSerialisableModel):
                 workspace_skus=[
                     "List of Azure VM SKUs that will be used for data analysis."
                 ],
+            ),
+            user_services=ConfigSectionUserServices.model_construct(
+                nexus=ConfigSubsectionNexus.model_construct(
+                    persistent_quota_gb="Total size in GiB for Nexus' persistent directory. "  # type: ignore
+                ),
+                dns_sidecar=ConfigSubsectionDnsSidecar.model_construct(
+                    cron_expression="Cron-formatted repeating schedule ('* * * * *') for DNS update.",
+                    replica_timeout="Maximum number of seconds a DNS sidecar job is allowed to run.",  # type: ignore
+                    retry_limit="Maximum number of retries before failing the DNS sidecar job.",  # type: ignore
+                ),
             ),
         )

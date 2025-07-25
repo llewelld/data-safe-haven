@@ -32,7 +32,7 @@ config_command_group = typer.Typer()
 @config_command_group.command()
 def show_shm(
     file: Annotated[
-        Optional[Path],  # noqa: UP007
+        Optional[Path],  # noqa: UP045
         typer.Option(help="File path to write configuration template to."),
     ] = None,
 ) -> None:
@@ -112,7 +112,7 @@ def show(
         typer.Argument(help="Name of SRE to show"),
     ],
     file: Annotated[
-        Optional[Path],  # noqa: UP007
+        Optional[Path],  # noqa: UP045
         typer.Option(help="File path to write configuration template to."),
     ] = None,
 ) -> None:
@@ -154,11 +154,11 @@ def show(
 @config_command_group.command()
 def template(
     file: Annotated[
-        Optional[Path],  # noqa: UP007
+        Optional[Path],  # noqa: UP045
         typer.Option(help="File path to write configuration template to."),
     ] = None,
     tier: Annotated[
-        Optional[int],  # noqa: UP007
+        Optional[int],  # noqa: UP045
         typer.Option(help="Which security tier to base this template on."),
     ] = None,
 ) -> None:

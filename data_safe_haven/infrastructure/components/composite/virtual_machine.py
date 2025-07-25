@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import compute, insights, maintenance, network
+from pulumi_azure_native import compute, maintenance, monitor, network
 
 from data_safe_haven.functions import replace_separators
 
@@ -249,7 +249,7 @@ class VMComponent(ComponentResource):
         )
 
         # Register with data collection rule
-        insights.DataCollectionRuleAssociation(
+        monitor.DataCollectionRuleAssociation(
             f"{name_underscored}_dcra_to_dcr",
             association_name=Output.concat(
                 props.data_collection_rule_name, "-association"  # this name is required
@@ -263,7 +263,7 @@ class VMComponent(ComponentResource):
         )
 
         # Register with data collection endpoint
-        insights.DataCollectionRuleAssociation(
+        monitor.DataCollectionRuleAssociation(
             f"{name_underscored}_dcra_to_dce",
             association_name="configurationAccessEndpoint",  # this name is required
             data_collection_endpoint_id=props.data_collection_endpoint_id,

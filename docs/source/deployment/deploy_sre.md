@@ -14,7 +14,19 @@ $ az feature register --name "AllowApplicationGatewayBasicSku" \
 $ az provider register --name Microsoft.Network
 :::
 
+Also, for supporting Container App Jobs, please register the additional resource providers by running these commands:
+
+:::{code} shell
+$ az provider register --name Microsoft.App
+$ az provider register --name Microsoft.ContainerService
+:::
+
 ::::
+
+## Requirements
+
+- An Azure subscription where you will deploy your infrastructure.
+- An account with at least [Owner](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/privileged) role over the scope of the subscription.
 
 ## Configuration
 
@@ -241,6 +253,13 @@ The impact of setting each of these options is detailed in the following table.
       </tr>
     </tbody>
 </table>
+
+:::{important}
+For controlling clipboard access, DSH relies entirely on the functionality offered by Guacamole.
+To the best of our knowledge, it is not possible to egress information from a remote workspace to a user computer when Guacamole's clipboard controls are in place.
+However, at the moment of writing, [it is possible to circumvent these controls to ingress data from a user's computer into the remote workspace](https://issues.apache.org/jira/browse/GUACAMOLE-1965).
+If ingress control is critical for your use case, we strongly recommend implementing policy and training controls given these technical control limitations.
+:::
 
 ## Upload the configuration file
 

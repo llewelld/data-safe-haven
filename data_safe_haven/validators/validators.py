@@ -152,7 +152,7 @@ def timezone(timezone: str) -> str:
 TH = TypeVar("TH", bound=Hashable)
 
 
-def unique_list(items: list[TH]) -> list[TH]:
+def unique_list(items: list[TH]) -> list[TH]:  # noqa: UP047
     if len(items) != len(set(items)):
         msg = "All items must be unique."
         raise ValueError(msg)

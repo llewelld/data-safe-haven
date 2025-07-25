@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import insights, network
+from pulumi_azure_native import monitor, network
 
 from data_safe_haven.infrastructure.common import (
     get_address_prefixes_from_subnet,
@@ -11,6 +11,7 @@ from data_safe_haven.infrastructure.common import (
 )
 from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
 from data_safe_haven.types import (
+    AzureServiceTag,
     FirewallPriorities,
     ForbiddenDomains,
     PermittedDomains,
@@ -31,6 +32,7 @@ class SREFirewallProps:
         route_table_name: Input[str],
         subnet_apt_proxy_server: Input[network.GetSubnetResult],
         subnet_clamav_mirror: Input[network.GetSubnetResult],
+        subnet_dns_sidecar: Input[network.GetSubnetResult],
         subnet_firewall: Input[network.GetSubnetResult],
         subnet_firewall_management: Input[network.GetSubnetResult],
         subnet_guacamole_containers: Input[network.GetSubnetResult],
@@ -49,6 +51,11 @@ class SREFirewallProps:
         self.subnet_clamav_mirror_prefixes = Output.from_input(
             subnet_clamav_mirror
         ).apply(get_address_prefixes_from_subnet)
+
+        self.subnet_dns_sidecar_prefixes = Output.from_input(subnet_dns_sidecar).apply(
+            get_address_prefixes_from_subnet
+        )
+
         self.subnet_identity_containers_prefixes = Output.from_input(
             subnet_identity_containers
         ).apply(get_address_prefixes_from_subnet)
@@ -207,13 +214,79 @@ class SREFirewallComponent(ComponentResource):
                     ),
                 ],
             ),
+            network.AzureFirewallApplicationRuleCollectionArgs(
+                action=network.AzureFirewallRCActionArgs(
+                    type=network.AzureFirewallRCActionType.ALLOW
+                ),
+                name="dns-sidecar-allow",
+                priority=FirewallPriorities.SRE_DNS_SIDECAR,
+                rules=[
+                    network.AzureFirewallApplicationRuleArgs(
+                        description="Allow Microsoft Container Registry downloads.",
+                        name="AllowMicrosoftContainerRegistryDownload",
+                        protocols=[
+                            network.AzureFirewallApplicationRuleProtocolArgs(
+                                port=int(Ports.HTTPS),
+                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                            )
+                        ],
+                        source_addresses=props.subnet_dns_sidecar_prefixes,
+                        target_fqdns=PermittedDomains.MICROSOFT_CONTAINER_REGISTRY,
+                    ),
+                    network.AzureFirewallApplicationRuleArgs(
+                        description="Allow using Managed Identities.",
+                        name="AllowUsingManagedIdentities",
+                        protocols=[
+                            network.AzureFirewallApplicationRuleProtocolArgs(
+                                port=int(Ports.HTTPS),
+                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                            )
+                        ],
+                        source_addresses=props.subnet_dns_sidecar_prefixes,
+                        target_fqdns=PermittedDomains.AZURE_MANAGED_IDENTITIES,
+                    ),
+                ],
+            ),
+        ]
+
+        # Enabling DNS Monitors to connect to Azure AD and ARM.
+        # IMPORTANT: The subnets in this list will have access to the Azure Services with tags
+        # AzureResourceManager and AzureActiveDirectory. If adding user-facing subnets, make sure
+        # it's not possible to egress data via these services.
+
+        network_rule_collections = [
+            network.AzureFirewallNetworkRuleCollectionArgs(
+                action=network.AzureFirewallRCActionArgs(
+                    type=network.AzureFirewallRCActionType.ALLOW
+                ),
+                name="dns-sidecar-allow",
+                priority=FirewallPriorities.ALL,
+                rules=[
+                    network.AzureFirewallNetworkRuleArgs(
+                        description="Enables access to the Azure Resource Manager from the DNS Sidecar.",
+                        destination_addresses=[AzureServiceTag.AZURE_RESOURCE_MANAGER],
+                        destination_ports=[Ports.HTTPS],
+                        name="allow-azure-resource-manager",
+                        protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
+                        source_addresses=props.subnet_dns_sidecar_prefixes,
+                    ),
+                    network.AzureFirewallNetworkRuleArgs(
+                        description="Enables access to the Azure Active Directory from the DNS Sidecar.",
+                        destination_addresses=[AzureServiceTag.AZURE_ACTIVE_DIRECTORY],
+                        destination_ports=[Ports.HTTPS],
+                        name="allow-azure-active-directory",
+                        protocols=[network.AzureFirewallNetworkRuleProtocol.TCP],
+                        source_addresses=props.subnet_dns_sidecar_prefixes,
+                    ),
+                ],
+            ),
         ]
 
         if props.allow_workspace_internet:
             application_rule_collections = application_rule_collections_common
             # A network rule is used as application rules are restricted to certain
             # types of traffic, e.g. HTTP, HTTPS
-            network_rule_collections = [
+            network_rule_collections += [
                 network.AzureFirewallNetworkRuleCollectionArgs(
                     action=network.AzureFirewallRCActionArgs(
                         type=network.AzureFirewallRCActionType.ALLOW
@@ -339,7 +412,6 @@ class SREFirewallComponent(ComponentResource):
                     ],
                 ),
             ]
-            network_rule_collections = None
 
         # Deploy firewall
         self.firewall = network.AzureFirewall(
@@ -371,7 +443,7 @@ class SREFirewallComponent(ComponentResource):
 
         # Add diagnostic settings for firewall
         # This links the firewall to the log analytics workspace
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{self._name}_firewall_diagnostic_settings",
             name="firewall_diagnostic_settings",
             log_analytics_destination_type="Dedicated",

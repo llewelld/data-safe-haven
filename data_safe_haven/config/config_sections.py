@@ -5,7 +5,7 @@ from __future__ import annotations
 from ipaddress import ip_network
 from itertools import combinations
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, PositiveInt, field_validator, model_validator
 
 from data_safe_haven.types import (
     AzureLocation,
@@ -49,6 +49,23 @@ class ConfigSubsectionRemoteDesktopOpts(BaseModel, validate_assignment=True):
 class ConfigSubsectionStorageQuotaGB(BaseModel, validate_assignment=True):
     home: AzurePremiumFileShareSize
     shared: AzurePremiumFileShareSize
+
+
+class ConfigSubsectionNexus(BaseModel, validate_assignment=True):
+    persistent_quota_gb: PositiveInt
+
+
+class ConfigSubsectionDnsSidecar(BaseModel, validate_assignment=True):
+    cron_expression: str
+    replica_timeout: PositiveInt
+    retry_limit: int
+
+
+class ConfigSectionUserServices(BaseModel, validate_assignment=True):
+    nexus: ConfigSubsectionNexus = ConfigSubsectionNexus(persistent_quota_gb=10)
+    dns_sidecar: ConfigSubsectionDnsSidecar = ConfigSubsectionDnsSidecar(
+        cron_expression="*/30 * * * *", replica_timeout=10 * 60, retry_limit=0
+    )
 
 
 class ConfigSectionSRE(BaseModel, validate_assignment=True):

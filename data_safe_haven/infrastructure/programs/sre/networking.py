@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, InvokeOptions, Output, ResourceOptions
-from pulumi_azure_native import network, provider
+from pulumi_azure_native import dns, network, privatedns, provider
 
 from data_safe_haven.functions import alphanumeric, replace_separators
 from data_safe_haven.infrastructure.common import (
@@ -21,7 +21,7 @@ class SRENetworkingProps:
     def __init__(
         self,
         allow_workspace_internet: Input[bool],
-        dns_private_zones: Input[dict[str, network.PrivateZone]],
+        dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
         dns_server_ip: Input[str],
         dns_virtual_network: Input[network.VirtualNetwork],
         location: Input[str],
@@ -1566,6 +1566,91 @@ class SRENetworkingComponent(ComponentResource):
             tags=child_tags,
         )
 
+        nsg_dns_sidecar = network.NetworkSecurityGroup(
+            f"{self._name}_nsg_dns_sidecar",
+            location=props.location,
+            network_security_group_name=f"{stack_name}-nsg-dns-sidecar",
+            resource_group_name=props.resource_group_name,
+            security_rules=[
+                # Inbound
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.DENY,
+                    description="Deny all other inbound traffic.",
+                    destination_address_prefix="*",
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="DenyAllOtherInbound",
+                    priority=NetworkingPriorities.ALL_OTHER,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix="*",
+                    source_port_range="*",
+                ),
+                # Outbound
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to Azure Resource Manager. This is needed for the DNS Monitor.",
+                    destination_address_prefix=AzureServiceTag.AZURE_RESOURCE_MANAGER,
+                    destination_port_ranges=[Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowAzureResourceManagerOutbound",
+                    priority=NetworkingPriorities.AZURE_RESOURCE_MANAGER,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.dns_sidecar.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to Azure Active Directory. This is needed for the DNS Monitor.",
+                    destination_address_prefix=AzureServiceTag.AZURE_ACTIVE_DIRECTORY,
+                    destination_port_ranges=[Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowAzureActiveDirectoryOutbound",
+                    priority=NetworkingPriorities.AZURE_ACTIVE_DIRECTORY,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.dns_sidecar.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to container registries over the internet.",
+                    destination_address_prefix="Internet",
+                    destination_port_ranges=[Ports.HTTP, Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowContainerRegistriesOutbound",
+                    priority=NetworkingPriorities.EXTERNAL_INTERNET,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.dns_sidecar.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to configuration data endpoints.",
+                    destination_address_prefix=SREIpRanges.data_configuration.prefix,
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowDataConfigurationEndpointsOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_DATA_CONFIGURATION,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix=SREIpRanges.dns_sidecar.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.DENY,
+                    description="Deny all other outbound traffic.",
+                    destination_address_prefix="*",
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="DenyAllOtherOutbound",
+                    priority=NetworkingPriorities.ALL_OTHER,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix="*",
+                    source_port_range="*",
+                ),
+            ],
+            opts=child_opts,
+            tags=child_tags,
+        )
+
         # Define the virtual network and its subnets
         # Note that these names for AzureFirewall subnets are required by Azure
         subnet_application_gateway_name = "ApplicationGatewaySubnet"
@@ -1589,6 +1674,7 @@ class SRENetworkingComponent(ComponentResource):
             "UserServicesSoftwareRepositoriesSubnet"
         )
         subnet_workspaces_name = "WorkspacesSubnet"
+        subnet_dns_sidecar_name = "DnsSidecarSubnet"
         sre_virtual_network = network.VirtualNetwork(
             f"{self._name}_virtual_network",
             address_space=network.AddressSpaceArgs(
@@ -1807,6 +1893,22 @@ class SRENetworkingComponent(ComponentResource):
                     ),
                     route_table=network.RouteTableArgs(id=route_table.id),
                 ),
+                # DNS Sidecar
+                network.SubnetArgs(
+                    address_prefix=SREIpRanges.dns_sidecar.prefix,
+                    delegations=[
+                        network.DelegationArgs(
+                            name="SubnetDelegationAppEnvironments",
+                            service_name="Microsoft.App/environments",
+                            type="Microsoft.Network/virtualNetworks/subnets/delegations",
+                        ),
+                    ],
+                    name=subnet_dns_sidecar_name,
+                    network_security_group=network.NetworkSecurityGroupArgs(
+                        id=nsg_dns_sidecar.id
+                    ),
+                    route_table=network.RouteTableArgs(id=route_table.id),
+                ),
             ],
             virtual_network_name=f"{stack_name}-vnet",
             virtual_network_peerings=[],
@@ -1880,7 +1982,7 @@ class SRENetworkingComponent(ComponentResource):
             opts=child_opts,
             tags=child_tags,
         )
-        shm_ns_record = network.RecordSet(
+        shm_ns_record = dns.RecordSet(
             f"{self._name}_ns_record",
             ns_records=sre_dns_zone.name_servers.apply(
                 lambda servers: [network.NsRecordArgs(nsdname=ns) for ns in servers]
@@ -1898,7 +2000,7 @@ class SRENetworkingComponent(ComponentResource):
                 ),
             ),
         )
-        network.RecordSet(
+        dns.RecordSet(
             f"{self._name}_caa_record",
             caa_records=[
                 network.CaaRecordArgs(
@@ -1918,7 +2020,7 @@ class SRENetworkingComponent(ComponentResource):
         )
 
         # Define SRE internal DNS zone
-        sre_private_dns_zone = network.PrivateZone(
+        sre_private_dns_zone = privatedns.PrivateZone(
             f"{self._name}_private_zone",
             location="Global",
             private_zone_name=Output.concat("privatelink.", sre_fqdn),
@@ -1930,7 +2032,7 @@ class SRENetworkingComponent(ComponentResource):
         )
 
         # Link SRE private DNS zone to DNS virtual network
-        network.VirtualNetworkLink(
+        privatedns.VirtualNetworkLink(
             f"{self._name}_private_zone_internal_vnet_link",
             location="Global",
             private_zone_name=sre_private_dns_zone.name,
@@ -1951,7 +2053,7 @@ class SRENetworkingComponent(ComponentResource):
         # must use default Azure DNS when setting up file mounts. This means that we
         # need to be able to resolve the "Storage Account" private DNS zones.
         for dns_zone_name, private_dns_zone in props.dns_private_zones.items():
-            network.VirtualNetworkLink(
+            privatedns.VirtualNetworkLink(
                 replace_separators(
                     f"{self._name}_private_zone_{dns_zone_name}_vnet_link", "_"
                 ),
@@ -2006,6 +2108,11 @@ class SRENetworkingComponent(ComponentResource):
         )
         self.subnet_data_private = network.get_subnet_output(
             subnet_name=subnet_data_private_name,
+            resource_group_name=props.resource_group_name,
+            virtual_network_name=sre_virtual_network.name,
+        )
+        self.subnet_dns_sidecar = network.get_subnet_output(
+            subnet_name=subnet_dns_sidecar_name,
             resource_group_name=props.resource_group_name,
             virtual_network_name=sre_virtual_network.name,
         )

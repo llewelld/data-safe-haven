@@ -1,12 +1,20 @@
 """Pulumi declarative program"""
 
 import pulumi
-from pulumi import ResourceOptions
+from pulumi import Output, ResourceOptions
 from pulumi_azure_native import resources
 
 from data_safe_haven.config import Context, SREConfig
 from data_safe_haven.functions import replace_separators
-from data_safe_haven.infrastructure.common import DockerHubCredentials
+from data_safe_haven.infrastructure.common import (
+    DockerHubCredentials,
+    get_id_from_subnet,
+)
+from data_safe_haven.infrastructure.programs.sre.dns_sidecar import (
+    DnsSidecarComponent,
+    DnsSidecarProps,
+    SupportsDnsSidecar,
+)
 
 from .sre.application_gateway import (
     SREApplicationGatewayComponent,
@@ -191,6 +199,7 @@ class DeclarativeSRE:
                 route_table_name=networking.route_table_name,
                 subnet_apt_proxy_server=networking.subnet_apt_proxy_server,
                 subnet_clamav_mirror=networking.subnet_clamav_mirror,
+                subnet_dns_sidecar=networking.subnet_dns_sidecar,
                 subnet_firewall=networking.subnet_firewall,
                 subnet_firewall_management=networking.subnet_firewall_management,
                 subnet_guacamole_containers=networking.subnet_guacamole_containers,
@@ -354,6 +363,7 @@ class DeclarativeSRE:
                 resource_group_name=resource_group.name,
                 software_packages=self.config.sre.software_packages,
                 sre_fqdn=networking.sre_fqdn,
+                nexus_persistent_quota_gb=self.config.user_services.nexus.persistent_quota_gb,
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
                 subnet_containers=networking.subnet_user_services_containers,
@@ -431,6 +441,37 @@ class DeclarativeSRE:
                 storage_account_data_private_sensitive_name=data.storage_account_data_private_sensitive_name,
             ),
             tags=self.tags,
+        )
+
+        # Deploy the DNS Sidecar
+        container_instance_information: list[SupportsDnsSidecar] = [
+            user_services.gitea_server,
+            user_services.hedgedoc_server,
+            user_services.software_repositories,
+            apt_proxy_server,
+            clamav_mirror,
+            identity,
+        ]
+
+        DnsSidecarComponent(
+            "dns_sidecar",
+            self.stack_name,
+            DnsSidecarProps(
+                container_instances=container_instance_information,
+                cron_expression=self.config.user_services.dns_sidecar.cron_expression,
+                subnet_id=Output.from_input(networking.subnet_dns_sidecar).apply(
+                    get_id_from_subnet
+                ),
+                log_analytics_workspace=monitoring.log_analytics,
+                location=self.config.azure.location,
+                resource_group_name=resource_group.name,
+                replica_timeout=self.config.user_services.dns_sidecar.replica_timeout,
+                retry_limit=self.config.user_services.dns_sidecar.retry_limit,
+                sre_fqdn=networking.sre_fqdn,
+                subscription_id=self.config.azure.subscription_id,
+                storage_account_key=data.storage_account_data_configuration_key,
+                storage_account_name=data.storage_account_data_configuration_name,
+            ),
         )
 
         # Export values for later use

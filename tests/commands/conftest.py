@@ -207,7 +207,6 @@ def runner(tmp_contexts) -> CliRunner:
             "COLUMNS": "500",  # Set large number of columns to avoid rich wrapping text
             "TERM": "dumb",  # Disable colours, style and interactive rich features
         },
-        mix_stderr=False,
     )
     return runner
 
@@ -220,7 +219,6 @@ def runner_none(tmp_contexts_none):
             "COLUMNS": "500",  # Set large number of columns to avoid rich wrapping text
             "TERM": "dumb",  # Disable colours, style and interactive rich features
         },
-        mix_stderr=False,
     )
     return runner
 
@@ -233,7 +231,6 @@ def runner_no_context_file(tmp_path):
             "COLUMNS": "500",  # Set large number of columns to avoid rich wrapping text
             "TERM": "dumb",  # Disable colours, style and interactive rich features
         },
-        mix_stderr=False,
     )
     return runner
 
