@@ -432,6 +432,7 @@ class DeclarativeSRE:
                 resource_group_name=resource_group.name,
                 storage_account_data_private_sensitive_id=data.storage_account_data_private_sensitive_id,
                 storage_account_data_private_sensitive_name=data.storage_account_data_private_sensitive_name,
+                subscription_id=self.config.azure.subscription_id,
             ),
             tags=self.tags,
         )
