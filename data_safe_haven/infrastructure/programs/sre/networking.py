@@ -1961,7 +1961,7 @@ class SRENetworkingComponent(ComponentResource):
             resource_group_name=props.shm_resource_group_name,
             zone_name=props.shm_zone_name,
         ).apply(
-            lambda kwargs: network.get_zone(
+            lambda kwargs: dns.get_zone(
                 resource_group_name=kwargs["resource_group_name"],
                 zone_name=kwargs["zone_name"],
                 opts=InvokeOptions(
@@ -1973,19 +1973,19 @@ class SRENetworkingComponent(ComponentResource):
             lambda name: alphanumeric(name).lower()
         )
         sre_fqdn = Output.concat(sre_subdomain, ".", props.shm_fqdn)
-        sre_dns_zone = network.Zone(
+        sre_dns_zone = dns.Zone(
             f"{self._name}_dns_zone",
             location="Global",
             resource_group_name=props.resource_group_name,
             zone_name=sre_fqdn,
-            zone_type=network.ZoneType.PUBLIC,
+            zone_type=dns.ZoneType.PUBLIC,
             opts=child_opts,
             tags=child_tags,
         )
         shm_ns_record = dns.RecordSet(
             f"{self._name}_ns_record",
             ns_records=sre_dns_zone.name_servers.apply(
-                lambda servers: [network.NsRecordArgs(nsdname=ns) for ns in servers]
+                lambda servers: [dns.NsRecordArgs(nsdname=ns) for ns in servers]
             ),
             record_type="NS",
             relative_record_set_name=sre_subdomain,
@@ -2003,7 +2003,7 @@ class SRENetworkingComponent(ComponentResource):
         dns.RecordSet(
             f"{self._name}_caa_record",
             caa_records=[
-                network.CaaRecordArgs(
+                dns.CaaRecordArgs(
                     flags=0,
                     tag="issue",
                     value="letsencrypt.org",

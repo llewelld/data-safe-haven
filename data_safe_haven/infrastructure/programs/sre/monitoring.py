@@ -122,6 +122,7 @@ class SREMonitoringComponent(ComponentResource):
         # Link the private linkscope to the log analytics workspace
         monitor.PrivateLinkScopedResource(
             f"{self._name}_log_analytics_ampls_connection",
+            kind=monitor.ScopedResourceKind.RESOURCE,
             linked_resource_id=self.log_analytics.id,
             name=f"{stack_name}-cnxn-ampls-to-log-analytics",
             resource_group_name=props.resource_group_name,
@@ -199,6 +200,7 @@ class SREMonitoringComponent(ComponentResource):
         # Link the private linkscope to the data collection endpoint
         monitor.PrivateLinkScopedResource(
             f"{self._name}_data_collection_endpoint_ampls_connection",
+            kind=monitor.ScopedResourceKind.RESOURCE,
             linked_resource_id=self.data_collection_endpoint.id,
             name=f"{stack_name}-cnxn-ampls-to-dce",
             resource_group_name=props.resource_group_name,

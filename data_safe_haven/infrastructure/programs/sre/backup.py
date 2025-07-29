@@ -1,9 +1,14 @@
 """Pulumi component for SRE backup"""
 
 from collections.abc import Mapping
+from typing import ClassVar
 
-from pulumi import ComponentResource, Input, ResourceOptions
-from pulumi_azure_native import dataprotection
+from pulumi import ComponentResource, Input, Output, ResourceOptions
+from pulumi_azure_native import authorization, dataprotection
+
+from data_safe_haven.functions import seeded_uuid
+
+# IMPORTANT: At the moment, this component is NOT deployed.
 
 
 class SREBackupProps:
@@ -15,6 +20,7 @@ class SREBackupProps:
         resource_group_name: Input[str],
         storage_account_data_private_sensitive_id: Input[str],
         storage_account_data_private_sensitive_name: Input[str],
+        subscription_id: Input[str],
     ) -> None:
         self.location = location
         self.resource_group_name = resource_group_name
@@ -24,10 +30,15 @@ class SREBackupProps:
         self.storage_account_data_private_sensitive_name = (
             storage_account_data_private_sensitive_name
         )
+        self.subscription_id = subscription_id
 
 
 class SREBackupComponent(ComponentResource):
     """Deploy SRE backup with Pulumi"""
+
+    azure_role_ids: ClassVar[dict[str, str]] = {
+        "Storage Account Backup Contributor": "e5e2a7ff-d759-4cd2-bb51-3152d37e2eb1"
+    }
 
     def __init__(
         self,
@@ -160,6 +171,25 @@ class SREBackupComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts, ResourceOptions(parent=backup_vault)
             ),
+        )
+
+        authorization.RoleAssignment(
+            f"{self._name}_backup_instance_dns_zone_contributor_role_assignment",
+            principal_id=backup_vault.identity.principal_id,
+            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+            role_assignment_name=str(
+                seeded_uuid(
+                    f"{stack_name} Storage Account Backup Contributor for Backup Vault"
+                )
+            ),
+            role_definition_id=Output.concat(
+                "/subscriptions/",
+                props.subscription_id,
+                "/providers/Microsoft.Authorization/roleDefinitions/",
+                self.azure_role_ids["Storage Account Backup Contributor"],
+            ),
+            scope=props.storage_account_data_private_sensitive_id,
+            opts=child_opts,
         )
 
         # Backup instance for blobs

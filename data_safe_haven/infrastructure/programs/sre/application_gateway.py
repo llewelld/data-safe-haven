@@ -81,7 +81,7 @@ class SREApplicationGatewayComponent(ComponentResource):
         dns.RecordSet(
             f"{self._name}_a_record",
             a_records=public_ip.ip_address.apply(
-                lambda ip: [network.ARecordArgs(ipv4_address=ip)] if ip else []
+                lambda ip: [dns.ARecordArgs(ipv4_address=ip)] if ip else []
             ),
             record_type="A",
             relative_record_set_name="@",
