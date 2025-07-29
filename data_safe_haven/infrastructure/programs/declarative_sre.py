@@ -21,7 +21,6 @@ from .sre.application_gateway import (
     SREApplicationGatewayProps,
 )
 from .sre.apt_proxy_server import SREAptProxyServerComponent, SREAptProxyServerProps
-from .sre.backup import SREBackupComponent, SREBackupProps
 from .sre.clamav_mirror import SREClamAVMirrorComponent, SREClamAVMirrorProps
 from .sre.data import SREDataComponent, SREDataProps
 from .sre.desired_state import SREDesiredStateComponent, SREDesiredStateProps
@@ -420,20 +419,6 @@ class DeclarativeSRE:
                 vm_details=list(enumerate(self.config.sre.workspace_skus)),
             ),
             opts=ResourceOptions(depends_on=[desired_state]),
-            tags=self.tags,
-        )
-
-        # Deploy backup service
-        SREBackupComponent(
-            "sre_backup",
-            self.stack_name,
-            SREBackupProps(
-                location=self.config.azure.location,
-                resource_group_name=resource_group.name,
-                storage_account_data_private_sensitive_id=data.storage_account_data_private_sensitive_id,
-                storage_account_data_private_sensitive_name=data.storage_account_data_private_sensitive_name,
-                subscription_id=self.config.azure.subscription_id,
-            ),
             tags=self.tags,
         )
 

@@ -8,6 +8,8 @@ from pulumi_azure_native import authorization, dataprotection
 
 from data_safe_haven.functions import seeded_uuid
 
+# IMPORTANT: At the moment, this component is NOT deployed.
+
 
 class SREBackupProps:
     """Properties for SREBackupComponent"""
