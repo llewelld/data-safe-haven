@@ -179,7 +179,7 @@ class SREBackupComponent(ComponentResource):
             principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
             role_assignment_name=str(
                 seeded_uuid(
-                    f"{stack_name} Storage Account Backup Contributor for Backup Value"
+                    f"{stack_name} Storage Account Backup Contributor for Backup Vault"
                 )
             ),
             role_definition_id=Output.concat(
