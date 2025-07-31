@@ -16,7 +16,7 @@ from data_safe_haven.types import AllowlistRepository, SoftwarePackageCategory
 allowlist_command_group = typer.Typer()
 
 
-def is_allowlist_required(sre_config: SREConfig) -> tuple[bool, str | None]:
+def is_allowlist_required(sre_config: SREConfig) -> tuple[bool, str]:
     """Validates if the SRE configuration requires an allowlist."""
 
     is_required: bool = True
