@@ -197,6 +197,9 @@ class SRERemoteDesktopComponent(ComponentResource):
                     name="guacamole"[:63],
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
+                            name="EXTENSION_PRIORITY", value="openid"
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
                             name="GUACD_HOSTNAME", value="localhost"
                         ),
                         containerinstance.EnvironmentVariableArgs(
