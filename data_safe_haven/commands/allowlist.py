@@ -65,9 +65,9 @@ def show(
         raise typer.Exit(1) from exc
 
     sre_config = SREConfig.from_remote_by_name(context, name)
-    allowlist_required, error_message = is_allowlist_required(sre_config)
+    allowlist_required, reason = is_allowlist_required(sre_config)
     if not allowlist_required:
-        logger.info(error_message)
+        logger.info(reason)
         raise typer.Exit()
 
     # Load Pulumi config
@@ -161,9 +161,9 @@ def upload(
         raise typer.Exit(1)
     sre_config = SREConfig.from_remote_by_name(context, name)
 
-    allowlist_required, error_message = is_allowlist_required(sre_config)
+    allowlist_required, reason = is_allowlist_required(sre_config)
     if not allowlist_required:
-        logger.info(error_message)
+        logger.info(reason)
         raise typer.Exit()
 
     # Load Pulumi config
