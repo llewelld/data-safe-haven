@@ -19,19 +19,22 @@ allowlist_command_group = typer.Typer()
 def is_allowlist_required(sre_config: SREConfig) -> tuple[bool, str | None]:
     """Validates if the SRE configuration requires an allowlist."""
 
+    is_required: bool = True
+    reason: str = "A package allowlist is required for this SRE."
+
     if sre_config.sre.software_packages == SoftwarePackageCategory.ANY:
-        return (
-            False,
-            "No package allowlist is required for this SRE. All packages are allowed.",
+        is_required = False
+        reason = (
+            "No package allowlist is required for this SRE. All packages are allowed."
         )
 
     elif sre_config.sre.software_packages == SoftwarePackageCategory.NONE:
-        return (
-            False,
-            "No package allowlist is required for this SRE. No packages are allowed.",
+        is_required = False
+        reason = (
+            "No package allowlist is required for this SRE. No packages are allowed."
         )
 
-    return True, None
+    return is_required, reason
 
 
 @allowlist_command_group.command()
