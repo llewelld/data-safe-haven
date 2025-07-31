@@ -183,7 +183,6 @@ class SREDesiredStateComponent(ComponentResource):
                 ldap_user_filter=props.ldap_user_filter,
                 ldap_user_search_base=props.ldap_user_search_base,
                 software_repository_hostname=props.software_repository_hostname,
-                allow_workspace_internet=props.allow_workspace_internet,
                 use_package_proxies=not props.allow_workspace_internet,
             ).apply(lambda kwargs: StringAsset(self.ansible_vars_file(**kwargs))),
         )
