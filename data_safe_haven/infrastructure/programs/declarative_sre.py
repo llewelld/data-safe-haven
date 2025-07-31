@@ -433,11 +433,14 @@ class DeclarativeSRE:
         container_instance_information: list[SupportsDnsSidecar] = [
             user_services.gitea_server,
             user_services.hedgedoc_server,
-            user_services.software_repositories,
             apt_proxy_server,
             clamav_mirror,
             identity,
         ]
+        if hasattr(user_services, "software_repositories"):
+            container_instance_information.append(
+                user_services.software_repositories,
+            )
 
         DnsSidecarComponent(
             "dns_sidecar",
