@@ -37,7 +37,9 @@ class SREFirewallProps:
         subnet_firewall_management: Input[network.GetSubnetResult],
         subnet_guacamole_containers: Input[network.GetSubnetResult],
         subnet_identity_containers: Input[network.GetSubnetResult],
-        subnet_user_services_software_repositories: Input[network.GetSubnetResult],
+        subnet_user_services_software_repositories: (
+            Input[network.GetSubnetResult] | None
+        ),
         subnet_workspaces: Input[network.GetSubnetResult],
     ) -> None:
         self.allow_workspace_internet = allow_workspace_internet
@@ -68,9 +70,16 @@ class SREFirewallProps:
         self.subnet_guacamole_containers_prefixes = Output.from_input(
             subnet_guacamole_containers
         ).apply(get_address_prefixes_from_subnet)
-        self.subnet_user_services_software_repositories_prefixes = Output.from_input(
-            subnet_user_services_software_repositories
-        ).apply(get_address_prefixes_from_subnet)
+
+        self.subnet_user_services_software_repositories_prefixes: (
+            Output[list[str]] | None
+        ) = None
+        if subnet_user_services_software_repositories is not None:
+            self.subnet_user_services_software_repositories_prefixes = (
+                Output.from_input(subnet_user_services_software_repositories).apply(
+                    get_address_prefixes_from_subnet
+                )
+            )
         self.subnet_workspaces_prefixes = Output.from_input(subnet_workspaces).apply(
             get_address_prefixes_from_subnet
         )

@@ -50,7 +50,7 @@ class SREUserServicesProps:
         subnet_containers: Input[network.GetSubnetResult],
         subnet_containers_support: Input[network.GetSubnetResult],
         subnet_databases: Input[network.GetSubnetResult],
-        subnet_software_repositories: Input[network.GetSubnetResult],
+        subnet_software_repositories: Input[network.GetSubnetResult] | None,
     ) -> None:
         self.allow_workspace_internet = allow_workspace_internet
         self.database_service_admin_password = database_service_admin_password
@@ -82,7 +82,9 @@ class SREUserServicesProps:
         self.subnet_databases_id = Output.from_input(subnet_databases).apply(
             get_id_from_subnet
         )
-        if not allow_workspace_internet:
+
+        self.subnet_software_repositories_id: Output[str] | None = None
+        if subnet_software_repositories is not None:
             self.subnet_software_repositories_id = Output.from_input(
                 subnet_software_repositories
             ).apply(get_id_from_subnet)
@@ -156,7 +158,7 @@ class SREUserServicesComponent(ComponentResource):
         )
 
         # Deploy software repository servers
-        if not props.allow_workspace_internet:
+        if props.subnet_software_repositories_id is not None:
             self.software_repositories = SRESoftwareRepositoriesComponent(
                 "sre_software_repositories",
                 stack_name,

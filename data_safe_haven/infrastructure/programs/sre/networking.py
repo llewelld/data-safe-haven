@@ -1,6 +1,7 @@
 """Pulumi component for SRE networking"""
 
 from collections.abc import Mapping
+from typing import Any
 
 from pulumi import ComponentResource, Input, InvokeOptions, Output, ResourceOptions
 from pulumi_azure_native import dns, network, privatedns, provider
@@ -408,7 +409,7 @@ class SRENetworkingComponent(ComponentResource):
             resource_group_name=props.resource_group_name,
             security_rules=[
                 # Inbound
-                *self.get_nsg_data_inbound_rules(),
+                *self.get_nsg_data_inbound_rule_args(),
                 # Outbound
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.DENY,
@@ -1206,13 +1207,13 @@ class SRENetworkingComponent(ComponentResource):
             opts=child_opts,
             tags=child_tags,
         )
-        self.nsg_user_services_software_repositories = (
-            self.get_nsg_user_services_software_repositories(
-                stack_name=stack_name,
-                props=props,
-                child_opts=child_opts,
-                child_tags=child_tags,
-            )
+        self.nsg_user_services_software_repositories: (
+            network.NetworkSecurityGroup | None
+        ) = self.get_nsg_user_services_software_repositories(
+            stack_name,
+            props,
+            child_opts,
+            child_tags,
         )
         self.nsg_workspaces = network.NetworkSecurityGroup(
             f"{self._name}_nsg_workspaces",
@@ -1258,7 +1259,7 @@ class SRENetworkingComponent(ComponentResource):
                     source_port_range="*",
                 ),
                 # Outbound
-                *self.get_nsg_workspaces_outbound_rules(),
+                *self.get_nsg_workspaces_outbound_rule_args(),
             ],
             opts=child_opts,
             tags=child_tags,
@@ -1384,7 +1385,7 @@ class SRENetworkingComponent(ComponentResource):
             location=props.location,
             resource_group_name=props.resource_group_name,
             # Note that we define subnets inline to avoid creation order issues
-            subnets=self.get_virtual_network_subnets(props=props),
+            subnets=self.get_virtual_network_subnet_args(props=props),
             virtual_network_name=f"{stack_name}-vnet",
             virtual_network_peerings=[],
             opts=ResourceOptions.merge(
@@ -1636,10 +1637,10 @@ class SRENetworkingComponent(ComponentResource):
             resource_group_name=props.resource_group_name,
             virtual_network_name=sre_virtual_network.name,
         )
-        self.subnet_user_services_software_repositories = network.get_subnet_output(
-            subnet_name=self.subnet_user_services_software_repositories_name,
-            resource_group_name=props.resource_group_name,
-            virtual_network_name=sre_virtual_network.name,
+        self.subnet_user_services_software_repositories: (
+            Output[network.GetSubnetResult] | None
+        ) = self.get_subnet_user_services_software_repositories_output(
+            props, sre_virtual_network
         )
         self.subnet_workspaces = network.get_subnet_output(
             subnet_name=self.subnet_workspaces_name,
@@ -1647,6 +1648,15 @@ class SRENetworkingComponent(ComponentResource):
             virtual_network_name=sre_virtual_network.name,
         )
         self.virtual_network = sre_virtual_network
+
+    def get_subnet_user_services_software_repositories_output(
+        self, props: SRENetworkingProps, sre_virtual_network: network.VirtualNetwork
+    ) -> Output[network.GetSubnetResult] | None:
+        return network.get_subnet_output(
+            subnet_name=self.subnet_user_services_software_repositories_name,
+            resource_group_name=props.resource_group_name,
+            virtual_network_name=sre_virtual_network.name,
+        )
 
     def get_nsg_user_services_software_repositories(
         self,
@@ -1752,8 +1762,8 @@ class SRENetworkingComponent(ComponentResource):
             tags=child_tags,
         )
 
-    def get_nsg_data_inbound_rules(self) -> list[network.SecurityRuleArgs]:
-        return [
+    def get_nsg_data_inbound_rule_args(self) -> list[network.SecurityRuleArgs]:
+        inbound_rules: list[network.SecurityRuleArgs | None] = [
             network.SecurityRuleArgs(
                 access=network.SecurityRuleAccess.ALLOW,
                 description="Allow inbound connections from Guacamole remote desktop gateway.",
@@ -1790,18 +1800,7 @@ class SRENetworkingComponent(ComponentResource):
                 source_address_prefix=SREIpRanges.user_services_containers.prefix,
                 source_port_range="*",
             ),
-            network.SecurityRuleArgs(
-                access=network.SecurityRuleAccess.ALLOW,
-                description="Allow inbound connections from user services software repositories.",
-                destination_address_prefix=SREIpRanges.data_configuration.prefix,
-                destination_port_range="*",
-                direction=network.SecurityRuleDirection.INBOUND,
-                name="AllowUserServicesSoftwareRepositoriesInbound",
-                priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
-                protocol=network.SecurityRuleProtocol.ASTERISK,
-                source_address_prefix=SREIpRanges.user_services_software_repositories.prefix,
-                source_port_range="*",
-            ),
+            self.get_nsg_data_nexus_inbound_rule_args(),
             network.SecurityRuleArgs(
                 access=network.SecurityRuleAccess.DENY,
                 description="Deny all other inbound traffic.",
@@ -1816,8 +1815,28 @@ class SRENetworkingComponent(ComponentResource):
             ),
         ]
 
-    def get_nsg_workspaces_outbound_rules(self) -> list[network.SecurityRuleArgs]:
         return [
+            inbound_rule for inbound_rule in inbound_rules if inbound_rule is not None
+        ]
+
+    def get_nsg_data_nexus_inbound_rule_args(self) -> network.SecurityRuleArgs | None:
+        return network.SecurityRuleArgs(
+            access=network.SecurityRuleAccess.ALLOW,
+            description="Allow inbound connections from user services software repositories.",
+            destination_address_prefix=SREIpRanges.data_configuration.prefix,
+            destination_port_range="*",
+            direction=network.SecurityRuleDirection.INBOUND,
+            name="AllowUserServicesSoftwareRepositoriesInbound",
+            priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
+            protocol=network.SecurityRuleProtocol.ASTERISK,
+            source_address_prefix=SREIpRanges.user_services_software_repositories.prefix,
+            source_port_range="*",
+        )
+
+    def get_nsg_workspaces_outbound_rule_args(
+        self,
+    ) -> list[network.SecurityRuleArgs]:
+        outbound_rules: list[network.SecurityRuleArgs | None] = [
             network.SecurityRuleArgs(
                 access=network.SecurityRuleAccess.DENY,
                 description="Deny outbound connections to Azure Platform DNS endpoints (including 168.63.129.16), which are not included in the 'Internet' service tag.",
@@ -1926,18 +1945,7 @@ class SRENetworkingComponent(ComponentResource):
                 source_address_prefix=SREIpRanges.workspaces.prefix,
                 source_port_range="*",
             ),
-            network.SecurityRuleArgs(
-                access=network.SecurityRuleAccess.ALLOW,
-                description="Allow outbound connections to user services software repositories.",
-                destination_address_prefix=SREIpRanges.user_services_software_repositories.prefix,
-                destination_port_ranges=[Ports.HTTP, Ports.HTTPS, Ports.SQUID],
-                direction=network.SecurityRuleDirection.OUTBOUND,
-                name="AllowUserServicesSoftwareRepositoriesOutbound",
-                priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
-                protocol=network.SecurityRuleProtocol.TCP,
-                source_address_prefix=SREIpRanges.workspaces.prefix,
-                source_port_range="*",
-            ),
+            self.get_nsg_workspaces_nexus_outbound_rule_args(),
             network.SecurityRuleArgs(
                 access=network.SecurityRuleAccess.ALLOW,
                 description="Allow outbound connections to apt proxy server.",
@@ -1976,11 +1984,33 @@ class SRENetworkingComponent(ComponentResource):
             ),
         ]
 
-    def get_virtual_network_subnets(
+        return [
+            outbound_rule
+            for outbound_rule in outbound_rules
+            if outbound_rule is not None
+        ]
+
+    def get_nsg_workspaces_nexus_outbound_rule_args(
+        self,
+    ) -> network.SecurityRuleArgs | None:
+        return network.SecurityRuleArgs(
+            access=network.SecurityRuleAccess.ALLOW,
+            description="Allow outbound connections to user services software repositories.",
+            destination_address_prefix=SREIpRanges.user_services_software_repositories.prefix,
+            destination_port_ranges=[Ports.HTTP, Ports.HTTPS, Ports.SQUID],
+            direction=network.SecurityRuleDirection.OUTBOUND,
+            name="AllowUserServicesSoftwareRepositoriesOutbound",
+            priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
+            protocol=network.SecurityRuleProtocol.TCP,
+            source_address_prefix=SREIpRanges.workspaces.prefix,
+            source_port_range="*",
+        )
+
+    def get_virtual_network_subnet_args(
         self,
         props: SRENetworkingProps,
     ) -> list[network.SubnetArgs]:
-        return [
+        subnets: list[network.SubnetArgs | None] = [
             # Application gateway subnet
             network.SubnetArgs(
                 address_prefix=SREIpRanges.application_gateway.prefix,
@@ -2165,21 +2195,7 @@ class SRENetworkingComponent(ComponentResource):
                 route_table=network.RouteTableArgs(id=self.route_table.id),
             ),
             # User services software repositories
-            network.SubnetArgs(
-                address_prefix=SREIpRanges.user_services_software_repositories.prefix,
-                delegations=[
-                    network.DelegationArgs(
-                        name="SubnetDelegationContainerGroups",
-                        service_name="Microsoft.ContainerInstance/containerGroups",
-                        type="Microsoft.Network/virtualNetworks/subnets/delegations",
-                    ),
-                ],
-                name=self.subnet_user_services_software_repositories_name,
-                network_security_group=network.NetworkSecurityGroupArgs(
-                    id=self.nsg_user_services_software_repositories.id
-                ),
-                route_table=network.RouteTableArgs(id=self.route_table.id),
-            ),
+            self.get_user_services_repositories_subnet_args(),
             # Workspaces
             network.SubnetArgs(
                 address_prefix=SREIpRanges.workspaces.prefix,
@@ -2206,3 +2222,60 @@ class SRENetworkingComponent(ComponentResource):
                 route_table=network.RouteTableArgs(id=self.route_table.id),
             ),
         ]
+        return [subnet for subnet in subnets if subnet is not None]
+
+    def get_user_services_repositories_subnet_args(self) -> network.SubnetArgs | None:
+        if self.nsg_user_services_software_repositories is not None:
+            return network.SubnetArgs(
+                address_prefix=SREIpRanges.user_services_software_repositories.prefix,
+                delegations=[
+                    network.DelegationArgs(
+                        name="SubnetDelegationContainerGroups",
+                        service_name="Microsoft.ContainerInstance/containerGroups",
+                        type="Microsoft.Network/virtualNetworks/subnets/delegations",
+                    ),
+                ],
+                name=self.subnet_user_services_software_repositories_name,
+                network_security_group=network.NetworkSecurityGroupArgs(
+                    id=self.nsg_user_services_software_repositories.id
+                ),
+                route_table=network.RouteTableArgs(id=self.route_table.id),
+            )
+
+        return None
+
+
+class SRENetworkingComponentWithoutNexus(SRENetworkingComponent):
+    """Deploy networking with Pulumi, excluding a Nexus Proxy"""
+
+    def __init__(
+        self,
+        name: str,
+        stack_name: str,
+        props: SRENetworkingProps,
+        opts: ResourceOptions | None = None,
+        tags: Input[Mapping[str, Input[str]]] | None = None,
+    ) -> None:
+        super().__init__(name, stack_name, props, opts, tags)
+
+    def get_nsg_user_services_software_repositories(
+        self,
+        *_: Any,
+    ) -> network.NetworkSecurityGroup | None:
+        return None
+
+    def get_nsg_data_nexus_inbound_rule_args(self) -> network.SecurityRuleArgs | None:
+        return None
+
+    def get_nsg_workspaces_nexus_outbound_rule_args(
+        self,
+    ) -> network.SecurityRuleArgs | None:
+        return None
+
+    def get_user_services_repositories_subnet_args(self) -> network.SubnetArgs | None:
+        return None
+
+    def get_subnet_user_services_software_repositories_output(
+        self, *_: Any
+    ) -> Output[network.GetSubnetResult] | None:
+        return None
