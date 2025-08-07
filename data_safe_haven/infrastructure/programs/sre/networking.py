@@ -1814,7 +1814,9 @@ class SRENetworkingComponent(ComponentResource):
             ),
         ]
 
-        nsg_data_nexus_inbound_rule_args: network.SecurityRuleArgs | None = self.get_nsg_data_nexus_inbound_rule_args()
+        nsg_data_nexus_inbound_rule_args: network.SecurityRuleArgs | None = (
+            self.get_nsg_data_nexus_inbound_rule_args()
+        )
         if nsg_data_nexus_inbound_rule_args is not None:
             inbound_rules.append(nsg_data_nexus_inbound_rule_args)
 
@@ -1837,7 +1839,7 @@ class SRENetworkingComponent(ComponentResource):
     def get_nsg_workspaces_outbound_rule_args(
         self,
     ) -> list[network.SecurityRuleArgs]:
-        outbound_rules: list[network.SecurityRuleArgs | None] = [
+        outbound_rules: list[network.SecurityRuleArgs] = [
             network.SecurityRuleArgs(
                 access=network.SecurityRuleAccess.DENY,
                 description="Deny outbound connections to Azure Platform DNS endpoints (including 168.63.129.16), which are not included in the 'Internet' service tag.",
@@ -1946,7 +1948,6 @@ class SRENetworkingComponent(ComponentResource):
                 source_address_prefix=SREIpRanges.workspaces.prefix,
                 source_port_range="*",
             ),
-            self.get_nsg_workspaces_nexus_outbound_rule_args(),
             network.SecurityRuleArgs(
                 access=network.SecurityRuleAccess.ALLOW,
                 description="Allow outbound connections to apt proxy server.",
@@ -1985,11 +1986,13 @@ class SRENetworkingComponent(ComponentResource):
             ),
         ]
 
-        return [
-            outbound_rule
-            for outbound_rule in outbound_rules
-            if outbound_rule is not None
-        ]
+        nsg_workspaces_nexus_outbound_rule_args: network.SecurityRuleArgs | None = (
+            self.get_nsg_workspaces_nexus_outbound_rule_args()
+        )
+        if nsg_workspaces_nexus_outbound_rule_args is not None:
+            outbound_rules.append(nsg_workspaces_nexus_outbound_rule_args)
+
+        return outbound_rules
 
     def get_nsg_workspaces_nexus_outbound_rule_args(
         self,
