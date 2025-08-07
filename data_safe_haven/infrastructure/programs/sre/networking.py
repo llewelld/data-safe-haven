@@ -1,7 +1,6 @@
 """Pulumi component for SRE networking"""
 
 from collections.abc import Mapping
-from typing import Any
 
 from pulumi import ComponentResource, Input, InvokeOptions, Output, ResourceOptions
 from pulumi_azure_native import dns, network, privatedns, provider
