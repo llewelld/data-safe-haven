@@ -1763,7 +1763,7 @@ class SRENetworkingComponent(ComponentResource):
         )
 
     def get_nsg_data_inbound_rule_args(self) -> list[network.SecurityRuleArgs]:
-        inbound_rules: list[network.SecurityRuleArgs | None] = [
+        inbound_rules: list[network.SecurityRuleArgs] = [
             network.SecurityRuleArgs(
                 access=network.SecurityRuleAccess.ALLOW,
                 description="Allow inbound connections from Guacamole remote desktop gateway.",
@@ -1800,7 +1800,6 @@ class SRENetworkingComponent(ComponentResource):
                 source_address_prefix=SREIpRanges.user_services_containers.prefix,
                 source_port_range="*",
             ),
-            self.get_nsg_data_nexus_inbound_rule_args(),
             network.SecurityRuleArgs(
                 access=network.SecurityRuleAccess.DENY,
                 description="Deny all other inbound traffic.",
@@ -1815,9 +1814,11 @@ class SRENetworkingComponent(ComponentResource):
             ),
         ]
 
-        return [
-            inbound_rule for inbound_rule in inbound_rules if inbound_rule is not None
-        ]
+        nsg_data_nexus_inbound_rule_args: network.SecurityRuleArgs | None = self.get_nsg_data_nexus_inbound_rule_args()
+        if nsg_data_nexus_inbound_rule_args is not None:
+            inbound_rules.append(nsg_data_nexus_inbound_rule_args)
+
+        return inbound_rules
 
     def get_nsg_data_nexus_inbound_rule_args(self) -> network.SecurityRuleArgs | None:
         return network.SecurityRuleArgs(
