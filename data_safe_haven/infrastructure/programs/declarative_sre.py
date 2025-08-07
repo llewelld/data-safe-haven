@@ -31,7 +31,6 @@ from .sre.identity import SREIdentityComponent, SREIdentityProps
 from .sre.monitoring import SREMonitoringComponent, SREMonitoringProps
 from .sre.networking import (
     SRENetworkingComponent,
-    SRENetworkingComponentWithoutNexus,
     SRENetworkingProps,
 )
 from .sre.remote_desktop import SRERemoteDesktopComponent, SRERemoteDesktopProps
@@ -144,36 +143,26 @@ class DeclarativeSRE:
         )
 
         # Deploy networking
-        sre_networking_props = SRENetworkingProps(
-            allow_workspace_internet=self.config.sre.allow_workspace_internet,
-            dns_private_zones=dns.private_zones,
-            dns_server_ip=dns.ip_address,
-            dns_virtual_network=dns.virtual_network,
-            location=self.config.azure.location,
-            resource_group_name=resource_group.name,
-            shm_fqdn=shm_fqdn,
-            shm_location=shm_location,
-            shm_resource_group_name=self.context.resource_group_name,
-            shm_subscription_id=shm_subscription_id,
-            shm_zone_name=shm_fqdn,
-            sre_name=self.config.name,
-            user_public_ip_ranges=self.config.sre.research_user_ip_addresses,
+        networking = SRENetworkingComponent(
+            "sre_networking",
+            self.stack_name,
+            SRENetworkingProps(
+                dns_private_zones=dns.private_zones,
+                dns_server_ip=dns.ip_address,
+                dns_virtual_network=dns.virtual_network,
+                location=self.config.azure.location,
+                resource_group_name=resource_group.name,
+                shm_fqdn=shm_fqdn,
+                shm_location=shm_location,
+                shm_resource_group_name=self.context.resource_group_name,
+                shm_subscription_id=shm_subscription_id,
+                shm_zone_name=shm_fqdn,
+                sre_name=self.config.name,
+                use_software_repositories=not self.config.sre.allow_workspace_internet,
+                user_public_ip_ranges=self.config.sre.research_user_ip_addresses,
+            ),
+            tags=self.tags,
         )
-
-        if not self.config.sre.allow_workspace_internet:
-            networking = SRENetworkingComponent(
-                "sre_networking",
-                self.stack_name,
-                sre_networking_props,
-                tags=self.tags,
-            )
-        else:
-            networking = SRENetworkingComponentWithoutNexus(
-                "sre_networking",
-                self.stack_name,
-                sre_networking_props,
-                tags=self.tags,
-            )
 
         # Deploy Entra resources
         entra = SREEntraComponent(
