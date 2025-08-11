@@ -29,7 +29,10 @@ from .sre.entra import SREEntraComponent, SREEntraProps
 from .sre.firewall import SREFirewallComponent, SREFirewallProps
 from .sre.identity import SREIdentityComponent, SREIdentityProps
 from .sre.monitoring import SREMonitoringComponent, SREMonitoringProps
-from .sre.networking import SRENetworkingComponent, SRENetworkingProps
+from .sre.networking import (
+    SRENetworkingComponent,
+    SRENetworkingProps,
+)
 from .sre.remote_desktop import SRERemoteDesktopComponent, SRERemoteDesktopProps
 from .sre.user_services import SREUserServicesComponent, SREUserServicesProps
 from .sre.workspaces import SREWorkspacesComponent, SREWorkspacesProps
@@ -155,6 +158,7 @@ class DeclarativeSRE:
                 shm_subscription_id=shm_subscription_id,
                 shm_zone_name=shm_fqdn,
                 sre_name=self.config.name,
+                use_software_repositories=not self.config.sre.allow_workspace_internet,
                 user_public_ip_ranges=self.config.sre.research_user_ip_addresses,
             ),
             tags=self.tags,
@@ -343,6 +347,7 @@ class DeclarativeSRE:
             "sre_user_services",
             self.stack_name,
             SREUserServicesProps(
+                allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 database_service_admin_password=data.password_database_service_admin,
                 databases=self.config.sre.databases,
                 dns_server_ip=dns.ip_address,
@@ -377,6 +382,7 @@ class DeclarativeSRE:
             self.stack_name,
             SREDesiredStateProps(
                 admin_ip_addresses=self.config.sre.admin_ip_addresses,
+                allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 clamav_mirror_hostname=clamav_mirror.hostname,
                 database_service_admin_password=data.password_database_service_admin,
                 dns_private_zones=dns.private_zones,
@@ -391,7 +397,11 @@ class DeclarativeSRE:
                 location=self.config.azure.location,
                 log_analytics_workspace=monitoring.log_analytics,
                 resource_group=resource_group,
-                software_repository_hostname=user_services.software_repositories.hostname,
+                software_repository_hostname=(
+                    user_services.software_repositories.hostname
+                    if not self.config.sre.allow_workspace_internet
+                    else ""
+                ),
                 subnet_desired_state=networking.subnet_desired_state,
                 subscription_name=sre_subscription_name,
             ),
@@ -426,11 +436,14 @@ class DeclarativeSRE:
         container_instance_information: list[SupportsDnsSidecar] = [
             user_services.gitea_server,
             user_services.hedgedoc_server,
-            user_services.software_repositories,
             apt_proxy_server,
             clamav_mirror,
             identity,
         ]
+        if hasattr(user_services, "software_repositories"):
+            container_instance_information.append(
+                user_services.software_repositories,
+            )
 
         DnsSidecarComponent(
             "dns_sidecar",
@@ -454,14 +467,15 @@ class DeclarativeSRE:
         )
 
         # Export values for later use
-        pulumi.export(
-            "allowlist_share_name",
-            user_services.software_repositories.allowlist_file_share_name,
-        )
-        pulumi.export(
-            "allowlist_share_filenames",
-            user_services.software_repositories.allowlist_file_names,
-        )
+        if not self.config.sre.allow_workspace_internet:
+            pulumi.export(
+                "allowlist_share_name",
+                user_services.software_repositories.allowlist_file_share_name,
+            )
+            pulumi.export(
+                "allowlist_share_filenames",
+                user_services.software_repositories.allowlist_file_names,
+            )
         pulumi.export("data", data.exports)
         pulumi.export("ldap", ldap_group_names)
         pulumi.export("remote_desktop", remote_desktop.exports)

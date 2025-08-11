@@ -46,6 +46,7 @@ class SREDesiredStateProps:
     def __init__(
         self,
         admin_ip_addresses: Input[Sequence[str]],
+        allow_workspace_internet: Input[bool],
         clamav_mirror_hostname: Input[str],
         database_service_admin_password: Input[str],
         dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
@@ -65,6 +66,7 @@ class SREDesiredStateProps:
         subnet_desired_state: Input[network.GetSubnetResult],
     ) -> None:
         self.admin_ip_addresses = admin_ip_addresses
+        self.allow_workspace_internet = allow_workspace_internet
         self.clamav_mirror_hostname = clamav_mirror_hostname
         self.database_service_admin_password = database_service_admin_password
         self.dns_private_zones = dns_private_zones
@@ -181,6 +183,7 @@ class SREDesiredStateComponent(ComponentResource):
                 ldap_user_filter=props.ldap_user_filter,
                 ldap_user_search_base=props.ldap_user_search_base,
                 software_repository_hostname=props.software_repository_hostname,
+                use_software_repositories=not props.allow_workspace_internet,
             ).apply(lambda kwargs: StringAsset(self.ansible_vars_file(**kwargs))),
         )
         # Set up a private endpoint for the desired state storage account

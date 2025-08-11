@@ -147,8 +147,8 @@ class TestSREFirewallComponent:
             ]
 
             assert (
-                len(application_rule_collections) == 6
-            )  # There are application rules for: 1) dns-sidecar, 2) apt, 3) clamav, 4) guacamole, 5) identity, and 6) nexus
+                len(application_rule_collections) == 5
+            )  # There are application rules for: 1) dns-sidecar, 2) apt, 3) clamav, 4) guacamole, 5) identity
             assert len(allow_internet_collection) == 1
 
         pulumi.Output.all(
