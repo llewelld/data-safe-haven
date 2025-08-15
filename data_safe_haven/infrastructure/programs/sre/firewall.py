@@ -37,6 +37,9 @@ class SREFirewallProps:
         subnet_firewall_management: Input[network.GetSubnetResult],
         subnet_guacamole_containers: Input[network.GetSubnetResult],
         subnet_identity_containers: Input[network.GetSubnetResult],
+        subnet_user_services: Input[
+            network.GetSubnetResult
+        ],  # TODO(cgavidia): Temporarily adding configuration to user services.
         subnet_user_services_software_repositories: (
             Input[network.GetSubnetResult] | None
         ),
@@ -74,6 +77,11 @@ class SREFirewallProps:
         self.subnet_user_services_software_repositories_prefixes: (
             Output[list[str]] | None
         ) = None
+
+        self.subnet_user_services_prefixes = Output.from_input(
+            subnet_user_services
+        ).apply(get_address_prefixes_from_subnet)
+
         if subnet_user_services_software_repositories is not None:
             self.subnet_user_services_software_repositories_prefixes = (
                 Output.from_input(subnet_user_services_software_repositories).apply(
@@ -253,6 +261,31 @@ class SREFirewallComponent(ComponentResource):
                         ],
                         source_addresses=props.subnet_dns_sidecar_prefixes,
                         target_fqdns=PermittedDomains.AZURE_MANAGED_IDENTITIES,
+                    ),
+                ],
+            ),
+            network.AzureFirewallApplicationRuleCollectionArgs(
+                action=network.AzureFirewallRCActionArgs(
+                    type=network.AzureFirewallRCActionType.ALLOW
+                ),
+                name="user-services-allow",  # TODO(cgavidia): Temporarily adding this configuration to user services.
+                priority=FirewallPriorities.SRE_USER_SERVICES,
+                rules=[
+                    network.AzureFirewallApplicationRuleArgs(
+                        description="Allow external GitHub repository update requests",
+                        name="AllowGitHubRepositoryUpdates",
+                        protocols=[
+                            network.AzureFirewallApplicationRuleProtocolArgs(
+                                port=int(Ports.HTTP),
+                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTP,
+                            ),
+                            network.AzureFirewallApplicationRuleProtocolArgs(
+                                port=int(Ports.HTTPS),
+                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                            ),
+                        ],
+                        source_addresses=props.subnet_user_services_prefixes,
+                        target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_GITHUB,
                     ),
                 ],
             ),
