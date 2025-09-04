@@ -169,7 +169,12 @@ def obtain_api_token(
 
 
 def create_push_mirror(
-    owner: str, repository: str, remote_address: str, token: str
+    owner: str,
+    repository: str,
+    remote_address: str,
+    remote_password: str,
+    remote_username: str,
+    token: str,
 ) -> None:
     logger.info(f"Creating a push mirror  for {repository} to {remote_address}")
 
@@ -179,11 +184,13 @@ def create_push_mirror(
     data: dict[str, str | bool] = {
         "interval": "0h10m0s",
         "remote_address": remote_address,
+        "remote_password": remote_password,
+        "remote_username": remote_username,
         "sync_on_commit": True,
     }
 
     response: Response = requests.post(
-        f"{GITEA_URL}/api/v1/repos/{owner}/{repository}/push_mirror",
+        f"{GITEA_URL}/api/v1/repos/{owner}/{repository}/push_mirrors",
         params=params,
         headers=headers,
         data=json.dumps(data),
@@ -196,8 +203,8 @@ def create_push_mirror(
         )
 
         raise Exception(error_message)
-    else:
-        logger.info(f"Push mirror created at {response.json()['html_url']}")
+
+    logger.info(f"Push mirror created to {remote_address}")
 
 
 def create_repository(
@@ -284,6 +291,8 @@ def main() -> None:
             owner=MIRROR_USERNAME,
             repository=repository["repository_name"],
             remote_address=remote_address,
+            remote_username=PUSH_MIRROR_USERNAME,
+            remote_password=PUSH_MIRROR_PASSWORD,
             token=migration_token,
         )
 

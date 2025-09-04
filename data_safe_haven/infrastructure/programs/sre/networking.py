@@ -1115,6 +1115,18 @@ class SRENetworkingComponent(ComponentResource):
                     source_address_prefix=SREIpRanges.user_services_containers.prefix,
                     source_port_range="*",
                 ),
+                network.SecurityRuleArgs( # TODO(cgavidia): Remove later. Only for testing.
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to user services containers.",
+                    destination_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    destination_port_ranges=[Ports.SSH, Ports.HTTP, Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowUserServicesContainersOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_CONTAINERS,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    source_port_range="*",
+                ),
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
                     description="Allow outbound connections to container support services.",

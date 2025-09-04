@@ -2,6 +2,7 @@ from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import containerinstance, storage
+from pulumi_random import RandomPassword
 
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
@@ -136,14 +137,27 @@ class SREGiteaServerComponent(ComponentResource):
         gitea_configure_sh_reader = FileReader(
             resources_path / "gitea" / "gitea" / "configure.mustache.sh"
         )
+
+        # TODO(cgavidia): I don't need this anymore!
+        gitea_admin_password: RandomPassword = RandomPassword(
+            f"{self._name}_password_gitea_service_admin",
+            length=20,
+            special=True,
+        )
+
+        self.dns_record_name = "gitea"
+
         gitea_configure_sh = Output.all(
             admin_email="dshadmin@example.com",
             admin_username="dshadmin",
+            admin_password=gitea_admin_password.result,
+            dns_record_name=self.dns_record_name,
             ldap_username_attribute=props.ldap_username_attribute,
             ldap_user_filter=props.ldap_user_filter,
             ldap_server_hostname=props.ldap_server_hostname,
             ldap_server_port=props.ldap_server_port,
             ldap_user_search_base=props.ldap_user_search_base,
+            sre_fqdn=props.sre_fqdn,
         ).apply(
             lambda mustache_values: gitea_configure_sh_reader.file_contents(
                 mustache_values
@@ -199,7 +213,6 @@ class SREGiteaServerComponent(ComponentResource):
         )
 
         # Define the container group with a dns monitor, guacd, guacamole and caddy
-        self.dns_record_name = "gitea"
         self.container_group_name = (
             f"{stack_name}-container-group-{self.dns_record_name }"
         )
@@ -269,6 +282,9 @@ class SREGiteaServerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__security__INSTALL_LOCK", value="true"
+                        ),
+                        containerinstance.EnvironmentVariableArgs(  # TODO(cgavidia): Remove later. Only for testing.
+                            name="GITEA__migrations__ALLOW_LOCALNETWORKS", value="true"
                         ),
                     ],
                     ports=[
