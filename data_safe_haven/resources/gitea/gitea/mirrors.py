@@ -12,32 +12,22 @@ logging.basicConfig(level=logging.INFO)
 
 DEFAULT_TIMEOUT: int = 5 * 60
 
-# Migration configuration
+# Mirror server configuration
 
-TOKEN_NAME: str = "mirror_api_token"  # noqa: S105
-GITEA_URL: str = os.environ["GITEA_URL"]
-MIRROR_USERNAME: str = os.environ["MIRROR_USERNAME"]
-MIRROR_PASSWORD: str = os.environ["MIRROR_PASSWORD"]
+MIRROR_SERVER_TOKEN_NAME: str = "mirror_api_token"  # noqa: S105
+MIRROR_SERVER_URL: str = os.environ["MIRROR_SERVER_URL"]
+MIRROR_SERVER_USERNAME: str = os.environ["MIRROR_SERVER_USERNAME"]
+MIRROR_SERVER_PASSWORD: str = os.environ["MIRROR_SERVER_PASSWORD"]
 
-# Push mirror configuration
-PUSH_MIRROR_TOKEN_NAME: str = "push_mirror_api_token"  # noqa: S105
-PUSH_MIRROR_GITEA_URL: str = os.environ["PUSH_MIRROR_GITEA_URL"]
-PUSH_MIRROR_USERNAME: str = os.environ["PUSH_MIRROR_USERNAME"]
-PUSH_MIRROR_PASSWORD: str = os.environ["PUSH_MIRROR_PASSWORD"]
+# Workspace server configuration
+WORKSPACE_SERVER_TOKEN_NAME: str = "push_mirror_api_token"  # noqa: S105
+WORKSPACE_SERVER_URL: str = os.environ["WORKSPACE_SERVER_URL"]
+WORKSPACE_SERVER_USERNAME: str = os.environ["WORKSPACE_SERVER_USERNAME"]
+WORKSPACE_SERVER_PASSWORD: str = os.environ["WORKSPACE_SERVER_PASSWORD"]
 
-# TODO(cgavidia): Testing workarounds
-REPOSITORY_AUTH_TOKEN: str = os.environ["REPOSITORY_AUTH_TOKEN"]
-
-
-def load_repository_data() -> list[dict[str, str]]:
-    # TODO(cgavidia) : Load from config. Or environment variables.
-    return [
-        {
-            "repository_name": "data-safe-haven",
-            "repository_url": "https://github.com/cptanalatriste/data-safe-haven",
-            "repository_auth_token": REPOSITORY_AUTH_TOKEN,
-        }
-    ]
+REPOSITORY_DATA: dict[str, list[dict[str, str]]] = json.loads(
+    os.environ["REPOSITORY_DATA"]
+)
 
 
 def delete_token(username: str, password: str, token_name: str, gitea_url: str) -> None:
@@ -92,7 +82,11 @@ def create_token(
 
 
 def create_migration(
-    repostiory_url: str, repository_name: str, repository_auth_token: str, token: str
+    repostiory_url: str,
+    repository_name: str,
+    repository_auth_token: str,
+    gitea_url: str,
+    token: str,
 ) -> None:
     logger.info(f"Creating a migration for repository {repostiory_url}")
 
@@ -110,7 +104,7 @@ def create_migration(
     }
 
     response: Response = requests.post(
-        f"{GITEA_URL}/api/v1/repos/migrate",
+        f"{gitea_url}/api/v1/repos/migrate",
         params=params,
         headers=headers,
         data=json.dumps(data),
@@ -174,6 +168,7 @@ def create_push_mirror(
     remote_address: str,
     remote_password: str,
     remote_username: str,
+    gitea_url: str,
     token: str,
 ) -> None:
     logger.info(f"Creating a push mirror  for {repository} to {remote_address}")
@@ -190,7 +185,7 @@ def create_push_mirror(
     }
 
     response: Response = requests.post(
-        f"{GITEA_URL}/api/v1/repos/{owner}/{repository}/push_mirrors",
+        f"{gitea_url}/api/v1/repos/{owner}/{repository}/push_mirrors",
         params=params,
         headers=headers,
         data=json.dumps(data),
@@ -239,29 +234,52 @@ def create_repository(
     return response.json()["clone_url"]
 
 
+def synchronise_push_mirrors(
+    owner: str, repository: str, gitea_url: str, token: str
+) -> None:
+    logger.info(f"Synchronising all push mirrors for {owner}/{repository}")
+
+    headers: dict[str, str] = {"Content-Type": "application/json"}
+    params: dict[str, str] = {"access_token": token}
+
+    response: Response = requests.post(
+        f"{gitea_url}/api/v1/repos/{owner}/{repository}/push_mirrors-sync",
+        params=params,
+        headers=headers,
+        timeout=DEFAULT_TIMEOUT,
+    )
+
+    if not response.status_code == requests.codes.ok:
+        error_message: str = (
+            f"Cannot synchronise push mirrors for repository {repository}. Status code: {response.status_code}. Response {response.json()}"
+        )
+
+        raise Exception(error_message)
+
+    logger.info(f"Push mirrors synchronised for {owner}/{repository}")
+
+
 def main() -> None:
     migration_token = obtain_api_token(
-        token_name=TOKEN_NAME,
-        username=MIRROR_USERNAME,
-        password=MIRROR_PASSWORD,
+        token_name=MIRROR_SERVER_TOKEN_NAME,
+        username=MIRROR_SERVER_USERNAME,
+        password=MIRROR_SERVER_PASSWORD,
         scopes=["write:repository"],
-        gitea_url=GITEA_URL,
+        gitea_url=MIRROR_SERVER_URL,
     )
 
     push_mirror_token = obtain_api_token(
-        token_name=PUSH_MIRROR_TOKEN_NAME,
-        username=PUSH_MIRROR_USERNAME,
-        password=PUSH_MIRROR_PASSWORD,
-        gitea_url=PUSH_MIRROR_GITEA_URL,
+        token_name=WORKSPACE_SERVER_TOKEN_NAME,
+        username=WORKSPACE_SERVER_USERNAME,
+        password=WORKSPACE_SERVER_PASSWORD,
+        gitea_url=WORKSPACE_SERVER_URL,
         scopes=["write:repository", "write:user"],
     )
 
-    repository_data: list[dict[str, str]] = load_repository_data()
-
-    for repository in repository_data:
+    for repository in REPOSITORY_DATA["repositories"]:
         delete_repository(
-            username=MIRROR_USERNAME,
-            gitea_url=GITEA_URL,
+            username=MIRROR_SERVER_USERNAME,
+            gitea_url=MIRROR_SERVER_URL,
             repository_name=repository["repository_name"],
             token=migration_token,
         )
@@ -270,29 +288,38 @@ def main() -> None:
             repository_name=repository["repository_name"],
             repostiory_url=repository["repository_url"],
             repository_auth_token=repository["repository_auth_token"],
+            gitea_url=MIRROR_SERVER_URL,
             token=migration_token,
         )
 
         delete_repository(
-            username=PUSH_MIRROR_USERNAME,
-            gitea_url=PUSH_MIRROR_GITEA_URL,
+            username=WORKSPACE_SERVER_USERNAME,
+            gitea_url=WORKSPACE_SERVER_URL,
             repository_name=f"{repository['repository_name']}-mirror",
             token=push_mirror_token,
         )
 
         remote_address: str = create_repository(
-            user_name=PUSH_MIRROR_USERNAME,
+            user_name=WORKSPACE_SERVER_USERNAME,
             repository_name=f"{repository['repository_name']}-mirror",
-            gitea_url=PUSH_MIRROR_GITEA_URL,
+            gitea_url=WORKSPACE_SERVER_URL,
             token=push_mirror_token,
         )
 
         create_push_mirror(
-            owner=MIRROR_USERNAME,
+            owner=MIRROR_SERVER_USERNAME,
             repository=repository["repository_name"],
             remote_address=remote_address,
-            remote_username=PUSH_MIRROR_USERNAME,
-            remote_password=PUSH_MIRROR_PASSWORD,
+            remote_username=WORKSPACE_SERVER_USERNAME,
+            remote_password=WORKSPACE_SERVER_PASSWORD,
+            gitea_url=MIRROR_SERVER_URL,
+            token=migration_token,
+        )
+
+        synchronise_push_mirrors(
+            owner=MIRROR_SERVER_USERNAME,
+            repository=repository["repository_name"],
+            gitea_url=MIRROR_SERVER_URL,
             token=migration_token,
         )
 
