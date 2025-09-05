@@ -15,6 +15,7 @@ from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps
 from .gitea_server import SREGiteaServerComponent, SREGiteaServerProps
 from .hedgedoc_server import SREHedgeDocServerComponent, SREHedgeDocServerProps
+from .mirror_manager import SREGiteMirrorManagerComponent, SREGiteMirrorManagerProps
 from .software_repositories import (
     SRESoftwareRepositoriesComponent,
     SRESoftwareRepositoriesProps,
@@ -124,6 +125,24 @@ class SREUserServicesComponent(ComponentResource):
                 log_analytics_workspace=props.log_analytics_workspace,
                 resource_group_name=props.resource_group_name,
                 sre_fqdn=props.sre_fqdn,
+                storage_account_key=props.storage_account_key,
+                storage_account_name=props.storage_account_name,
+            ),
+            opts=child_opts,
+            tags=child_tags,
+        )
+
+        # TODO(cgavidia): Move this somewhere else later. And to its own subnet
+        self.mirror_monitor = SREGiteMirrorManagerComponent(
+            "gitea_mirror_monitor",
+            stack_name,
+            SREGiteMirrorManagerProps(
+                dns_server_ip=props.dns_server_ip,
+                dockerhub_credentials=props.dockerhub_credentials,
+                location=props.location,
+                log_analytics_workspace=props.log_analytics_workspace,
+                mirror_manager_subnet_id=props.subnet_containers_id,
+                resource_group_name=props.resource_group_name,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
             ),
