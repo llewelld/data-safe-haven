@@ -1029,6 +1029,19 @@ class SRENetworkingComponent(ComponentResource):
             resource_group_name=props.resource_group_name,
             security_rules=[
                 # Inbound
+                # TODO(cgavidia): Only for testing!
+                    network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow inbound connections from User Services containers.",
+                    destination_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    destination_port_ranges=[Ports.SSH, Ports.HTTP, Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="AllowUserServicesInbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_CONTAINERS,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    source_port_range="*",
+                ),
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
                     description="Allow inbound connections from SRE workspaces.",

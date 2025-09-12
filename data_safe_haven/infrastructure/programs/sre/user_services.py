@@ -143,6 +143,7 @@ class SREUserServicesComponent(ComponentResource):
                 log_analytics_workspace=props.log_analytics_workspace,
                 mirror_manager_subnet_id=props.subnet_containers_id,
                 resource_group_name=props.resource_group_name,
+                sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
             ),

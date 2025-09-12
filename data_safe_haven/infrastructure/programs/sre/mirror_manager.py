@@ -3,10 +3,15 @@ from collections.abc import Mapping
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import containerinstance, storage
 
-from data_safe_haven.infrastructure.common import DockerHubCredentials
+from data_safe_haven.infrastructure.common import (
+    DockerHubCredentials,
+    get_ip_address_from_container_group,
+)
 from data_safe_haven.infrastructure.components import (
     FileShareFile,
     FileShareFileProps,
+    LocalDnsRecordComponent,
+    LocalDnsRecordProps,
     WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
@@ -24,6 +29,7 @@ class SREGiteMirrorManagerProps:
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         mirror_manager_subnet_id: Input[str],
         resource_group_name: Input[str],
+        sre_fqdn: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
     ) -> None:
@@ -33,6 +39,7 @@ class SREGiteMirrorManagerProps:
         self.log_analytics_workspace = log_analytics_workspace
         self.mirror_manager_subnet_id = mirror_manager_subnet_id
         self.resource_group_name = resource_group_name
+        self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
 
@@ -95,27 +102,27 @@ class SREGiteMirrorManagerComponent(ComponentResource):
                         # TODO(cgavidia): Replace later with proper values. And passwords from Secrets.
                         containerinstance.EnvironmentVariableArgs(
                             name="MIRROR_SERVER_URL",
-                            value="http://gitea.ronsocosandbox.cvdnetdev.develop.turingsafehaven.ac.uk",
+                            value=Output.concat("http://gitea.", props.sre_fqdn),
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="MIRROR_SERVER_USERNAME", value="carlos.gavidia"
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="MIRROR_SERVER_PASSWORD", value="TBA"
+                            name="MIRROR_SERVER_PASSWORD", value="<TBA>"
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="WORKSPACE_SERVER_URL",
-                            value="http://gitea.ronsocosandbox.cvdnetdev.develop.turingsafehaven.ac.uk",
+                            value=Output.concat("http://gitea.", props.sre_fqdn),
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="WORKSPACE_SERVER_USERNAME", value="carlos.gavidia"
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="WORKSPACE_SERVER_PASSWORD", value="TBA"
+                            name="WORKSPACE_SERVER_PASSWORD", value="<TBA>"
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="REPOSITORY_DATA",
-                            value='{"repositories": [{"repository_name":"data-safe-haven","repository_url":"https://github.com/cptanalatriste/data-safe-haven","repository_auth_token":"TBA"}]}',
+                            value='{"repositories": [{"repository_name":"data-safe-haven","repository_url":"https://github.com/cptanalatriste/data-safe-haven","repository_auth_token":"<TBA>"}]}',
                         ),
                     ],
                     ports=[
@@ -141,8 +148,8 @@ class SREGiteMirrorManagerComponent(ComponentResource):
             ],
             diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                 log_analytics=containerinstance.LogAnalyticsArgs(
-                    workspace_id=props.log_analytics_workspace.workspace_id, # type: ignore
-                    workspace_key=props.log_analytics_workspace.workspace_key, # type: ignore
+                    workspace_id=props.log_analytics_workspace.workspace_id,  # type: ignore
+                    workspace_key=props.log_analytics_workspace.workspace_key,  # type: ignore
                 ),
             ),
             dns_config=containerinstance.DnsConfigurationArgs(
@@ -183,17 +190,31 @@ class SREGiteMirrorManagerComponent(ComponentResource):
                         storage_account_name=props.storage_account_name,
                     ),
                     name="mirror-manager-etc-scripts",
-                )],
+                )
+            ],
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
                     delete_before_replace=True,
-                    depends_on=[
-                        file_share_mirror_manager_python_script
-                    ],
+                    depends_on=[file_share_mirror_manager_python_script],
                     replace_on_changes=["containers"],
                 ),
             ),
             tags=child_tags,
+        )
 
+        self.dns_record_name = "giteamirror"
+        self.local_dns = LocalDnsRecordComponent(
+            f"{self._name}_giteamirror_dns_record_set",
+            LocalDnsRecordProps(
+                base_fqdn=props.sre_fqdn,
+                private_ip_address=get_ip_address_from_container_group(
+                    self.container_group
+                ),
+                record_name=self.dns_record_name,
+                resource_group_name=props.resource_group_name,
+            ),
+            opts=ResourceOptions.merge(
+                child_opts, ResourceOptions(parent=self.container_group)
+            ),
         )
