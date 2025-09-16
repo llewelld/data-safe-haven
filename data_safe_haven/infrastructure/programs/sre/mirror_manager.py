@@ -44,7 +44,7 @@ class SREGiteMirrorManagerProps:
         self.storage_account_name = storage_account_name
 
 
-class SREGiteMirrorManagerComponent(ComponentResource):
+class SREGiteaMirrorManagerComponent(ComponentResource):
     def __init__(
         self,
         name: str,

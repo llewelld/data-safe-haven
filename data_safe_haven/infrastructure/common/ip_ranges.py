@@ -24,6 +24,7 @@ class SREIpRanges:
     monitoring = vnet.next_subnet(32)
     user_services_containers = vnet.next_subnet(8)
     user_services_containers_support = vnet.next_subnet(8)
+    user_services_gitea_mirror = vnet.next_subnet(8)
     user_services_databases = vnet.next_subnet(8)
     user_services_software_repositories = vnet.next_subnet(8)
     workspaces = vnet.next_subnet(256)

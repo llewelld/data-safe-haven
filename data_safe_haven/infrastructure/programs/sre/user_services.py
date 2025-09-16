@@ -15,7 +15,7 @@ from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps
 from .gitea_server import SREGiteaServerComponent, SREGiteaServerProps
 from .hedgedoc_server import SREHedgeDocServerComponent, SREHedgeDocServerProps
-from .mirror_manager import SREGiteMirrorManagerComponent, SREGiteMirrorManagerProps
+from .mirror_manager import SREGiteaMirrorManagerComponent, SREGiteMirrorManagerProps
 from .software_repositories import (
     SRESoftwareRepositoriesComponent,
     SRESoftwareRepositoriesProps,
@@ -50,6 +50,7 @@ class SREUserServicesProps:
         storage_account_name: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
         subnet_containers_support: Input[network.GetSubnetResult],
+        subnet_gitea_mirrors: Input[network.GetSubnetResult],
         subnet_databases: Input[network.GetSubnetResult],
         subnet_software_repositories: Input[network.GetSubnetResult] | None,
     ) -> None:
@@ -84,6 +85,10 @@ class SREUserServicesProps:
             get_id_from_subnet
         )
 
+        self.subnet_gitea_mirrors_id = Output.from_input(subnet_gitea_mirrors).apply(
+            get_id_from_subnet
+        )
+
         self.subnet_software_repositories_id: Output[str] | None = None
         if subnet_software_repositories is not None:
             self.subnet_software_repositories_id = Output.from_input(
@@ -104,7 +109,7 @@ class SREUserServicesComponent(ComponentResource):
     ) -> None:
         super().__init__("dsh:sre:UserServicesComponent", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
-        child_tags = {"component": "user services"} | (tags if tags else {})
+        child_tags = {"component": "user services"} | (tags if tags else {})  # type: ignore
 
         # Deploy the Gitea server
         self.gitea_server = SREGiteaServerComponent(
@@ -133,7 +138,7 @@ class SREUserServicesComponent(ComponentResource):
         )
 
         # TODO(cgavidia): Move this somewhere else later. And to its own subnet
-        self.mirror_monitor = SREGiteMirrorManagerComponent(
+        self.mirror_monitor = SREGiteaMirrorManagerComponent(
             "gitea_mirror_monitor",
             stack_name,
             SREGiteMirrorManagerProps(
@@ -141,7 +146,7 @@ class SREUserServicesComponent(ComponentResource):
                 dockerhub_credentials=props.dockerhub_credentials,
                 location=props.location,
                 log_analytics_workspace=props.log_analytics_workspace,
-                mirror_manager_subnet_id=props.subnet_containers_id,
+                mirror_manager_subnet_id=props.subnet_gitea_mirrors_id,
                 resource_group_name=props.resource_group_name,
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,

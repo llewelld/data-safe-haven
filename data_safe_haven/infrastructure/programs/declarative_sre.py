@@ -371,6 +371,7 @@ class DeclarativeSRE:
                 storage_account_name=data.storage_account_data_configuration_name,
                 subnet_containers=networking.subnet_user_services_containers,
                 subnet_containers_support=networking.subnet_user_services_containers_support,
+                subnet_gitea_mirrors=networking.subnet_user_services_gitea_mirror,
                 subnet_databases=networking.subnet_user_services_databases,
                 subnet_software_repositories=networking.subnet_user_services_software_repositories,
             ),
