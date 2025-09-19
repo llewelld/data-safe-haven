@@ -130,7 +130,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
             admin_username="dshadmin",
             mirror_email="mirror@example.com",
             mirror_username=mirror_username,
-            mirror_password=mirror_password,  # TODO(cgavidia): Let's find a better way of doing this...
         ).apply(
             lambda mustache_values: gitea_configure_sh_reader.file_contents(
                 mustache_values
@@ -238,10 +237,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                             value=props.workspace_username,
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            name="WORKSPACE_SERVER_PASSWORD",
-                            secure_value=props.workspace_password,
-                        ),
-                        containerinstance.EnvironmentVariableArgs(
                             name="REPOSITORY_DATA",
                             value=json.dumps(
                                 props.repository_data.model_dump(mode="json")
@@ -310,6 +305,10 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(  # TODO(cgavidia): Remove later. Only for testing.
                             name="GITEA__migrations__ALLOW_LOCALNETWORKS", value="true"
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="MIRROR_SERVER_PASSWORD",
+                            secure_value=mirror_password,
                         ),
                     ],
                     ports=[
