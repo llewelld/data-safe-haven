@@ -138,26 +138,28 @@ class SREGiteaServerComponent(ComponentResource):
             resources_path / "gitea" / "gitea" / "configure.mustache.sh"
         )
 
-        # TODO(cgavidia): I don't need this anymore!
-        gitea_admin_password: RandomPassword = RandomPassword(
-            f"{self._name}_password_gitea_service_admin",
+        gitea_workspace_user_password: RandomPassword = RandomPassword(
+            f"{self._name}_password_gitea_workspace_user",
             length=20,
-            special=True,
+            special=False,
         )
 
-        self.dns_record_name = "gitea"
+        self.workspace_username: str = "workspaceuser"
+        self.workspace_password: Output[str] = Output.secret(
+            gitea_workspace_user_password.result
+        )
 
         gitea_configure_sh = Output.all(
             admin_email="dshadmin@example.com",
             admin_username="dshadmin",
-            admin_password=gitea_admin_password.result,
-            dns_record_name=self.dns_record_name,
             ldap_username_attribute=props.ldap_username_attribute,
             ldap_user_filter=props.ldap_user_filter,
             ldap_server_hostname=props.ldap_server_hostname,
             ldap_server_port=props.ldap_server_port,
             ldap_user_search_base=props.ldap_user_search_base,
-            sre_fqdn=props.sre_fqdn,
+            workspace_email="workspace@example.com",
+            workspace_username=self.workspace_username,
+            workspace_password=self.workspace_password,  # TODO(cgavidia): Let's find a better way of doing this...
         ).apply(
             lambda mustache_values: gitea_configure_sh_reader.file_contents(
                 mustache_values
@@ -211,6 +213,8 @@ class SREGiteaServerComponent(ComponentResource):
             opts=child_opts,
             tags=child_tags,
         )
+
+        self.dns_record_name = "gitea"
 
         # Define the container group with a dns monitor, guacd, guacamole and caddy
         self.container_group_name = (

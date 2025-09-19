@@ -141,7 +141,7 @@ def delete_repository(
     if response.status_code == requests.codes.no_content:
         logging.info("Repository successfully deleted.")
     else:
-        logging.info("Cannot delete repository.")
+        logging.info(f"Cannot delete repository. Response {response.json()}")
 
 
 def obtain_api_token(
