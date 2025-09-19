@@ -365,6 +365,7 @@ class DeclarativeSRE:
                 log_analytics_workspace=monitoring.log_analytics,
                 nexus_admin_password=data.password_nexus_admin,
                 resource_group_name=resource_group.name,
+                repository_data=self.config.user_services.gitea_mirror,
                 software_packages=self.config.sre.software_packages,
                 sre_fqdn=networking.sre_fqdn,
                 nexus_persistent_quota_gb=self.config.user_services.nexus.persistent_quota_gb,

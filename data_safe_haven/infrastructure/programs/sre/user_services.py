@@ -3,6 +3,7 @@ from collections.abc import Mapping
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import network
 
+from data_safe_haven.config.config_sections import ConfigSubsectionGiteaMirror
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_id_from_subnet,
@@ -47,6 +48,7 @@ class SREUserServicesProps:
         software_packages: SoftwarePackageCategory,
         sre_fqdn: Input[str],
         nexus_persistent_quota_gb: Input[int],
+        repository_data: ConfigSubsectionGiteaMirror,
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
@@ -71,6 +73,7 @@ class SREUserServicesProps:
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
         self.nexus_admin_password = Output.secret(nexus_admin_password)
+        self.repository_data = repository_data
         self.resource_group_name = resource_group_name
         self.nexus_persistent_quota_gb = nexus_persistent_quota_gb
         self.software_packages = software_packages
@@ -151,6 +154,7 @@ class SREUserServicesComponent(ComponentResource):
                 location=props.location,
                 log_analytics_workspace=props.log_analytics_workspace,
                 mirror_manager_subnet_id=props.subnet_gitea_mirrors_id,
+                repository_data=props.repository_data,
                 resource_group_name=props.resource_group_name,
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,

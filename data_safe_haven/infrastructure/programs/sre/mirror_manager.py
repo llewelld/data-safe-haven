@@ -1,9 +1,11 @@
+import json
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import containerinstance, storage
 from pulumi_random import RandomPassword
 
+from data_safe_haven.config.config_sections import ConfigSubsectionGiteaMirror
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_ip_address_from_container_group,
@@ -33,6 +35,7 @@ class SREGiteMirrorManagerProps:
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         mirror_manager_subnet_id: Input[str],
+        repository_data: ConfigSubsectionGiteaMirror,
         resource_group_name: Input[str],
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
@@ -52,6 +55,7 @@ class SREGiteMirrorManagerProps:
         self.log_analytics_workspace = log_analytics_workspace
         self.mirror_manager_subnet_id = mirror_manager_subnet_id
         self.resource_group_name = resource_group_name
+        self.repository_data = repository_data
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
@@ -222,9 +226,8 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                             name="MIRROR_SERVER_USERNAME", value=mirror_username
                         ),
                         containerinstance.EnvironmentVariableArgs(
-                            # name="MIRROR_SERVER_PASSWORD", secure_value=mirror_password # TODO(cgavidia): Only for testing
                             name="MIRROR_SERVER_PASSWORD",
-                            value=mirror_password,
+                            secure_value=mirror_password,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="WORKSPACE_SERVER_URL",
@@ -236,11 +239,13 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="WORKSPACE_SERVER_PASSWORD",
-                            value=props.workspace_password,  # TODO(cgavidia): Make it a secure value
+                            secure_value=props.workspace_password,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="REPOSITORY_DATA",
-                            value='{"repositories": [{"repository_name":"data-safe-haven","repository_url":"https://github.com/cptanalatriste/data-safe-haven","repository_auth_token":"<TBA>"}]}',
+                            value=json.dumps(
+                                props.repository_data.model_dump(mode="json")
+                            ),  # TODO(cgavidia): Make it a secure value, given the API tokens.
                         ),
                     ],
                     ports=[
