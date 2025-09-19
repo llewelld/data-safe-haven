@@ -11,14 +11,14 @@ done
 # Ensure that the mirror user exists
 until su-exec "$USER" /usr/local/bin/gitea admin user list | grep "{{workspace_username}}" > /dev/null 2>&1; do
     echo "$(date -Iseconds) [gitea] Attempting to create default workspace user '{{workspace_username}}'..." | tee -a /var/log/configuration
-    su-exec "$USER" /usr/local/bin/gitea admin user create --username "{{workspace_username}}" --password "{{workspace_password}}" --must-change-password=false --email "{{workspace_email}}" 2> /dev/null
+    su-exec "$USER" /usr/local/bin/gitea admin user create --username "{{workspace_username}}" --password "$WORKSPACE_SERVER_PASSWORD" --must-change-password=false --email "{{workspace_email}}" 2> /dev/null
     sleep 1
 done
 
 echo "$(date -Iseconds) [gitea] Users '{{workspace_username}}' and '{{admin_username}}' created successfully" | tee -a /var/log/configuration
 
 echo "$(date -Iseconds) [gitea] Attempting to set password for user '{{workspace_username}}'..." 
-su-exec "$USER" /usr/local/bin/gitea admin user change-password --username "{{workspace_username}}" --password "{{workspace_password}}" --must-change-password=false
+su-exec "$USER" /usr/local/bin/gitea admin user change-password --username "{{workspace_username}}" --password "$WORKSPACE_SERVER_PASSWORD" --must-change-password=false
 
 
 # Ensure that LDAP authentication is enabled
