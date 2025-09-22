@@ -155,6 +155,7 @@ class PermittedDomains(tuple[str, ...], Enum):
     )
     AZURE_DNS_ZONES = AzureDnsZoneNames.ALL
     AZURE_RESOURCE_MANAGER = ("management.azure.com",)
+    AZURE_KUBERNETES = ("*.hcp.uksouth.azmk8s.io",)  # TODO(cgavidia): Only for testing
     CLAMAV_UPDATES = (
         "clamav.net",
         "current.cvd.clamav.net",
@@ -191,6 +192,7 @@ class PermittedDomains(tuple[str, ...], Enum):
                 + AZURE_DNS_ZONES
                 + AZURE_RESOURCE_MANAGER
                 + CLAMAV_UPDATES
+                + AZURE_KUBERNETES
                 + AZURE_MANAGED_IDENTITIES
                 + MICROSOFT_CONTAINER_REGISTRY
                 + MICROSOFT_GRAPH_API
