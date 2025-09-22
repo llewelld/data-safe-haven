@@ -207,11 +207,11 @@ class DnsSidecarComponent(ComponentResource):
                 infrastructure_subnet_id=props.subnet_id,
                 internal=True,
             ),
-            workload_profiles=[ # TODO(cgavidia): Temporary change looking for improvements.
+            workload_profiles=[
                 WorkloadProfileArgs(
                     name=workload_profile_name,
-                    maximum_count=2,
-                    minimum_count=1,
+                    maximum_count=1,
+                    minimum_count=0,
                     workload_profile_type="D4",
                 )
             ],
@@ -255,10 +255,9 @@ class DnsSidecarComponent(ComponentResource):
                         image="mcr.microsoft.com/azure-cli:2.75.0",
                         name="dnssidecar",
                         command=("/bin/sh", "/mnt/init/init.sh"),
-                        # TODO(cgavidia): Testing if this improves Job execution
                         resources=ContainerResourcesArgs(
-                            cpu=0.5,
-                            memory="1.0Gi",
+                            cpu=4,
+                            memory="16Gi",
                         ),
                         env=[
                             EnvironmentVarArgs(
