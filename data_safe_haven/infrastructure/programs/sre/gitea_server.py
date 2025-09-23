@@ -286,7 +286,7 @@ class SREGiteaServerComponent(ComponentResource):
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__security__INSTALL_LOCK", value="true"
                         ),
-                        containerinstance.EnvironmentVariableArgs(  # TODO(cgavidia): Remove later. Only for testing.
+                        containerinstance.EnvironmentVariableArgs(
                             name="GITEA__migrations__ALLOW_LOCALNETWORKS", value="true"
                         ),
                         containerinstance.EnvironmentVariableArgs(
