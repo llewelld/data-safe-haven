@@ -237,6 +237,10 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                             value=props.workspace_username,
                         ),
                         containerinstance.EnvironmentVariableArgs(
+                            name="WORKSPACE_SERVER_PASSWORD",
+                            secure_value=props.workspace_password,
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
                             name="REPOSITORY_DATA",
                             value=json.dumps(
                                 props.repository_data.model_dump(mode="json")
