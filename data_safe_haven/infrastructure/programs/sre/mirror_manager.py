@@ -216,7 +216,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                     name="mirrormanager",
                     command=["python", "/etc/scripts/mirrors.py"],
                     environment_variables=[
-                        # TODO(cgavidia): Replace later with proper values. And passwords from Secrets.
                         containerinstance.EnvironmentVariableArgs(
                             name="MIRROR_SERVER_URL",
                             value="http://localhost:3000",
@@ -242,9 +241,9 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="REPOSITORY_DATA",
-                            value=json.dumps(
+                            secure_value=json.dumps(
                                 props.repository_data.model_dump(mode="json")
-                            ),  # TODO(cgavidia): Make it a secure value, given the API tokens.
+                            ),
                         ),
                     ],
                     ports=[
@@ -302,12 +301,12 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__log__LEVEL",
                             # Options are: "Trace", "Debug", "Info" [default], "Warn", "Error", "Critical" or "None".
-                            value="Error",  # TODO(cgavidia): Only for testing!
+                            value="Debug",
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__security__INSTALL_LOCK", value="true"
                         ),
-                        containerinstance.EnvironmentVariableArgs(  # TODO(cgavidia): Remove later. Only for testing.
+                        containerinstance.EnvironmentVariableArgs(
                             name="GITEA__migrations__ALLOW_LOCALNETWORKS", value="true"
                         ),
                         containerinstance.EnvironmentVariableArgs(

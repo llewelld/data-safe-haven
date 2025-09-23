@@ -1029,7 +1029,6 @@ class SRENetworkingComponent(ComponentResource):
             resource_group_name=props.resource_group_name,
             security_rules=[
                 # Inbound
-                # TODO(cgavidia): Only for testing!
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
                     description="Allow inbound connections from Gitea Mirror containers.",
@@ -1103,19 +1102,6 @@ class SRENetworkingComponent(ComponentResource):
                     source_address_prefix=SREIpRanges.user_services_containers.prefix,
                     source_port_range="*",
                 ),
-                # TODO(cgavidia): Temporary adding to user-services network.
-                network.SecurityRuleArgs(
-                    access=network.SecurityRuleAccess.ALLOW,
-                    description="Allow outbound connections to external repositories over the internet.",
-                    destination_address_prefix="Internet",
-                    destination_port_ranges=[Ports.HTTP, Ports.HTTPS],
-                    direction=network.SecurityRuleDirection.OUTBOUND,
-                    name="AllowPackagesInternetOutbound",
-                    priority=NetworkingPriorities.EXTERNAL_INTERNET,
-                    protocol=network.SecurityRuleProtocol.TCP,
-                    source_address_prefix=SREIpRanges.user_services_containers.prefix,
-                    source_port_range="*",
-                ),
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
                     description="Allow LDAP client requests over TCP.",
@@ -1124,18 +1110,6 @@ class SRENetworkingComponent(ComponentResource):
                     direction=network.SecurityRuleDirection.OUTBOUND,
                     name="AllowIdentityServersOutbound",
                     priority=NetworkingPriorities.INTERNAL_SRE_IDENTITY_CONTAINERS,
-                    protocol=network.SecurityRuleProtocol.TCP,
-                    source_address_prefix=SREIpRanges.user_services_containers.prefix,
-                    source_port_range="*",
-                ),
-                network.SecurityRuleArgs(  # TODO(cgavidia): Remove later. Only for testing.
-                    access=network.SecurityRuleAccess.ALLOW,
-                    description="Allow outbound connections to user services containers.",
-                    destination_address_prefix=SREIpRanges.user_services_containers.prefix,
-                    destination_port_ranges=[Ports.SSH, Ports.HTTP, Ports.HTTPS],
-                    direction=network.SecurityRuleDirection.OUTBOUND,
-                    name="AllowUserServicesContainersOutbound",
-                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_CONTAINERS,
                     protocol=network.SecurityRuleProtocol.TCP,
                     source_address_prefix=SREIpRanges.user_services_containers.prefix,
                     source_port_range="*",
@@ -1188,18 +1162,6 @@ class SRENetworkingComponent(ComponentResource):
                     source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
                     source_port_range="*",
                 ),
-                # network.SecurityRuleArgs(
-                #     access=network.SecurityRuleAccess.ALLOW,
-                #     description="Allow inbound connections from SRE workspaces.",
-                #     destination_address_prefix=SREIpRanges.user_services_containers.prefix,
-                #     destination_port_ranges=[Ports.SSH, Ports.HTTP, Ports.HTTPS],
-                #     direction=network.SecurityRuleDirection.INBOUND,
-                #     name="AllowWorkspacesInbound",
-                #     priority=NetworkingPriorities.INTERNAL_SRE_WORKSPACES,
-                #     protocol=network.SecurityRuleProtocol.TCP,
-                #     source_address_prefix=SREIpRanges.workspaces.prefix,
-                #     source_port_range="*",
-                # ),
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.DENY,
                     description="Deny all other inbound traffic.",
@@ -1261,19 +1223,7 @@ class SRENetworkingComponent(ComponentResource):
                     source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
                     source_port_range="*",
                 ),
-                # network.SecurityRuleArgs(
-                #     access=network.SecurityRuleAccess.ALLOW,
-                #     description="Allow LDAP client requests over TCP.",
-                #     destination_address_prefix=SREIpRanges.identity_containers.prefix,
-                #     destination_port_ranges=[Ports.LDAP_APRICOT],
-                #     direction=network.SecurityRuleDirection.OUTBOUND,
-                #     name="AllowIdentityServersOutbound",
-                #     priority=NetworkingPriorities.INTERNAL_SRE_IDENTITY_CONTAINERS,
-                #     protocol=network.SecurityRuleProtocol.TCP,
-                #     source_address_prefix=SREIpRanges.user_services_containers.prefix,
-                #     source_port_range="*",
-                # ),
-                network.SecurityRuleArgs(  # TODO(cgavidia): Remove later. Only for testing.
+                network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
                     description="Allow outbound connections to user services containers.",
                     destination_address_prefix=SREIpRanges.user_services_containers.prefix,

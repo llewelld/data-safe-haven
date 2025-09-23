@@ -142,7 +142,6 @@ class SREUserServicesComponent(ComponentResource):
             tags=child_tags,
         )
 
-        # TODO(cgavidia): Move this somewhere else later. And to its own subnet
         self.mirror_monitor = SREGiteaMirrorManagerComponent(
             "gitea_mirror_monitor",
             stack_name,
