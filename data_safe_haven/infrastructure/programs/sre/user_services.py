@@ -90,9 +90,11 @@ class SREUserServicesProps:
             get_id_from_subnet
         )
 
-        self.subnet_gitea_mirrors_id = Output.from_input(subnet_gitea_mirrors).apply(
-            get_id_from_subnet
-        )
+        self.subnet_gitea_mirrors_id: Output[str] | None = None
+        if subnet_gitea_mirrors is not None:
+            self.subnet_gitea_mirrors_id = Output.from_input(
+                subnet_gitea_mirrors
+            ).apply(get_id_from_subnet)
 
         self.subnet_software_repositories_id: Output[str] | None = None
         if subnet_software_repositories is not None:
@@ -142,28 +144,30 @@ class SREUserServicesComponent(ComponentResource):
             tags=child_tags,
         )
 
-        self.mirror_monitor = SREGiteaMirrorManagerComponent(
-            "gitea_mirror_monitor",
-            stack_name,
-            SREGiteMirrorManagerProps(
-                database_subnet_id=props.subnet_containers_support_id,
-                database_password=props.gitea_mirror_database_password,
-                dns_server_ip=props.dns_server_ip,
-                dockerhub_credentials=props.dockerhub_credentials,
-                location=props.location,
-                log_analytics_workspace=props.log_analytics_workspace,
-                mirror_manager_subnet_id=props.subnet_gitea_mirrors_id,
-                repository_data=props.repository_data,
-                resource_group_name=props.resource_group_name,
-                sre_fqdn=props.sre_fqdn,
-                storage_account_key=props.storage_account_key,
-                storage_account_name=props.storage_account_name,
-                workspace_username=self.gitea_server.workspace_username,
-                workspace_password=self.gitea_server.workspace_password,
-            ),
-            opts=child_opts,
-            tags=child_tags,
-        )
+        # Deploy the Gitea Mirror
+        if props.subnet_gitea_mirrors_id is not None:
+            self.mirror_monitor = SREGiteaMirrorManagerComponent(
+                "gitea_mirror_monitor",
+                stack_name,
+                SREGiteMirrorManagerProps(
+                    database_subnet_id=props.subnet_containers_support_id,
+                    database_password=props.gitea_mirror_database_password,
+                    dns_server_ip=props.dns_server_ip,
+                    dockerhub_credentials=props.dockerhub_credentials,
+                    location=props.location,
+                    log_analytics_workspace=props.log_analytics_workspace,
+                    mirror_manager_subnet_id=props.subnet_gitea_mirrors_id,
+                    repository_data=props.repository_data,
+                    resource_group_name=props.resource_group_name,
+                    sre_fqdn=props.sre_fqdn,
+                    storage_account_key=props.storage_account_key,
+                    storage_account_name=props.storage_account_name,
+                    workspace_username=self.gitea_server.workspace_username,
+                    workspace_password=self.gitea_server.workspace_password,
+                ),
+                opts=child_opts,
+                tags=child_tags,
+            )
 
         # Deploy the HedgeDoc server
         self.hedgedoc_server = SREHedgeDocServerComponent(
