@@ -1784,9 +1784,7 @@ class SRENetworkingComponent(ComponentResource):
             private_zone_name=sre_private_dns_zone.name,
             registration_enabled=False,
             resource_group_name=props.resource_group_name,
-            virtual_network=network.SubResourceArgs(
-                id=props.dns_virtual_network_id
-            ),
+            virtual_network=network.SubResourceArgs(id=props.dns_virtual_network_id),
             virtual_network_link_name=Output.concat(
                 "link-to-", props.dns_virtual_network_name
             ),
