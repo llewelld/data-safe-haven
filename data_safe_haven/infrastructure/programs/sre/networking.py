@@ -1786,7 +1786,7 @@ class SRENetworkingComponent(ComponentResource):
             resource_group_name=props.resource_group_name,
             virtual_network=network.SubResourceArgs(
                 id=props.dns_virtual_network_id
-            ),  # type: ignore
+            ),
             virtual_network_link_name=Output.concat(
                 "link-to-", props.dns_virtual_network_name
             ),
@@ -1809,7 +1809,7 @@ class SRENetworkingComponent(ComponentResource):
                 private_zone_name=private_dns_zone.name,
                 registration_enabled=False,
                 resource_group_name=props.resource_group_name,
-                virtual_network=network.SubResourceArgs(id=sre_virtual_network.id),  # type: ignore
+                virtual_network=network.SubResourceArgs(id=sre_virtual_network.id),
                 virtual_network_link_name=Output.concat(
                     "link-to-", sre_virtual_network.name
                 ),

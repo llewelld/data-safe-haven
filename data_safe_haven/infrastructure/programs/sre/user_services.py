@@ -116,7 +116,7 @@ class SREUserServicesComponent(ComponentResource):
     ) -> None:
         super().__init__("dsh:sre:UserServicesComponent", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
-        child_tags = {"component": "user services"} | (tags if tags else {})  # type: ignore
+        child_tags = {"component": "user services"} | (tags if tags else {})
 
         # Deploy the Gitea server
         self.gitea_server = SREGiteaServerComponent(

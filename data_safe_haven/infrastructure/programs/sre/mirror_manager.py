@@ -75,7 +75,7 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
     ) -> None:
         super().__init__("dsh:sre:GiteaServerComponent", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
-        child_tags = {"component": "Gitea server"} | (tags if tags else {})  # type: ignore
+        child_tags = {"component": "Gitea server"} | (tags if tags else {})
 
         # Define configuration file shares
         file_share_mirror_manager = storage.FileShare(
@@ -342,8 +342,8 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
             ],
             diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                 log_analytics=containerinstance.LogAnalyticsArgs(
-                    workspace_id=props.log_analytics_workspace.workspace_id,  # type: ignore
-                    workspace_key=props.log_analytics_workspace.workspace_key,  # type: ignore
+                    workspace_id=props.log_analytics_workspace.workspace_id,
+                    workspace_key=props.log_analytics_workspace.workspace_key,
                 ),
             ),
             dns_config=containerinstance.DnsConfigurationArgs(
