@@ -259,6 +259,33 @@ def synchronise_push_mirrors(
     logger.info(f"Push mirrors synchronised for {owner}/{repository}")
 
 
+def get_repositories(owner: str, gitea_url: str, token: str) -> list[str]:
+    logger.info(f"Searching for repositories of {owner} at {gitea_url}")
+
+    headers: dict[str, str] = {"Content-Type": "application/json"}
+    params: dict[str, str] = {"access_token": token}
+
+    response: Response = requests.get(
+        f"{gitea_url}/api/v1/repos/search",
+        params=params,
+        headers=headers,
+        timeout=DEFAULT_TIMEOUT,
+    )
+
+    if not response.status_code == requests.codes.ok:
+        error_message: str = (
+            f"Could not list repositories for user {owner}. Status code: {response.status_code}. Response {response.json()}"
+        )
+
+        raise Exception(error_message)
+
+    return [
+        repository["name"]
+        for repository in response.json()["data"]
+        if repository["owner"]["username"] == owner
+    ]
+
+
 def main() -> None:
     migration_token = obtain_api_token(
         token_name=MIRROR_SERVER_TOKEN_NAME,
@@ -276,13 +303,31 @@ def main() -> None:
         scopes=["write:repository", "write:user"],
     )
 
-    for repository in REPOSITORY_DATA["repositories"]:
+    for repository_name in get_repositories(
+        owner=MIRROR_SERVER_USERNAME,
+        gitea_url=MIRROR_SERVER_URL,
+        token=migration_token,
+    ):
         delete_repository(
             username=MIRROR_SERVER_USERNAME,
             gitea_url=MIRROR_SERVER_URL,
-            repository_name=repository["repository_name"],
+            repository_name=repository_name,
             token=migration_token,
         )
+
+    for repository_name in get_repositories(
+        owner=WORKSPACE_SERVER_USERNAME,
+        gitea_url=WORKSPACE_SERVER_URL,
+        token=push_mirror_token,
+    ):
+        delete_repository(
+            username=WORKSPACE_SERVER_USERNAME,
+            gitea_url=WORKSPACE_SERVER_URL,
+            repository_name=repository_name,
+            token=push_mirror_token,
+        )
+
+    for repository in REPOSITORY_DATA["repositories"]:
 
         create_migration(
             repository_name=repository["repository_name"],
@@ -290,13 +335,6 @@ def main() -> None:
             repository_auth_token=repository["repository_auth_token"],
             gitea_url=MIRROR_SERVER_URL,
             token=migration_token,
-        )
-
-        delete_repository(
-            username=WORKSPACE_SERVER_USERNAME,
-            gitea_url=WORKSPACE_SERVER_URL,
-            repository_name=f"{repository['repository_name']}-mirror",
-            token=push_mirror_token,
         )
 
         remote_address: str = create_repository(
