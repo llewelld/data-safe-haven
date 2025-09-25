@@ -14,9 +14,12 @@ from data_safe_haven.infrastructure.components import (
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps
+from .gitea_mirror_manager import (
+    SREGiteaMirrorManagerComponent,
+    SREGiteaMirrorManagerProps,
+)
 from .gitea_server import SREGiteaServerComponent, SREGiteaServerProps
 from .hedgedoc_server import SREHedgeDocServerComponent, SREHedgeDocServerProps
-from .mirror_manager import SREGiteaMirrorManagerComponent, SREGiteaMirrorManagerProps
 from .software_repositories import (
     SRESoftwareRepositoriesComponent,
     SRESoftwareRepositoriesProps,
