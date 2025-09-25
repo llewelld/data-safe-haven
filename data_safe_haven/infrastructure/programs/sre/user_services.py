@@ -16,7 +16,7 @@ from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps
 from .gitea_server import SREGiteaServerComponent, SREGiteaServerProps
 from .hedgedoc_server import SREHedgeDocServerComponent, SREHedgeDocServerProps
-from .mirror_manager import SREGiteaMirrorManagerComponent, SREGiteMirrorManagerProps
+from .mirror_manager import SREGiteaMirrorManagerComponent, SREGiteaMirrorManagerProps
 from .software_repositories import (
     SRESoftwareRepositoriesComponent,
     SRESoftwareRepositoriesProps,
@@ -149,7 +149,7 @@ class SREUserServicesComponent(ComponentResource):
             self.mirror_monitor = SREGiteaMirrorManagerComponent(
                 "gitea_mirror_monitor",
                 stack_name,
-                SREGiteMirrorManagerProps(
+                SREGiteaMirrorManagerProps(
                     database_subnet_id=props.subnet_containers_support_id,
                     database_password=props.gitea_mirror_database_password,
                     dns_server_ip=props.dns_server_ip,

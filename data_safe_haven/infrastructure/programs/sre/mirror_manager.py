@@ -23,8 +23,8 @@ from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
 
 
-class SREGiteMirrorManagerProps:
-    """Properties for SREGiteMirrorManagerComponent"""
+class SREGiteaMirrorManagerProps:
+    """Properties for SREGiteaMirrorManagerProps"""
 
     def __init__(
         self,
@@ -69,7 +69,7 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
         self,
         name: str,
         stack_name: str,
-        props: SREGiteMirrorManagerProps,
+        props: SREGiteaMirrorManagerProps,
         opts: ResourceOptions | None = None,
         tags: Input[Mapping[str, Input[str]]] | None = None,
     ) -> None:

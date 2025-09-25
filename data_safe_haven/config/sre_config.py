@@ -142,7 +142,7 @@ class SREConfig(AzureSerialisableModel):
                         GitRepository.model_construct(
                             repository_name="An identifier for the GitHub repository to mirror.",
                             repository_url="The URL of the GitHub repository to mirror.",  # type: ignore
-                            repository_auth_token="A GitHub personal access token, with access to the repository to mirror.",
+                            repository_auth_token="A read-only GitHub personal access token, with access to the repository to mirror.",
                         )
                     ]
                 ),
