@@ -158,6 +158,8 @@ class DeclarativeSRE:
                 shm_subscription_id=shm_subscription_id,
                 shm_zone_name=shm_fqdn,
                 sre_name=self.config.name,
+                use_gitea_mirror=not self.config.sre.allow_workspace_internet
+                and len(self.config.user_services.gitea_mirror.repositories) > 0,
                 use_software_repositories=not self.config.sre.allow_workspace_internet,
                 user_public_ip_ranges=self.config.sre.research_user_ip_addresses,
             ),

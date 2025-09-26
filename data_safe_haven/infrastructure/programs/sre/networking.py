@@ -31,17 +31,18 @@ class SRENetworkingProps:
         shm_subscription_id: Input[str],
         shm_zone_name: Input[str],
         sre_name: Input[str],
+        use_gitea_mirror: bool,  # noqa: FBT001
         use_software_repositories: bool,  # noqa: FBT001
         user_public_ip_ranges: Input[list[str]] | AzureServiceTag,
     ) -> None:
         # Other variables
         self.dns_private_zones = dns_private_zones
-        self.dns_virtual_network_id = Output.from_input(dns_virtual_network).apply(
-            get_id_from_vnet
-        )
-        self.dns_virtual_network_name = Output.from_input(dns_virtual_network).apply(
-            get_name_from_vnet
-        )
+        self.dns_virtual_network_id: Output[str] = Output.from_input(
+            dns_virtual_network
+        ).apply(get_id_from_vnet)
+        self.dns_virtual_network_name: Output[str] = Output.from_input(
+            dns_virtual_network
+        ).apply(get_name_from_vnet)
         self.dns_server_ip = dns_server_ip
         self.location = location
         self.resource_group_name = resource_group_name
@@ -51,6 +52,7 @@ class SRENetworkingProps:
         self.shm_subscription_id = shm_subscription_id
         self.shm_zone_name = shm_zone_name
         self.sre_name = sre_name
+        self.use_gitea_mirror = use_gitea_mirror
         self.use_software_repositories = use_software_repositories
         self.user_public_ip_ranges = user_public_ip_ranges
 
@@ -1303,8 +1305,6 @@ class SRENetworkingComponent(ComponentResource):
             network.NetworkSecurityGroup | None
         ) = None
 
-        self.nsg_user_services_gitea_mirror: network.NetworkSecurityGroup | None = None
-
         if props.use_software_repositories:
             self.nsg_user_services_software_repositories = (
                 self.get_nsg_user_services_software_repositories(
@@ -1315,6 +1315,8 @@ class SRENetworkingComponent(ComponentResource):
                 )
             )
 
+        self.nsg_user_services_gitea_mirror: network.NetworkSecurityGroup | None = None
+        if props.use_gitea_mirror:
             self.nsg_user_services_gitea_mirror = (
                 self.get_nsg_user_services_gitea_mirror(
                     stack_name,
@@ -1922,6 +1924,7 @@ class SRENetworkingComponent(ComponentResource):
                 virtual_network_name=sre_virtual_network.name,
             )
 
+        if props.use_gitea_mirror:
             self.subnet_user_services_gitea_mirror = network.get_subnet_output(
                 subnet_name=self.subnet_user_services_gitea_mirror_name,
                 resource_group_name=props.resource_group_name,
@@ -2380,10 +2383,7 @@ class SRENetworkingComponent(ComponentResource):
             )
 
         # User services Gitea mirrors
-        if (
-            props.use_software_repositories
-            and self.nsg_user_services_gitea_mirror is not None
-        ):
+        if props.use_gitea_mirror and self.nsg_user_services_gitea_mirror is not None:
             subnets.append(
                 network.SubnetArgs(
                     address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
