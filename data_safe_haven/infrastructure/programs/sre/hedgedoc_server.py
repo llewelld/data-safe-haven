@@ -145,7 +145,7 @@ class SREHedgeDocServerComponent(ComponentResource):
             container_group_name=self.container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image="caddy:2.10.0",
+                    image="caddy:2.10.2",
                     name="caddy"[:63],
                     ports=[
                         containerinstance.ContainerPortArgs(
