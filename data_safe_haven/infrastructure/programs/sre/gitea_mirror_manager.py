@@ -80,16 +80,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
         child_tags = {"component": "Gitea server"} | (tags if tags else {})
 
         # Define configuration file shares
-        file_share_mirror_manager = storage.FileShare(
-            f"{self._name}_file_share_mirror_manager",
-            access_tier=storage.ShareAccessTier.TRANSACTION_OPTIMIZED,
-            account_name=props.storage_account_name,
-            resource_group_name=props.resource_group_name,
-            share_name="mirror-manager",
-            share_quota=1,
-            signed_identifiers=[],
-            opts=child_opts,
-        )
 
         file_share_gitea_mirror_data = storage.FileShare(
             f"{self._name}_file_share_gitea_mirror_data",
@@ -170,25 +160,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
             ),
         )
 
-        # Upload Python script file
-        python_script_reader = FileReader(
-            resources_path / "mirror_manager" / "mirrors.py"
-        )
-
-        file_share_mirror_manager_python_script = FileShareFile(
-            f"{self._name}_file_share_gitea_caddy_caddyfile",
-            FileShareFileProps(
-                destination_path=python_script_reader.name,
-                share_name=file_share_mirror_manager.name,
-                file_contents=Output.secret(python_script_reader.file_contents()),
-                storage_account_key=props.storage_account_key,
-                storage_account_name=props.storage_account_name,
-            ),
-            opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=file_share_mirror_manager)
-            ),
-        )
-
         # Define a PostgreSQL server and default database
         db_gitea_repository_name = "giteamirror"
         db_server_gitea = PostgresqlDatabaseComponent(
@@ -217,9 +188,8 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
             container_group_name=self.container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image="xr09/python-requests:3.11",
+                    image="ghcr.io/alan-turing-institute/gitea-mirror-manager:main",
                     name="mirrormanager",
-                    command=["python", "/etc/scripts/mirrors.py"],
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
                             name="MIRROR_SERVER_URL",
@@ -270,13 +240,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                             memory_in_gb=0.5,
                         ),
                     ),
-                    volume_mounts=[
-                        containerinstance.VolumeMountArgs(
-                            mount_path="/etc/scripts",
-                            name="mirror-manager-etc-scripts",
-                            read_only=True,
-                        ),
-                    ],
                 ),
                 containerinstance.ContainerArgs(
                     image="gitea/gitea:1.24.2",
@@ -351,11 +314,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                             name="gitea-mirror-app-custom",
                             read_only=True,
                         ),
-                        containerinstance.VolumeMountArgs(
-                            mount_path="/data",
-                            name="gitea-mirror-data",
-                            read_only=False,
-                        ),
                     ],
                 ),
             ],
@@ -398,14 +356,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
             volumes=[
                 containerinstance.VolumeArgs(
                     azure_file=containerinstance.AzureFileVolumeArgs(
-                        share_name=file_share_mirror_manager.name,
-                        storage_account_key=props.storage_account_key,
-                        storage_account_name=props.storage_account_name,
-                    ),
-                    name="mirror-manager-etc-scripts",
-                ),
-                containerinstance.VolumeArgs(
-                    azure_file=containerinstance.AzureFileVolumeArgs(
                         share_name=file_share_gitea_mirror_data.name,
                         storage_account_key=props.storage_account_key,
                         storage_account_name=props.storage_account_name,
@@ -426,7 +376,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                 ResourceOptions(
                     delete_before_replace=True,
                     depends_on=[
-                        file_share_mirror_manager_python_script,
                         file_share_gitea_gitea_entrypoint_sh,
                         file_share_gitea_gitea_configure_sh,
                     ],
