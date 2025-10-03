@@ -188,7 +188,7 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
             container_group_name=self.container_group_name,
             containers=[
                 containerinstance.ContainerArgs(
-                    image="ghcr.io/alan-turing-institute/gitea-mirror-manager:main",
+                    image="ghcr.io/alan-turing-institute/gitea-mirror-manager:v0.0.1",
                     name="mirrormanager",
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
