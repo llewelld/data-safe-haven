@@ -87,7 +87,8 @@ def create_migration(
     repository_auth_token: str,
     gitea_url: str,
     token: str,
-) -> None:
+    service: str,
+) -> tuple[Any, Any]:
     logger.info(f"Creating a migration for repository {repostiory_url}")
 
     headers: dict[str, str] = {"Content-Type": "application/json"}
@@ -100,7 +101,7 @@ def create_migration(
         "mirror_interval": "0h10m0s",
         "private": False,
         "repo_name": repository_name,
-        "service": "github",
+        "service": service,
     }
 
     response: Response = requests.post(
@@ -117,8 +118,11 @@ def create_migration(
         )
 
         raise Exception(error_message)
-    else:
-        logger.info(f"Migration created at {response.json()['html_url']}")
+
+    logger.info(
+        f"Migration created for user {response.json()['owner']['username']} at repository {response.json()['name']}"
+    )
+    return response.json()["owner"]["username"], response.json()["name"]
 
 
 def delete_repository(
@@ -162,103 +166,6 @@ def obtain_api_token(
     return token_value
 
 
-def create_push_mirror(
-    owner: str,
-    repository: str,
-    remote_address: str,
-    remote_password: str,
-    remote_username: str,
-    gitea_url: str,
-    token: str,
-) -> None:
-    logger.info(f"Creating a push mirror  for {repository} to {remote_address}")
-
-    headers: dict[str, str] = {"Content-Type": "application/json"}
-    params: dict[str, str] = {"access_token": token}
-
-    data: dict[str, str | bool] = {
-        "interval": "0h10m0s",
-        "remote_address": remote_address,
-        "remote_password": remote_password,
-        "remote_username": remote_username,
-        "sync_on_commit": True,
-    }
-
-    response: Response = requests.post(
-        f"{gitea_url}/api/v1/repos/{owner}/{repository}/push_mirrors",
-        params=params,
-        headers=headers,
-        data=json.dumps(data),
-        timeout=DEFAULT_TIMEOUT,
-    )
-
-    if not response.status_code == requests.codes.ok:
-        error_message: str = (
-            f"Cannot create push mirror for repository {repository}. Status code: {response.status_code}. Response {response.json()}"
-        )
-
-        raise Exception(error_message)
-
-    logger.info(f"Push mirror created to {remote_address}")
-
-
-def create_repository(
-    user_name: str, repository_name: str, gitea_url: str, token: str
-) -> Any:
-    logger.info(f"Creating repository {repository_name} for user {user_name}")
-
-    headers: dict[str, str] = {"Content-Type": "application/json"}
-    params: dict[str, str] = {"access_token": token}
-
-    data: dict[str, str | bool] = {
-        "name": repository_name,
-        "private": False,
-    }
-
-    response: Response = requests.post(
-        f"{gitea_url}/api/v1/user/repos",
-        params=params,
-        headers=headers,
-        data=json.dumps(data),
-        timeout=DEFAULT_TIMEOUT,
-    )
-
-    if not response.status_code == requests.codes.created:
-        error_message: str = (
-            f"Cannot create repository {repository_name} for user {user_name}. Status code: {response.status_code}. Response {response.json()}"
-        )
-
-        raise Exception(error_message)
-
-    logger.info(f"Repository created at {response.json()['html_url']}")
-    return response.json()["clone_url"]
-
-
-def synchronise_push_mirrors(
-    owner: str, repository: str, gitea_url: str, token: str
-) -> None:
-    logger.info(f"Synchronising all push mirrors for {owner}/{repository}")
-
-    headers: dict[str, str] = {"Content-Type": "application/json"}
-    params: dict[str, str] = {"access_token": token}
-
-    response: Response = requests.post(
-        f"{gitea_url}/api/v1/repos/{owner}/{repository}/push_mirrors-sync",
-        params=params,
-        headers=headers,
-        timeout=DEFAULT_TIMEOUT,
-    )
-
-    if not response.status_code == requests.codes.ok:
-        error_message: str = (
-            f"Cannot synchronise push mirrors for repository {repository}. Status code: {response.status_code}. Response {response.json()}"
-        )
-
-        raise Exception(error_message)
-
-    logger.info(f"Push mirrors synchronised for {owner}/{repository}")
-
-
 def get_repositories(owner: str, gitea_url: str, token: str) -> list[str]:
     logger.info(f"Searching for repositories of {owner} at {gitea_url}")
 
@@ -287,7 +194,7 @@ def get_repositories(owner: str, gitea_url: str, token: str) -> list[str]:
 
 
 def main() -> None:
-    migration_token = obtain_api_token(
+    gitea_mirror_token = obtain_api_token(
         token_name=MIRROR_SERVER_TOKEN_NAME,
         username=MIRROR_SERVER_USERNAME,
         password=MIRROR_SERVER_PASSWORD,
@@ -295,7 +202,7 @@ def main() -> None:
         gitea_url=MIRROR_SERVER_URL,
     )
 
-    push_mirror_token = obtain_api_token(
+    workspace_gitea_token = obtain_api_token(
         token_name=WORKSPACE_SERVER_TOKEN_NAME,
         username=WORKSPACE_SERVER_USERNAME,
         password=WORKSPACE_SERVER_PASSWORD,
@@ -306,59 +213,45 @@ def main() -> None:
     for repository_name in get_repositories(
         owner=MIRROR_SERVER_USERNAME,
         gitea_url=MIRROR_SERVER_URL,
-        token=migration_token,
+        token=gitea_mirror_token,
     ):
         delete_repository(
             username=MIRROR_SERVER_USERNAME,
             gitea_url=MIRROR_SERVER_URL,
             repository_name=repository_name,
-            token=migration_token,
+            token=gitea_mirror_token,
         )
 
     for repository_name in get_repositories(
         owner=WORKSPACE_SERVER_USERNAME,
         gitea_url=WORKSPACE_SERVER_URL,
-        token=push_mirror_token,
+        token=workspace_gitea_token,
     ):
         delete_repository(
             username=WORKSPACE_SERVER_USERNAME,
             gitea_url=WORKSPACE_SERVER_URL,
             repository_name=repository_name,
-            token=push_mirror_token,
+            token=workspace_gitea_token,
         )
 
     for repository in REPOSITORY_DATA["repositories"]:
 
-        create_migration(
+        owner, repository_name = create_migration(
             repository_name=repository["repository_name"],
             repostiory_url=repository["repository_url"],
             repository_auth_token=repository["repository_auth_token"],
             gitea_url=MIRROR_SERVER_URL,
-            token=migration_token,
+            token=gitea_mirror_token,
+            service="github",  # TODO(cgavidia): Maybe this can be a parameter in config.
         )
 
-        remote_address: str = create_repository(
-            user_name=WORKSPACE_SERVER_USERNAME,
+        create_migration(
             repository_name=f"{repository['repository_name']}-mirror",
+            repostiory_url=f"{MIRROR_SERVER_URL}/{owner}/{repository_name}",
+            repository_auth_token=gitea_mirror_token,
             gitea_url=WORKSPACE_SERVER_URL,
-            token=push_mirror_token,
-        )
-
-        create_push_mirror(
-            owner=MIRROR_SERVER_USERNAME,
-            repository=repository["repository_name"],
-            remote_address=remote_address,
-            remote_username=WORKSPACE_SERVER_USERNAME,
-            remote_password=WORKSPACE_SERVER_PASSWORD,
-            gitea_url=MIRROR_SERVER_URL,
-            token=migration_token,
-        )
-
-        synchronise_push_mirrors(
-            owner=MIRROR_SERVER_USERNAME,
-            repository=repository["repository_name"],
-            gitea_url=MIRROR_SERVER_URL,
-            token=migration_token,
+            token=workspace_gitea_token,
+            service="gitea",
         )
 
 

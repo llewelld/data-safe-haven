@@ -32,6 +32,7 @@ class SREGiteaMirrorManagerProps:
         database_subnet_id: Input[str],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
+        gitea_workspace_dns_record: str,
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
         mirror_manager_subnet_id: Input[str],
@@ -51,6 +52,7 @@ class SREGiteaMirrorManagerProps:
         )
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
+        self.gitea_workspace_dns_record = gitea_workspace_dns_record
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
         self.mirror_manager_subnet_id = mirror_manager_subnet_id
@@ -207,6 +209,9 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
 
         # Define the container group.
         self.container_group_name = f"{stack_name}-container-group-mirror-manager"
+        self.dns_record_name = "giteamirror"
+        self.gitea_default_port: int = 3000
+
         self.container_group = containerinstance.ContainerGroup(
             f"{self._name}_container_group",
             container_group_name=self.container_group_name,
@@ -218,7 +223,11 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
                             name="MIRROR_SERVER_URL",
-                            value="http://localhost:3000",
+                            value=Output.concat(
+                                f"http://{self.dns_record_name}.",
+                                props.sre_fqdn,
+                                f":{self.gitea_default_port}",
+                            ),
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="MIRROR_SERVER_USERNAME", value=mirror_username
@@ -229,7 +238,10 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="WORKSPACE_SERVER_URL",
-                            value=Output.concat("http://gitea.", props.sre_fqdn),
+                            value=Output.concat(
+                                f"http://{props.gitea_workspace_dns_record}.",
+                                props.sre_fqdn,
+                            ),
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="WORKSPACE_SERVER_USERNAME",
@@ -305,6 +317,13 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__security__INSTALL_LOCK", value="true"
+                        ),
+                        containerinstance.EnvironmentVariableArgs(
+                            name="GITEA__server__DOMAIN",
+                            value=Output.concat(
+                                f"{self.dns_record_name}.",
+                                props.sre_fqdn,
+                            ),
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__migrations__ALLOW_LOCALNETWORKS", value="true"
@@ -417,7 +436,6 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
             tags=child_tags,
         )
 
-        self.dns_record_name = "giteamirror"
         self.local_dns = LocalDnsRecordComponent(
             f"{self._name}_giteamirror_dns_record_set",
             LocalDnsRecordProps(

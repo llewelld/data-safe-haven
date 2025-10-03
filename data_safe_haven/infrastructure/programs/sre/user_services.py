@@ -157,6 +157,7 @@ class SREUserServicesComponent(ComponentResource):
                     database_password=props.gitea_mirror_database_password,
                     dns_server_ip=props.dns_server_ip,
                     dockerhub_credentials=props.dockerhub_credentials,
+                    gitea_workspace_dns_record=self.gitea_server.dns_record_name,
                     location=props.location,
                     log_analytics_workspace=props.log_analytics_workspace,
                     mirror_manager_subnet_id=props.subnet_gitea_mirrors_id,

@@ -1129,6 +1129,18 @@ class SRENetworkingComponent(ComponentResource):
                     source_port_range="*",
                 ),
                 network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to Gitea Mirror containers.",
+                    destination_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowGiteaMirrorOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_GITEA_MIRROR,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.DENY,
                     description="Deny all other outbound traffic.",
                     destination_address_prefix="*",
@@ -1954,14 +1966,14 @@ class SRENetworkingComponent(ComponentResource):
                 # Inbound
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
-                    description="Allow inbound connections from Gitea Mirror containers.",
+                    description="Allow inbound connections from User Services containers.",
                     destination_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
                     destination_port_range="*",
                     direction=network.SecurityRuleDirection.INBOUND,
-                    name="AllowUserServicesGiteaMirrorInbound",
+                    name="AllowUserServicesContainersInbound",
                     priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_GITEA_MIRROR,
                     protocol=network.SecurityRuleProtocol.TCP,
-                    source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    source_address_prefix=SREIpRanges.user_services_containers.prefix,
                     source_port_range="*",
                 ),
                 network.SecurityRuleArgs(
