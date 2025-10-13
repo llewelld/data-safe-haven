@@ -145,6 +145,14 @@ def subnet_user_services_software_repositories() -> network.GetSubnetResult:
 
 
 @fixture
+def subnet_user_services_gitea_mirror() -> network.GetSubnetResult:
+    return network.GetSubnetResult(
+        address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+        id="subnet_user_services_gitea_mirror_id",
+    )
+
+
+@fixture
 def subnet_user_services_containers() -> network.GetSubnetResult:
     return network.GetSubnetResult(
         address_prefix=SREIpRanges.user_services_containers.prefix,

@@ -4,7 +4,7 @@ from data_safe_haven.infrastructure.common import SREDnsIpRanges, SREIpRanges
 
 class TestSREIpRanges:
 
-    def test_vnet_and_subnets(self):
+    def test_vnet_and_subnets(self) -> None:
         assert SREIpRanges.vnet == AzureIPv4Range("10.0.0.0", "10.0.255.255")
         assert SREIpRanges.application_gateway == AzureIPv4Range(
             "10.0.0.0", "10.0.0.255"
@@ -36,15 +36,19 @@ class TestSREIpRanges:
         assert SREIpRanges.user_services_containers_support == AzureIPv4Range(
             "10.0.1.232", "10.0.1.239"
         )
-        assert SREIpRanges.user_services_databases == AzureIPv4Range(
+        assert SREIpRanges.user_services_gitea_mirror == AzureIPv4Range(
             "10.0.1.240", "10.0.1.247"
         )
-        assert SREIpRanges.user_services_software_repositories == AzureIPv4Range(
+        assert SREIpRanges.user_services_databases == AzureIPv4Range(
             "10.0.1.248", "10.0.1.255"
         )
-        assert SREIpRanges.workspaces == AzureIPv4Range("10.0.2.0", "10.0.2.255")
+        assert SREIpRanges.user_services_software_repositories == AzureIPv4Range(
+            "10.0.2.0", "10.0.2.7"
+        )
+
+        assert SREIpRanges.workspaces == AzureIPv4Range("10.0.3.0", "10.0.3.255")
 
 
 class TestSREDnsIpRanges:
-    def test_vnet(self):
+    def test_vnet(self) -> None:
         assert SREDnsIpRanges.vnet == AzureIPv4Range("192.168.0.0", "192.168.0.7")

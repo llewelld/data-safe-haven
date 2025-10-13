@@ -61,6 +61,7 @@ def firewall_props_internet_enabled(
     subnet_guacamole_containers: network.GetSubnetResult,
     subnet_identity_containers: network.GetSubnetResult,
     subnet_dns_sidecar: network.GetSubnetResult,
+    subnet_user_services_gitea_mirror: network.GetSubnetResult,
     subnet_user_services_software_repositories: network.GetSubnetResult,
     subnet_workspaces: network.GetSubnetResult,
 ) -> SREFirewallProps:
@@ -77,6 +78,7 @@ def firewall_props_internet_enabled(
         subnet_firewall_management=subnet_firewall_management,
         subnet_guacamole_containers=subnet_guacamole_containers,
         subnet_identity_containers=subnet_identity_containers,
+        subnet_user_services_gitea_mirror=subnet_user_services_gitea_mirror,
         subnet_user_services_software_repositories=subnet_user_services_software_repositories,
         subnet_workspaces=subnet_workspaces,
     )
@@ -95,6 +97,7 @@ def firewall_props_internet_disabled(
     subnet_firewall_management: network.GetSubnetResult,
     subnet_guacamole_containers: network.GetSubnetResult,
     subnet_identity_containers: network.GetSubnetResult,
+    subnet_user_services_gitea_mirror: network.GetSubnetResult,
     subnet_user_services_software_repositories: network.GetSubnetResult,
     subnet_workspaces: network.GetSubnetResult,
 ) -> SREFirewallProps:
@@ -111,6 +114,7 @@ def firewall_props_internet_disabled(
         subnet_firewall_management=subnet_firewall_management,
         subnet_guacamole_containers=subnet_guacamole_containers,
         subnet_identity_containers=subnet_identity_containers,
+        subnet_user_services_gitea_mirror=subnet_user_services_gitea_mirror,
         subnet_user_services_software_repositories=subnet_user_services_software_repositories,
         subnet_workspaces=subnet_workspaces,
     )
@@ -124,7 +128,7 @@ class TestSREFirewallComponent:
         firewall_props_internet_enabled: SREFirewallProps,
         stack_name: str,
         tags: dict[str, str],
-    ):
+    ) -> None:
 
         firewall_component: SREFirewallComponent = SREFirewallComponent(
             name="sre_firewall_with_internet",
@@ -135,7 +139,7 @@ class TestSREFirewallComponent:
 
         def assert_on_firewall_rules(
             args: list,
-        ):
+        ) -> None:
             application_rule_collections = args[0]
             network_rule_collections = args[1]
 
@@ -162,7 +166,7 @@ class TestSREFirewallComponent:
         firewall_props_internet_disabled: SREFirewallProps,
         stack_name: str,
         tags: dict[str, str],
-    ):
+    ) -> None:
         firewall_component: SREFirewallComponent = SREFirewallComponent(
             name="sre_firewall_with_internet",
             stack_name=stack_name,
@@ -172,7 +176,7 @@ class TestSREFirewallComponent:
 
         def assert_on_firewall_rules(
             args: list,
-        ):
+        ) -> None:
             application_rule_collections = args[0]
             network_rule_collections = args[1]
 

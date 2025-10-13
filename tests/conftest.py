@@ -627,6 +627,8 @@ def sre_config_yaml(request):
             cron_expression: "*/30 * * * *"
             replica_timeout: 600
             retry_limit: 0
+        gitea_mirror:
+            repositories: []
     """.replace(
         "guid_subscription", request.config.guid_subscription
     ).replace(

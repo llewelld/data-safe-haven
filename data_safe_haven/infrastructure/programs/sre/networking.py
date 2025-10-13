@@ -31,17 +31,18 @@ class SRENetworkingProps:
         shm_subscription_id: Input[str],
         shm_zone_name: Input[str],
         sre_name: Input[str],
+        use_gitea_mirror: bool,  # noqa: FBT001
         use_software_repositories: bool,  # noqa: FBT001
         user_public_ip_ranges: Input[list[str]] | AzureServiceTag,
     ) -> None:
         # Other variables
         self.dns_private_zones = dns_private_zones
-        self.dns_virtual_network_id = Output.from_input(dns_virtual_network).apply(
-            get_id_from_vnet
-        )
-        self.dns_virtual_network_name = Output.from_input(dns_virtual_network).apply(
-            get_name_from_vnet
-        )
+        self.dns_virtual_network_id: Output[str] = Output.from_input(
+            dns_virtual_network
+        ).apply(get_id_from_vnet)
+        self.dns_virtual_network_name: Output[str] = Output.from_input(
+            dns_virtual_network
+        ).apply(get_name_from_vnet)
         self.dns_server_ip = dns_server_ip
         self.location = location
         self.resource_group_name = resource_group_name
@@ -51,6 +52,7 @@ class SRENetworkingProps:
         self.shm_subscription_id = shm_subscription_id
         self.shm_zone_name = shm_zone_name
         self.sre_name = sre_name
+        self.use_gitea_mirror = use_gitea_mirror
         self.use_software_repositories = use_software_repositories
         self.user_public_ip_ranges = user_public_ip_ranges
 
@@ -1031,6 +1033,18 @@ class SRENetworkingComponent(ComponentResource):
                 # Inbound
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow inbound connections from Gitea Mirror containers.",
+                    destination_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    destination_port_ranges=[Ports.SSH, Ports.HTTP, Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="AllowGiteaMirrorInbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_CONTAINERS,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
                     description="Allow inbound connections from SRE workspaces.",
                     destination_address_prefix=SREIpRanges.user_services_containers.prefix,
                     destination_port_ranges=[Ports.SSH, Ports.HTTP, Ports.HTTPS],
@@ -1115,6 +1129,18 @@ class SRENetworkingComponent(ComponentResource):
                     source_port_range="*",
                 ),
                 network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to Gitea Mirror containers.",
+                    destination_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowGiteaMirrorOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_GITEA_MIRROR,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.DENY,
                     description="Deny all other outbound traffic.",
                     destination_address_prefix="*",
@@ -1130,6 +1156,7 @@ class SRENetworkingComponent(ComponentResource):
             opts=child_opts,
             tags=child_tags,
         )
+
         self.nsg_user_services_containers_support = network.NetworkSecurityGroup(
             f"{self._name}_nsg_user_services_containers_support",
             location=props.location,
@@ -1147,6 +1174,18 @@ class SRENetworkingComponent(ComponentResource):
                     priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_CONTAINERS,
                     protocol=network.SecurityRuleProtocol.TCP,
                     source_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow inbound connections from user services gitea mirror.",
+                    destination_address_prefix=SREIpRanges.user_services_containers_support.prefix,
+                    destination_port_ranges=[Ports.POSTGRESQL],
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="AllowUserServicesGiteaMirrorInbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_GITEA_MIRROR,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
                     source_port_range="*",
                 ),
                 network.SecurityRuleArgs(
@@ -1281,6 +1320,17 @@ class SRENetworkingComponent(ComponentResource):
         if props.use_software_repositories:
             self.nsg_user_services_software_repositories = (
                 self.get_nsg_user_services_software_repositories(
+                    stack_name,
+                    props,
+                    child_opts,
+                    child_tags,
+                )
+            )
+
+        self.nsg_user_services_gitea_mirror: network.NetworkSecurityGroup | None = None
+        if props.use_gitea_mirror:
+            self.nsg_user_services_gitea_mirror = (
+                self.get_nsg_user_services_gitea_mirror(
                     stack_name,
                     props,
                     child_opts,
@@ -1600,6 +1650,7 @@ class SRENetworkingComponent(ComponentResource):
         self.subnet_identity_containers_name = "IdentityContainersSubnet"
         self.subnet_monitoring_name = "MonitoringSubnet"
         self.subnet_user_services_containers_name = "UserServicesContainersSubnet"
+        self.subnet_user_services_gitea_mirror_name = "UserServicesGiteaMirrorSubnet"
         self.subnet_user_services_containers_support_name = (
             "UserServicesContainersSupportSubnet"
         )
@@ -1874,9 +1925,20 @@ class SRENetworkingComponent(ComponentResource):
             Output[network.GetSubnetResult] | None
         ) = None
 
+        self.subnet_user_services_gitea_mirror: (
+            Output[network.GetSubnetResult] | None
+        ) = None
+
         if props.use_software_repositories:
             self.subnet_user_services_software_repositories = network.get_subnet_output(
                 subnet_name=self.subnet_user_services_software_repositories_name,
+                resource_group_name=props.resource_group_name,
+                virtual_network_name=sre_virtual_network.name,
+            )
+
+        if props.use_gitea_mirror:
+            self.subnet_user_services_gitea_mirror = network.get_subnet_output(
+                subnet_name=self.subnet_user_services_gitea_mirror_name,
                 resource_group_name=props.resource_group_name,
                 virtual_network_name=sre_virtual_network.name,
             )
@@ -1887,6 +1949,134 @@ class SRENetworkingComponent(ComponentResource):
             virtual_network_name=sre_virtual_network.name,
         )
         self.virtual_network = sre_virtual_network
+
+    def get_nsg_user_services_gitea_mirror(
+        self,
+        stack_name: str,
+        props: SRENetworkingProps,
+        child_opts: ResourceOptions | None,
+        child_tags: Input[Mapping[str, Input[str]]] | None,
+    ) -> network.NetworkSecurityGroup:
+        return network.NetworkSecurityGroup(
+            f"{self._name}_nsg_user_gitea_mirror",
+            location=props.location,
+            network_security_group_name=f"{stack_name}-nsg-user-services-gitea-mirror",
+            resource_group_name=props.resource_group_name,
+            security_rules=[
+                # Inbound
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow inbound connections from User Services containers.",
+                    destination_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="AllowUserServicesContainersInbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_GITEA_MIRROR,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.DENY,
+                    description="Deny all other inbound traffic.",
+                    destination_address_prefix="*",
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="DenyAllOtherInbound",
+                    priority=NetworkingPriorities.ALL_OTHER,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix="*",
+                    source_port_range="*",
+                ),
+                # Outbound
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.DENY,
+                    description="Deny outbound connections to Azure Platform DNS endpoints (including 168.63.129.16), which are not included in the 'Internet' service tag.",
+                    destination_address_prefix="AzurePlatformDNS",
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="DenyAzurePlatformDnsOutbound",
+                    priority=NetworkingPriorities.AZURE_PLATFORM_DNS,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix="*",
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to DNS servers.",
+                    destination_address_prefix=SREDnsIpRanges.vnet.prefix,
+                    destination_port_ranges=[Ports.DNS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowDNSServersOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_DNS_SERVERS,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to configuration data endpoints.",
+                    destination_address_prefix=SREIpRanges.data_configuration.prefix,
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowDataConfigurationEndpointsOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_DATA_CONFIGURATION,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to external repositories over the internet.",
+                    destination_address_prefix="Internet",
+                    destination_port_ranges=[Ports.HTTP, Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowPackagesInternetOutbound",
+                    priority=NetworkingPriorities.EXTERNAL_INTERNET,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to user services containers.",
+                    destination_address_prefix=SREIpRanges.user_services_containers.prefix,
+                    destination_port_ranges=[Ports.SSH, Ports.HTTP, Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowUserServicesContainersOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_CONTAINERS,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to container support services.",
+                    destination_address_prefix=SREIpRanges.user_services_containers_support.prefix,
+                    destination_port_ranges=[Ports.POSTGRESQL],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowUserServicesContainersSupportOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_CONTAINERS_SUPPORT,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.DENY,
+                    description="Deny all other outbound traffic.",
+                    destination_address_prefix="*",
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="DenyAllOtherOutbound",
+                    priority=NetworkingPriorities.ALL_OTHER,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix="*",
+                    source_port_range="*",
+                ),
+            ],
+            opts=child_opts,
+            tags=child_tags,
+        )
 
     def get_nsg_user_services_software_repositories(
         self,
@@ -2199,6 +2389,26 @@ class SRENetworkingComponent(ComponentResource):
                     name=self.subnet_user_services_software_repositories_name,
                     network_security_group=network.NetworkSecurityGroupArgs(
                         id=self.nsg_user_services_software_repositories.id
+                    ),
+                    route_table=network.RouteTableArgs(id=self.route_table.id),
+                )
+            )
+
+        # User services Gitea mirrors
+        if props.use_gitea_mirror and self.nsg_user_services_gitea_mirror is not None:
+            subnets.append(
+                network.SubnetArgs(
+                    address_prefix=SREIpRanges.user_services_gitea_mirror.prefix,
+                    delegations=[
+                        network.DelegationArgs(
+                            name="SubnetDelegationContainerGroups",
+                            service_name="Microsoft.ContainerInstance/containerGroups",
+                            type="Microsoft.Network/virtualNetworks/subnets/delegations",
+                        ),
+                    ],
+                    name=self.subnet_user_services_gitea_mirror_name,
+                    network_security_group=network.NetworkSecurityGroupArgs(
+                        id=self.nsg_user_services_gitea_mirror.id
                     ),
                     route_table=network.RouteTableArgs(id=self.route_table.id),
                 )

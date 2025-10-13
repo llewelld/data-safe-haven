@@ -37,6 +37,7 @@ class SREFirewallProps:
         subnet_firewall_management: Input[network.GetSubnetResult],
         subnet_guacamole_containers: Input[network.GetSubnetResult],
         subnet_identity_containers: Input[network.GetSubnetResult],
+        subnet_user_services_gitea_mirror: Input[network.GetSubnetResult] | None,
         subnet_user_services_software_repositories: (
             Input[network.GetSubnetResult] | None
         ),
@@ -74,12 +75,19 @@ class SREFirewallProps:
         self.subnet_user_services_software_repositories_prefixes: (
             Output[list[str]] | None
         ) = None
+
         if subnet_user_services_software_repositories is not None:
             self.subnet_user_services_software_repositories_prefixes = (
                 Output.from_input(subnet_user_services_software_repositories).apply(
                     get_address_prefixes_from_subnet
                 )
             )
+
+        self.subnet_user_services_gitea_mirror_prefixes: Output[list[str]] | None = None
+        if subnet_user_services_gitea_mirror is not None:
+            self.subnet_user_services_gitea_mirror_prefixes = Output.from_input(
+                subnet_user_services_gitea_mirror
+            ).apply(get_address_prefixes_from_subnet)
         self.subnet_workspaces_prefixes = Output.from_input(subnet_workspaces).apply(
             get_address_prefixes_from_subnet
         )
@@ -362,39 +370,74 @@ class SREFirewallComponent(ComponentResource):
                         ),
                     ],
                 ),
-                network.AzureFirewallApplicationRuleCollectionArgs(
-                    action=network.AzureFirewallRCActionArgs(
-                        type=network.AzureFirewallRCActionType.ALLOW
-                    ),
-                    name="software-repositories-allow",
-                    priority=FirewallPriorities.SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
-                    rules=[
-                        network.AzureFirewallApplicationRuleArgs(
-                            description="Allow external CRAN package requests",
-                            name="AllowCRANPackageDownload",
-                            protocols=[
-                                network.AzureFirewallApplicationRuleProtocolArgs(
-                                    port=int(Ports.HTTPS),
-                                    protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
-                                )
-                            ],
-                            source_addresses=props.subnet_user_services_software_repositories_prefixes,
-                            target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_R,
+            ]
+
+            if props.subnet_user_services_software_repositories_prefixes is not None:
+                application_rule_collections.append(
+                    network.AzureFirewallApplicationRuleCollectionArgs(
+                        action=network.AzureFirewallRCActionArgs(
+                            type=network.AzureFirewallRCActionType.ALLOW
                         ),
-                        network.AzureFirewallApplicationRuleArgs(
-                            description="Allow external PyPI package requests",
-                            name="AllowPyPIPackageDownload",
-                            protocols=[
-                                network.AzureFirewallApplicationRuleProtocolArgs(
-                                    port=int(Ports.HTTPS),
-                                    protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
-                                )
-                            ],
-                            source_addresses=props.subnet_user_services_software_repositories_prefixes,
-                            target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_PYTHON,
+                        name="software-repositories-allow",
+                        priority=FirewallPriorities.SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
+                        rules=[
+                            network.AzureFirewallApplicationRuleArgs(
+                                description="Allow external CRAN package requests",
+                                name="AllowCRANPackageDownload",
+                                protocols=[
+                                    network.AzureFirewallApplicationRuleProtocolArgs(
+                                        port=int(Ports.HTTPS),
+                                        protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                                    )
+                                ],
+                                source_addresses=props.subnet_user_services_software_repositories_prefixes,
+                                target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_R,
+                            ),
+                            network.AzureFirewallApplicationRuleArgs(
+                                description="Allow external PyPI package requests",
+                                name="AllowPyPIPackageDownload",
+                                protocols=[
+                                    network.AzureFirewallApplicationRuleProtocolArgs(
+                                        port=int(Ports.HTTPS),
+                                        protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                                    )
+                                ],
+                                source_addresses=props.subnet_user_services_software_repositories_prefixes,
+                                target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_PYTHON,
+                            ),
+                        ],
+                    )
+                )
+
+            if props.subnet_user_services_gitea_mirror_prefixes is not None:
+                application_rule_collections.append(
+                    network.AzureFirewallApplicationRuleCollectionArgs(
+                        action=network.AzureFirewallRCActionArgs(
+                            type=network.AzureFirewallRCActionType.ALLOW
                         ),
-                    ],
-                ),
+                        name="user-services-gitea-mirror-allow",
+                        priority=FirewallPriorities.SRE_USER_SERVICES_GITEA_MIRROR,
+                        rules=[
+                            network.AzureFirewallApplicationRuleArgs(
+                                description="Allow external GitHub repository update requests",
+                                name="AllowGitHubRepositoryUpdates",
+                                protocols=[
+                                    network.AzureFirewallApplicationRuleProtocolArgs(
+                                        port=int(Ports.HTTP),
+                                        protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTP,
+                                    ),
+                                    network.AzureFirewallApplicationRuleProtocolArgs(
+                                        port=int(Ports.HTTPS),
+                                        protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                                    ),
+                                ],
+                                source_addresses=props.subnet_user_services_gitea_mirror_prefixes,
+                                target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_GITHUB,
+                            ),
+                        ],
+                    )
+                )
+            application_rule_collections.append(
                 network.AzureFirewallApplicationRuleCollectionArgs(
                     action=network.AzureFirewallRCActionArgs(
                         type=network.AzureFirewallRCActionType.DENY
@@ -419,8 +462,8 @@ class SREFirewallComponent(ComponentResource):
                             target_fqdns=ForbiddenDomains.UBUNTU_SNAPCRAFT,
                         ),
                     ],
-                ),
-            ]
+                )
+            )
 
         # Deploy firewall
         self.firewall = network.AzureFirewall(
