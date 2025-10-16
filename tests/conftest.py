@@ -629,6 +629,8 @@ def sre_config_yaml(request):
             retry_limit: 0
             workload_maximum_count: 2
             workload_minimum_count: 1
+        gitea_mirror:
+            repositories: []
     """.replace(
         "guid_subscription", request.config.guid_subscription
     ).replace(

@@ -13,9 +13,11 @@ from .config_sections import (
     ConfigSectionSRE,
     ConfigSectionUserServices,
     ConfigSubsectionDnsSidecar,
+    ConfigSubsectionGiteaMirror,
     ConfigSubsectionNexus,
     ConfigSubsectionRemoteDesktopOpts,
     ConfigSubsectionStorageQuotaGB,
+    GitRepository,
 )
 
 
@@ -136,6 +138,15 @@ class SREConfig(AzureSerialisableModel):
                     retry_limit="Maximum number of retries before failing the DNS sidecar job.",  # type: ignore
                     workload_maximum_count="Maximum capacity of the workload profile for the managed environment.",  # type: ignore
                     workload_minimum_count="Minimum capacity of the workload profile for the managed environment.",  # type: ignore
+                ),
+                gitea_mirror=ConfigSubsectionGiteaMirror.model_construct(
+                    repositories=[
+                        GitRepository.model_construct(
+                            repository_name="An identifier for the GitHub repository to mirror.",
+                            repository_url="The URL of the GitHub repository to mirror.",  # type: ignore
+                            repository_auth_token="A read-only GitHub personal access token, with access to the repository to mirror.",
+                        )
+                    ]
                 ),
             ),
         )

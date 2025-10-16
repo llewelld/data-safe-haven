@@ -5,7 +5,7 @@ from __future__ import annotations
 from ipaddress import ip_network
 from itertools import combinations
 
-from pydantic import BaseModel, PositiveInt, field_validator, model_validator
+from pydantic import BaseModel, HttpUrl, PositiveInt, field_validator, model_validator
 
 from data_safe_haven.types import (
     AzureLocation,
@@ -63,6 +63,16 @@ class ConfigSubsectionDnsSidecar(BaseModel, validate_assignment=True):
     workload_minimum_count: int
 
 
+class GitRepository(BaseModel, validate_assignment=True):
+    repository_name: str
+    repository_url: HttpUrl
+    repository_auth_token: str
+
+
+class ConfigSubsectionGiteaMirror(BaseModel, validate_assignment=True):
+    repositories: list[GitRepository]
+
+
 class ConfigSectionUserServices(BaseModel, validate_assignment=True):
     nexus: ConfigSubsectionNexus = ConfigSubsectionNexus(persistent_quota_gb=10)
     dns_sidecar: ConfigSubsectionDnsSidecar = ConfigSubsectionDnsSidecar(
@@ -71,6 +81,9 @@ class ConfigSectionUserServices(BaseModel, validate_assignment=True):
         retry_limit=0,
         workload_maximum_count=2,
         workload_minimum_count=1,
+    )
+    gitea_mirror: ConfigSubsectionGiteaMirror = ConfigSubsectionGiteaMirror(
+        repositories=[]
     )
 
 
