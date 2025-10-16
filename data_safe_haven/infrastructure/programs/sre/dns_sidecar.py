@@ -212,7 +212,7 @@ class DnsSidecarComponent(ComponentResource):
                 internal=True,
             ),
             workload_profiles=[
-                WorkloadProfileArgs(  # TODO(cgavidia): Temporary change looking for improvements.
+                WorkloadProfileArgs(
                     name=workload_profile_name,
                     maximum_count=props.workload_maximum_count,
                     minimum_count=props.workload_minimum_count,
