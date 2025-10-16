@@ -155,7 +155,7 @@ class PermittedDomains(tuple[str, ...], Enum):
     )
     AZURE_DNS_ZONES = AzureDnsZoneNames.ALL
     AZURE_RESOURCE_MANAGER = ("management.azure.com",)
-    AZURE_KUBERNETES = ("*.hcp.uksouth.azmk8s.io",)  # TODO(cgavidia): Only for testing
+    AZURE_KUBERNETES = ("*.hcp.{location}.azmk8s.io",)
     CLAMAV_UPDATES = (
         "clamav.net",
         "current.cvd.clamav.net",
@@ -185,26 +185,30 @@ class PermittedDomains(tuple[str, ...], Enum):
         "api.snapcraft.io",
         "*.snapcraftcontent.com",
     )
-    ALL = tuple(
-        sorted(
+
+    @classmethod
+    def all(cls, mapping: dict[str, str]) -> tuple[str, ...]:
+
+        sorted_domains = sorted(
             set(
-                APT_REPOSITORIES
-                + AZURE_DNS_ZONES
-                + AZURE_RESOURCE_MANAGER
-                + CLAMAV_UPDATES
-                + AZURE_KUBERNETES
-                + AZURE_MANAGED_IDENTITIES
-                + MICROSOFT_CONTAINER_REGISTRY
-                + MICROSOFT_GRAPH_API
-                + MICROSOFT_LOGIN
-                + RSTUDIO_DEB
-                + SOFTWARE_REPOSITORIES_PYTHON
-                + SOFTWARE_REPOSITORIES_R
-                + UBUNTU_KEYSERVER
-                + UBUNTU_SNAPCRAFT
+                cls.APT_REPOSITORIES
+                + cls.AZURE_DNS_ZONES
+                + cls.AZURE_RESOURCE_MANAGER
+                + cls.CLAMAV_UPDATES
+                + cls.AZURE_KUBERNETES
+                + cls.AZURE_MANAGED_IDENTITIES
+                + cls.MICROSOFT_CONTAINER_REGISTRY
+                + cls.MICROSOFT_GRAPH_API
+                + cls.MICROSOFT_LOGIN
+                + cls.RSTUDIO_DEB
+                + cls.SOFTWARE_REPOSITORIES_PYTHON
+                + cls.SOFTWARE_REPOSITORIES_R
+                + cls.UBUNTU_KEYSERVER
+                + cls.UBUNTU_SNAPCRAFT
             )
         )
-    )
+
+        return tuple([domain.format_map(mapping) for domain in sorted_domains])
 
 
 @verify(UNIQUE)
