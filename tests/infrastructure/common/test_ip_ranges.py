@@ -36,17 +36,19 @@ class TestSREIpRanges:
         assert SREIpRanges.user_services_containers_support == AzureIPv4Range(
             "10.0.1.232", "10.0.1.239"
         )
-        assert SREIpRanges.user_services_gitea_mirror == AzureIPv4Range(
+        assert SREIpRanges.user_services_databases == AzureIPv4Range(
             "10.0.1.240", "10.0.1.247"
         )
-        assert SREIpRanges.user_services_databases == AzureIPv4Range(
+        assert SREIpRanges.user_services_software_repositories == AzureIPv4Range(
             "10.0.1.248", "10.0.1.255"
         )
-        assert SREIpRanges.user_services_software_repositories == AzureIPv4Range(
-            "10.0.2.0", "10.0.2.7"
-        )
+        assert SREIpRanges.workspaces == AzureIPv4Range("10.0.2.0", "10.0.2.255")
 
-        assert SREIpRanges.workspaces == AzureIPv4Range("10.0.3.0", "10.0.3.255")
+        assert SREIpRanges.dns_sidecar == AzureIPv4Range("10.0.3.0", "10.0.3.31")
+
+        assert SREIpRanges.user_services_gitea_mirror == AzureIPv4Range(
+            "10.0.3.32", "10.0.3.39"
+        )
 
 
 class TestSREDnsIpRanges:
