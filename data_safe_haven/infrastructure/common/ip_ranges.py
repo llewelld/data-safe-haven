@@ -24,12 +24,12 @@ class SREIpRanges:
     monitoring = vnet.next_subnet(32)
     user_services_containers = vnet.next_subnet(8)
     user_services_containers_support = vnet.next_subnet(8)
-    user_services_gitea_mirror = vnet.next_subnet(8)
     user_services_databases = vnet.next_subnet(8)
     user_services_software_repositories = vnet.next_subnet(8)
     workspaces = vnet.next_subnet(256)
     # Virtual networks for Container Apps need a CIDR of length /27 or larger
     dns_sidecar = vnet.next_subnet(32)
+    user_services_gitea_mirror = vnet.next_subnet(8)
 
 
 @dataclass(frozen=True)
