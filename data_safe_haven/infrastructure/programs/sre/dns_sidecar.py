@@ -63,6 +63,8 @@ class DnsSidecarProps:
         subscription_id: Input[str],
         storage_account_name: Input[str],
         storage_account_key: Input[str],
+        workload_maximum_count: int,
+        workload_minimum_count: int,
     ):
         self.container_instances = container_instances
         self.cron_expression = cron_expression
@@ -76,6 +78,8 @@ class DnsSidecarProps:
         self.subscription_id = subscription_id
         self.storage_account_name = storage_account_name
         self.storage_account_key = storage_account_key
+        self.workload_maximum_count = workload_maximum_count
+        self.workload_minimum_count = workload_minimum_count
 
 
 class DnsSidecarComponent(ComponentResource):
@@ -210,8 +214,8 @@ class DnsSidecarComponent(ComponentResource):
             workload_profiles=[
                 WorkloadProfileArgs(
                     name=workload_profile_name,
-                    maximum_count=1,
-                    minimum_count=0,
+                    maximum_count=props.workload_maximum_count,
+                    minimum_count=props.workload_minimum_count,
                     workload_profile_type="D4",
                 )
             ],
@@ -256,8 +260,8 @@ class DnsSidecarComponent(ComponentResource):
                         name="dnssidecar",
                         command=("/bin/sh", "/mnt/init/init.sh"),
                         resources=ContainerResourcesArgs(
-                            cpu=4,
-                            memory="16Gi",
+                            cpu=0.5,
+                            memory="1.0Gi",
                         ),
                         env=[
                             EnvironmentVarArgs(

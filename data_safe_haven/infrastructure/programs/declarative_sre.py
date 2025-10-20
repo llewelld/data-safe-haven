@@ -469,6 +469,8 @@ class DeclarativeSRE:
                 subscription_id=self.config.azure.subscription_id,
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
+                workload_maximum_count=self.config.user_services.dns_sidecar.workload_maximum_count,
+                workload_minimum_count=self.config.user_services.dns_sidecar.workload_minimum_count,
             ),
         )
 

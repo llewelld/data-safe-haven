@@ -627,6 +627,8 @@ def sre_config_yaml(request):
             cron_expression: "*/30 * * * *"
             replica_timeout: 600
             retry_limit: 0
+            workload_maximum_count: 2
+            workload_minimum_count: 1
         gitea_mirror:
             repositories: []
     """.replace(

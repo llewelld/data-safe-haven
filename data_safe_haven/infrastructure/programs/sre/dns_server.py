@@ -31,7 +31,7 @@ class SREDnsServerProps:
         *,
         allow_workspace_internet: bool,
         dockerhub_credentials: DockerHubCredentials,
-        location: Input[str],
+        location: str,
         resource_group_name: Input[str],
         shm_fqdn: Input[str],
     ) -> None:
@@ -76,7 +76,7 @@ class SREDnsServerComponent(ComponentResource):
             filter_allow = Output.from_input(props.shm_fqdn).apply(
                 lambda fqdn: [
                     f"*.{fqdn}",
-                    *PermittedDomains.ALL,
+                    *PermittedDomains.all(mapping={"location": props.location}),
                 ]
             )
             filter_block = ["*.*"]
