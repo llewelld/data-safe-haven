@@ -55,7 +55,7 @@ appdirs==1.4.4
     # via hatch.envs.docs
 arpeggio==2.0.3
     # via parver
-attrs==25.3.0
+attrs==25.4.0
     # via parver
 azure-common==1.1.28
     # via
@@ -125,13 +125,13 @@ babel==2.17.0
     #   sphinx
 beautifulsoup4==4.14.2
     # via pydata-sphinx-theme
-certifi==2025.8.3
+certifi==2025.10.5
     # via
     #   msrest
     #   requests
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 chevron==0.14.0
     # via hatch.envs.docs
@@ -168,9 +168,9 @@ emoji==2.15.0
     # via hatch.envs.docs
 fqdn==1.5.1
     # via hatch.envs.docs
-grpcio==1.75.1
+grpcio==1.76.0
     # via pulumi
-idna==3.10
+idna==3.11
     # via requests
 imagesize==1.4.1
     # via sphinx
@@ -192,7 +192,7 @@ jinja2==3.1.6
     # via
     #   myst-parser
     #   sphinx
-josepy==2.1.0
+josepy==2.2.0
     # via acme
 markdown-it-py==3.0.0
     # via
@@ -336,7 +336,7 @@ sphinxcontrib-typer==0.6.2
     # via hatch.envs.docs
 typer==0.19.2
     # via hatch.envs.docs
-typer-slim==0.19.2
+typer-slim==0.20.0
     # via sphinxcontrib-typer
 typing-extensions==4.15.0
     # via
