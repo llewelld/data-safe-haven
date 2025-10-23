@@ -42,7 +42,7 @@ class TestAzureSdkCredential:
         credential = AzureSdkCredential(skip_confirmation=False)
         with pytest.raises(
             DataSafeHavenCachedCredentialError,
-            match="Selected credentials are incorrect.",
+            match=r"Selected credentials are incorrect.",
         ):
             credential.get_credential()
         out, _ = capsys.readouterr()
@@ -69,7 +69,7 @@ class TestAzureSdkCredential:
         credential = AzureSdkCredential(skip_confirmation=True)
         with pytest.raises(
             DataSafeHavenAzureError,
-            match="Error getting account information from Azure CLI.",
+            match=r"Error getting account information from Azure CLI.",
         ):
             credential.decode_token(credential.token)
 

@@ -56,7 +56,7 @@ class TestYAMLSerialisableModel:
         yaml = "\n".join(["string: 'abc'", "integer: -3", "list_of_integers: [-1,0,1"])
         with raises(
             DataSafeHavenConfigError,
-            match="Could not parse Example configuration as YAML.",
+            match=r"Could not parse Example configuration as YAML.",
         ):
             ExampleYAMLSerialisableModel.from_yaml(yaml)
 
@@ -64,7 +64,7 @@ class TestYAMLSerialisableModel:
         yaml = """42"""
         with raises(
             DataSafeHavenConfigError,
-            match="Unable to parse Example configuration as a dict.",
+            match=r"Unable to parse Example configuration as a dict.",
         ):
             ExampleYAMLSerialisableModel.from_yaml(yaml)
 
@@ -78,7 +78,7 @@ class TestYAMLSerialisableModel:
         )
         with raises(
             DataSafeHavenTypeError,
-            match="Example configuration is invalid.",
+            match=r"Example configuration is invalid.",
         ):
             ExampleYAMLSerialisableModel.from_yaml(yaml)
         assert "Input should be a valid integer" in caplog.text

@@ -97,7 +97,7 @@ class TestSREProjectManager:
         )
         with raises(
             DataSafeHavenConfigError,
-            match="No SRE named sandbox is defined.",
+            match=r"No SRE named sandbox is defined.",
         ):
             _ = sre.pulumi_project
 
@@ -131,7 +131,7 @@ class TestSREProjectManager:
     def test_run_pulumi_command_command_error(self, sre_project_manager):
         with raises(
             DataSafeHavenPulumiError,
-            match="Failed to run command.",
+            match=r"Failed to run command.",
         ):
             sre_project_manager.run_pulumi_command("notapulumicommand")
 
