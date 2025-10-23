@@ -280,7 +280,7 @@ class TestAzureSdk:
         mocker.patch.object(sdk, "storage_exists", return_value=False)
         with pytest.raises(
             DataSafeHavenAzureStorageError,
-            match="Storage account 'storage_account' could not be found.",
+            match=r"Storage account 'storage_account' could not be found.",
         ):
             sdk.blob_exists(
                 "exists", "resource_group", "storage_account", "storage_container"
@@ -372,7 +372,7 @@ class TestAzureSdk:
         sdk = AzureSdk("subscription name")
         with pytest.raises(
             DataSafeHavenAzureAPIAuthenticationError,
-            match="Failed to authenticate with Azure API.",
+            match=r"Failed to authenticate with Azure API.",
         ):
             sdk.get_subscription("Subscription 1")
 

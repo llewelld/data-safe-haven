@@ -26,7 +26,7 @@ class TestGraphApi:
     def test_from_token_invalid(self):
         with pytest.raises(
             DataSafeHavenValueError,
-            match="Could not construct GraphApi from provided token.",
+            match=r"Could not construct GraphApi from provided token.",
         ):
             GraphApi.from_token("not a jwt")
 
@@ -65,7 +65,7 @@ class TestGraphApi:
         api = GraphApi.from_scopes(scopes=[], tenant_id=request.config.guid_tenant)
         with pytest.raises(
             DataSafeHavenMicrosoftGraphError,
-            match="Could not execute GET request to 'https://example.com'.",
+            match=r"Could not execute GET request to 'https://example.com'.",
         ):
             api.http_get(url)
 

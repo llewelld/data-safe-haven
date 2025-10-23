@@ -99,7 +99,7 @@ class TestAzureSerialisableModel:
         yaml = "\n".join(["string: 'abc'", "integer: -3", "list_of_integers: [-1,0,1"])
         with raises(
             DataSafeHavenConfigError,
-            match="Could not parse Example configuration as YAML.",
+            match=r"Could not parse Example configuration as YAML.",
         ):
             ExampleAzureSerialisableModel.from_yaml(yaml)
 
@@ -107,7 +107,7 @@ class TestAzureSerialisableModel:
         yaml = """42"""
         with raises(
             DataSafeHavenConfigError,
-            match="Unable to parse Example configuration as a dict.",
+            match=r"Unable to parse Example configuration as a dict.",
         ):
             ExampleAzureSerialisableModel.from_yaml(yaml)
 
@@ -118,7 +118,7 @@ class TestAzureSerialisableModel:
 
         with raises(
             DataSafeHavenTypeError,
-            match="Example configuration is invalid.",
+            match=r"Example configuration is invalid.",
         ):
             ExampleAzureSerialisableModel.from_yaml(yaml)
 
@@ -143,6 +143,6 @@ class TestAzureSerialisableModel:
         mocker.patch.object(AzureSdk, "download_blob", return_value=example_config_yaml)
         with raises(
             DataSafeHavenTypeError,
-            match="'file.yaml' does not contain a valid Example configuration.",
+            match=r"'file.yaml' does not contain a valid Example configuration.",
         ):
             ExampleAzureSerialisableModel.from_remote(context)

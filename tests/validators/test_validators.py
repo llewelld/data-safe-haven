@@ -111,7 +111,7 @@ class TestValidateIpAddress:
     def test_ip_address_fail(self, ip_address):
         with pytest.raises(
             ValueError,
-            match="Expected valid IPv4 address, for example '1.1.1.1'.",
+            match=r"Expected valid IPv4 address, for example '1.1.1.1'.",
         ):
             validators.ip_address(ip_address)
 
@@ -180,5 +180,5 @@ class TestUniqueList:
         ],
     )
     def test_unique_list_fail(self, items):
-        with pytest.raises(ValueError, match="All items must be unique."):
+        with pytest.raises(ValueError, match=r"All items must be unique."):
             validators.unique_list(items)

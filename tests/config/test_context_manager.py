@@ -145,7 +145,7 @@ class TestContextManager:
         )
         with pytest.raises(
             DataSafeHavenTypeError,
-            match="ContextManager configuration is invalid.",
+            match=r"ContextManager configuration is invalid.",
         ):
             ContextManager.from_yaml(context_yaml)
 
@@ -155,7 +155,7 @@ class TestContextManager:
         )
         with pytest.raises(
             DataSafeHavenTypeError,
-            match="ContextManager configuration is invalid.",
+            match=r"ContextManager configuration is invalid.",
         ):
             ContextManager.from_yaml(context_yaml)
 
@@ -163,7 +163,7 @@ class TestContextManager:
         invalid_yaml = "a: [1,2"
         with pytest.raises(
             DataSafeHavenConfigError,
-            match="Could not parse ContextManager configuration as YAML.",
+            match=r"Could not parse ContextManager configuration as YAML.",
         ):
             ContextManager.from_yaml(invalid_yaml)
 
@@ -171,7 +171,7 @@ class TestContextManager:
         not_dict = "[1, 2, 3]"
         with pytest.raises(
             DataSafeHavenConfigError,
-            match="Unable to parse ContextManager configuration as a dict.",
+            match=r"Unable to parse ContextManager configuration as a dict.",
         ):
             ContextManager.from_yaml(not_dict)
 
@@ -185,7 +185,7 @@ class TestContextManager:
 
     def test_invalid_selected(self, context_manager):
         with pytest.raises(
-            DataSafeHavenValueError, match="Context 'invalid' is not defined."
+            DataSafeHavenValueError, match=r"Context 'invalid' is not defined."
         ):
             context_manager.selected = "invalid"
 
@@ -263,7 +263,7 @@ class TestContextManager:
     def test_invalid_add(self, context_manager):
         with pytest.raises(
             DataSafeHavenValueError,
-            match="A context with name 'acmedeployment' is already defined.",
+            match=r"A context with name 'acmedeployment' is already defined.",
         ):
             context_manager.add(
                 admin_group_name="Acme Admins",
@@ -279,7 +279,7 @@ class TestContextManager:
 
     def test_invalid_remove(self, context_manager):
         with pytest.raises(
-            DataSafeHavenValueError, match="No context with name 'invalid'."
+            DataSafeHavenValueError, match=r"No context with name 'invalid'."
         ):
             context_manager.remove("invalid")
 

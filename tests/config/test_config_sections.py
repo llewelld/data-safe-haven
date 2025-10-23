@@ -28,7 +28,7 @@ class TestConfigSectionAzure:
 
     def test_invalid_location(self):
         with pytest.raises(
-            ValidationError, match="Value error, Expected valid Azure location"
+            ValidationError, match=r"Value error, Expected valid Azure location"
         ):
             ConfigSectionAzure(
                 location="not_a_location",
@@ -69,7 +69,7 @@ class TestConfigSectionDockerHub:
     def test_invalid_access_token(self):
         with pytest.raises(
             ValidationError,
-            match="Value error, Expected valid string containing only letters, numbers, hyphens and underscores.",
+            match=r"Value error, Expected valid string containing only letters, numbers, hyphens and underscores.",
         ):
             ConfigSectionDockerHub(
                 access_token="not a valid access token",
@@ -79,7 +79,7 @@ class TestConfigSectionDockerHub:
     def test_invalid_username(self):
         with pytest.raises(
             ValidationError,
-            match="Value error, Expected valid string containing only letters, numbers, hyphens and underscores.",
+            match=r"Value error, Expected valid string containing only letters, numbers, hyphens and underscores.",
         ):
             ConfigSectionDockerHub(
                 access_token="dummytoken",
@@ -133,7 +133,7 @@ class TestConfigSectionUserServices:
         assert user_services_config.nexus.persistent_quota_gb == default_quota_size
 
     def test_invalid_nexus_quota(self):
-        with pytest.raises(ValueError, match="Input should be greater than 0"):
+        with pytest.raises(ValueError, match=r"Input should be greater than 0"):
             ConfigSectionUserServices(
                 nexus=ConfigSubsectionNexus(persistent_quota_gb=0)
             )
@@ -197,19 +197,19 @@ class TestConfigSectionSRE:
             )
 
     def test_ip_overlap_admin(self):
-        with pytest.raises(ValueError, match="IP addresses must not overlap."):
+        with pytest.raises(ValueError, match=r"IP addresses must not overlap."):
             ConfigSectionSRE(
                 admin_ip_addresses=["1.2.3.4", "1.2.3.4"],
             )
 
     def test_ip_overlap_data_provider(self):
-        with pytest.raises(ValueError, match="IP addresses must not overlap."):
+        with pytest.raises(ValueError, match=r"IP addresses must not overlap."):
             ConfigSectionSRE(
                 data_provider_ip_addresses=["1.2.3.4", "1.2.3.4"],
             )
 
     def test_ip_overlap_research_user(self):
-        with pytest.raises(ValueError, match="IP addresses must not overlap."):
+        with pytest.raises(ValueError, match=r"IP addresses must not overlap."):
             ConfigSectionSRE(
                 research_user_ip_addresses=["1.2.3.4", "1.2.3.4"],
             )
@@ -243,7 +243,7 @@ class TestConfigSectionSRE:
         ],
     )
     def test_ip_overlap(self, addresses):
-        with pytest.raises(ValueError, match="IP addresses must not overlap."):
+        with pytest.raises(ValueError, match=r"IP addresses must not overlap."):
             ConfigSectionSRE(
                 research_user_ip_addresses=addresses,
             )

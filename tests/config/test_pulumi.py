@@ -40,11 +40,11 @@ class TestDSHPulumiConfig:
         assert pulumi_config["other_project"] == pulumi_project_other
 
     def test_getitem_type_error(self, pulumi_config):
-        with raises(TypeError, match="'key' must be a string."):
+        with raises(TypeError, match=r"'key' must be a string."):
             pulumi_config[0]
 
     def test_getitem_index_error(self, pulumi_config):
-        with raises(KeyError, match="No configuration for DSH Pulumi Project Ringo."):
+        with raises(KeyError, match=r"No configuration for DSH Pulumi Project Ringo."):
             pulumi_config["Ringo"]
 
     def test_delitem(self, pulumi_config):
@@ -53,11 +53,11 @@ class TestDSHPulumiConfig:
         assert len(pulumi_config.projects) == 1
 
     def test_delitem_value_error(self, pulumi_config):
-        with raises(TypeError, match="'key' must be a string."):
+        with raises(TypeError, match=r"'key' must be a string."):
             del pulumi_config[-1]
 
     def test_delitem_index_error(self, pulumi_config):
-        with raises(KeyError, match="No configuration for DSH Pulumi Project Ringo."):
+        with raises(KeyError, match=r"No configuration for DSH Pulumi Project Ringo."):
             del pulumi_config["Ringo"]
 
     def test_setitem(self, pulumi_config, pulumi_project):
@@ -69,11 +69,11 @@ class TestDSHPulumiConfig:
         assert "acmedeployment" in pulumi_config.project_names
 
     def test_setitem_type_error(self, pulumi_config):
-        with raises(TypeError, match="'key' must be a string."):
+        with raises(TypeError, match=r"'key' must be a string."):
             pulumi_config[1] = 5
 
     def test_setitem_value_error(self, pulumi_config):
-        with raises(ValueError, match="Stack other_project already exists."):
+        with raises(ValueError, match=r"Stack other_project already exists."):
             pulumi_config["other_project"] = 5
 
     def test_project_names(self, pulumi_config):
@@ -101,20 +101,20 @@ class TestDSHPulumiConfig:
     def test_from_yaml_invalid_yaml(self):
         with raises(
             DataSafeHavenConfigError,
-            match="Could not parse Pulumi configuration as YAML.",
+            match=r"Could not parse Pulumi configuration as YAML.",
         ):
             DSHPulumiConfig.from_yaml("a: [1,2")
 
     def test_from_yaml_not_dict(self):
         with raises(
             DataSafeHavenConfigError,
-            match="Unable to parse Pulumi configuration as a dict.",
+            match=r"Unable to parse Pulumi configuration as a dict.",
         ):
             DSHPulumiConfig.from_yaml("5")
 
     def test_from_yaml_validation_error(self):
         not_valid = "projects: -3"
-        with raises(DataSafeHavenTypeError, match="Pulumi configuration is invalid."):
+        with raises(DataSafeHavenTypeError, match=r"Pulumi configuration is invalid."):
             DSHPulumiConfig.from_yaml(not_valid)
 
     def test_upload(self, mocker, pulumi_config, context):
