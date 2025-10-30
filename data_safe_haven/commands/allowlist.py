@@ -11,9 +11,30 @@ from data_safe_haven.config import ContextManager, DSHPulumiConfig, SREConfig
 from data_safe_haven.exceptions import DataSafeHavenConfigError, DataSafeHavenError
 from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.logging import get_logger
-from data_safe_haven.types import AllowlistRepository
+from data_safe_haven.types import AllowlistRepository, SoftwarePackageCategory
 
 allowlist_command_group = typer.Typer()
+
+
+def is_allowlist_required(sre_config: SREConfig) -> tuple[bool, str]:
+    """Validates if the SRE configuration requires an allowlist."""
+
+    is_required: bool = True
+    reason: str = "A package allowlist is required for this SRE."
+
+    if sre_config.sre.software_packages == SoftwarePackageCategory.ANY:
+        is_required = False
+        reason = (
+            "No package allowlist is required for this SRE. All packages are allowed."
+        )
+
+    elif sre_config.sre.software_packages == SoftwarePackageCategory.NONE:
+        is_required = False
+        reason = (
+            "No package allowlist is required for this SRE. No packages are allowed."
+        )
+
+    return is_required, reason
 
 
 @allowlist_command_group.command()
@@ -27,7 +48,7 @@ def show(
         typer.Argument(help="Name of the repository to show the allowlist for."),
     ],
     file: Annotated[
-        Optional[str],  # noqa: UP007
+        Optional[str],  # noqa: UP045
         typer.Option(help="File path to write the allowlist to."),
     ] = None,
 ) -> None:
@@ -44,6 +65,10 @@ def show(
         raise typer.Exit(1) from exc
 
     sre_config = SREConfig.from_remote_by_name(context, name)
+    allowlist_required, reason = is_allowlist_required(sre_config)
+    if not allowlist_required:
+        logger.info(reason)
+        raise typer.Exit()
 
     # Load Pulumi config
     pulumi_config = DSHPulumiConfig.from_remote(context)
@@ -83,7 +108,7 @@ def template(
         typer.Argument(help="Name of the repository to show the allowlist for."),
     ],
     file: Annotated[
-        Optional[Path],  # noqa: UP007
+        Optional[Path],  # noqa: UP045
         typer.Option(help="File path to write allowlist template to."),
     ] = None,
 ) -> None:
@@ -135,6 +160,11 @@ def upload(
         logger.critical(f"Allowlist file '{file}' not found.")
         raise typer.Exit(1)
     sre_config = SREConfig.from_remote_by_name(context, name)
+
+    allowlist_required, reason = is_allowlist_required(sre_config)
+    if not allowlist_required:
+        logger.info(reason)
+        raise typer.Exit()
 
     # Load Pulumi config
     pulumi_config = DSHPulumiConfig.from_remote(context)

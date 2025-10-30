@@ -1,5 +1,5 @@
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import network
+from pulumi_azure_native import dns, privatedns
 
 
 class LocalDnsRecordProps:
@@ -31,10 +31,10 @@ class LocalDnsRecordComponent(ComponentResource):
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
 
         # Register the resource in a private DNS zone
-        private_dns_record_set = network.PrivateRecordSet(
+        private_dns_record_set = privatedns.PrivateRecordSet(
             f"{self._name}_private_record_set",
             a_records=[
-                network.ARecordArgs(
+                privatedns.ARecordArgs(
                     ipv4_address=props.private_ip_address,
                 )
             ],
@@ -47,9 +47,9 @@ class LocalDnsRecordComponent(ComponentResource):
         )
 
         # Redirect the public DNS to private DNS
-        public_dns_record_set = network.RecordSet(
+        public_dns_record_set = dns.RecordSet(
             f"{self._name}_public_record_set",
-            cname_record=network.CnameRecordArgs(
+            cname_record=dns.CnameRecordArgs(
                 cname=Output.concat(props.record_name, ".privatelink.", props.base_fqdn)
             ),
             record_type="CNAME",

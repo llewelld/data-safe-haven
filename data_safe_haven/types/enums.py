@@ -72,9 +72,10 @@ class FirewallPriorities(int, Enum):
     SRE_DNS_SIDECAR = 3200
     SRE_GUACAMOLE_CONTAINERS = 3300
     SRE_IDENTITY_CONTAINERS = 3400
-    SRE_USER_SERVICES_SOFTWARE_REPOSITORIES = 3500
-    SRE_WORKSPACES = 3600
-    SRE_WORKSPACES_DENY = 3650
+    SRE_USER_SERVICES_GITEA_MIRROR = 3500
+    SRE_USER_SERVICES_SOFTWARE_REPOSITORIES = 3600
+    SRE_WORKSPACES = 3700
+    SRE_WORKSPACES_DENY = 3750
 
 
 @verify(UNIQUE)
@@ -120,9 +121,10 @@ class NetworkingPriorities(int, Enum):
     INTERNAL_SRE_MONITORING_TOOLS = 2300
     INTERNAL_SRE_USER_SERVICES_CONTAINERS = 2400
     INTERNAL_SRE_USER_SERVICES_CONTAINERS_SUPPORT = 2500
-    INTERNAL_SRE_USER_SERVICES_DATABASES = 2600
-    INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES = 2700
-    INTERNAL_SRE_WORKSPACES = 2800
+    INTERNAL_SRE_USER_SERVICES_GITEA_MIRROR = 2600
+    INTERNAL_SRE_USER_SERVICES_DATABASES = 2700
+    INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES = 2800
+    INTERNAL_SRE_WORKSPACES = 2900
     INTERNAL_SRE_ANY = 2999
     # Authorised external IPs: 3000-3499
     AUTHORISED_EXTERNAL_USER_IPS = 3100
@@ -155,6 +157,7 @@ class PermittedDomains(tuple[str, ...], Enum):
     )
     AZURE_DNS_ZONES = AzureDnsZoneNames.ALL
     AZURE_RESOURCE_MANAGER = ("management.azure.com",)
+    AZURE_KUBERNETES = ("*.hcp.{location}.azmk8s.io",)
     CLAMAV_UPDATES = (
         "clamav.net",
         "current.cvd.clamav.net",
@@ -178,31 +181,38 @@ class PermittedDomains(tuple[str, ...], Enum):
         "pypi.org",
     )
     SOFTWARE_REPOSITORIES_R = ("cran.r-project.org",)
+    SOFTWARE_REPOSITORIES_GITHUB = ("github.com", "api.github.com")
     SOFTWARE_REPOSITORIES = SOFTWARE_REPOSITORIES_PYTHON + SOFTWARE_REPOSITORIES_R
     UBUNTU_KEYSERVER = ("keyserver.ubuntu.com",)
     UBUNTU_SNAPCRAFT = (
         "api.snapcraft.io",
         "*.snapcraftcontent.com",
     )
-    ALL = tuple(
-        sorted(
+
+    @classmethod
+    def all(cls, mapping: dict[str, str]) -> tuple[str, ...]:
+
+        sorted_domains = sorted(
             set(
-                APT_REPOSITORIES
-                + AZURE_DNS_ZONES
-                + AZURE_RESOURCE_MANAGER
-                + CLAMAV_UPDATES
-                + AZURE_MANAGED_IDENTITIES
-                + MICROSOFT_CONTAINER_REGISTRY
-                + MICROSOFT_GRAPH_API
-                + MICROSOFT_LOGIN
-                + RSTUDIO_DEB
-                + SOFTWARE_REPOSITORIES_PYTHON
-                + SOFTWARE_REPOSITORIES_R
-                + UBUNTU_KEYSERVER
-                + UBUNTU_SNAPCRAFT
+                cls.APT_REPOSITORIES
+                + cls.AZURE_DNS_ZONES
+                + cls.AZURE_RESOURCE_MANAGER
+                + cls.CLAMAV_UPDATES
+                + cls.AZURE_KUBERNETES
+                + cls.AZURE_MANAGED_IDENTITIES
+                + cls.MICROSOFT_CONTAINER_REGISTRY
+                + cls.MICROSOFT_GRAPH_API
+                + cls.MICROSOFT_LOGIN
+                + cls.RSTUDIO_DEB
+                + cls.SOFTWARE_REPOSITORIES_PYTHON
+                + cls.SOFTWARE_REPOSITORIES_R
+                + cls.SOFTWARE_REPOSITORIES_GITHUB
+                + cls.UBUNTU_KEYSERVER
+                + cls.UBUNTU_SNAPCRAFT
             )
         )
-    )
+
+        return tuple([domain.format_map(mapping) for domain in sorted_domains])
 
 
 @verify(UNIQUE)

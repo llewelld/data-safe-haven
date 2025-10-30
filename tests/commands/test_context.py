@@ -116,7 +116,7 @@ class TestAdd:
             ],
         )
         assert result.exit_code == 2
-        assert "Invalid value for '--admin-group-name':" in result.stderr
+        assert "Invalid value for '--admin-group-name'" in result.stderr
 
     def test_add_invalid_subscription_name(self, runner):
         result = runner.invoke(
@@ -134,7 +134,7 @@ class TestAdd:
             ],
         )
         assert result.exit_code == 2
-        assert "Invalid value for '--subscription-name':" in result.stderr
+        assert "Invalid value for '--subscription-name'" in result.stderr
 
     def test_add_missing_ags(self, runner):
         result = runner.invoke(

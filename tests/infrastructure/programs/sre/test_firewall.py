@@ -1,6 +1,6 @@
 import pulumi
 import pulumi.runtime
-from pulumi_azure_native import network
+from pulumi_azure_native import network, privatedns
 from pytest import fixture
 
 from data_safe_haven.functions import replace_separators
@@ -28,7 +28,7 @@ def sre_monitoring_component(
         stack_name,
         SREMonitoringProps(
             dns_private_zones={
-                dns_zone_name: network.PrivateZone(
+                dns_zone_name: privatedns.PrivateZone(
                     replace_separators(
                         f"test_sre_dns_server_private_zone_{dns_zone_name}", "_"
                     ),
@@ -61,6 +61,7 @@ def firewall_props_internet_enabled(
     subnet_guacamole_containers: network.GetSubnetResult,
     subnet_identity_containers: network.GetSubnetResult,
     subnet_dns_sidecar: network.GetSubnetResult,
+    subnet_user_services_gitea_mirror: network.GetSubnetResult,
     subnet_user_services_software_repositories: network.GetSubnetResult,
     subnet_workspaces: network.GetSubnetResult,
 ) -> SREFirewallProps:
@@ -77,6 +78,7 @@ def firewall_props_internet_enabled(
         subnet_firewall_management=subnet_firewall_management,
         subnet_guacamole_containers=subnet_guacamole_containers,
         subnet_identity_containers=subnet_identity_containers,
+        subnet_user_services_gitea_mirror=subnet_user_services_gitea_mirror,
         subnet_user_services_software_repositories=subnet_user_services_software_repositories,
         subnet_workspaces=subnet_workspaces,
     )
@@ -95,6 +97,7 @@ def firewall_props_internet_disabled(
     subnet_firewall_management: network.GetSubnetResult,
     subnet_guacamole_containers: network.GetSubnetResult,
     subnet_identity_containers: network.GetSubnetResult,
+    subnet_user_services_gitea_mirror: network.GetSubnetResult,
     subnet_user_services_software_repositories: network.GetSubnetResult,
     subnet_workspaces: network.GetSubnetResult,
 ) -> SREFirewallProps:
@@ -111,6 +114,7 @@ def firewall_props_internet_disabled(
         subnet_firewall_management=subnet_firewall_management,
         subnet_guacamole_containers=subnet_guacamole_containers,
         subnet_identity_containers=subnet_identity_containers,
+        subnet_user_services_gitea_mirror=subnet_user_services_gitea_mirror,
         subnet_user_services_software_repositories=subnet_user_services_software_repositories,
         subnet_workspaces=subnet_workspaces,
     )
@@ -124,7 +128,7 @@ class TestSREFirewallComponent:
         firewall_props_internet_enabled: SREFirewallProps,
         stack_name: str,
         tags: dict[str, str],
-    ):
+    ) -> None:
 
         firewall_component: SREFirewallComponent = SREFirewallComponent(
             name="sre_firewall_with_internet",
@@ -135,7 +139,7 @@ class TestSREFirewallComponent:
 
         def assert_on_firewall_rules(
             args: list,
-        ):
+        ) -> None:
             application_rule_collections = args[0]
             network_rule_collections = args[1]
 
@@ -147,8 +151,8 @@ class TestSREFirewallComponent:
             ]
 
             assert (
-                len(application_rule_collections) == 6
-            )  # There are application rules for: 1) dns-sidecar, 2) apt, 3) clamav, 4) guacamole, 5) identity, and 6) nexus
+                len(application_rule_collections) == 5
+            )  # There are application rules for: 1) dns-sidecar, 2) apt, 3) clamav, 4) guacamole, 5) identity
             assert len(allow_internet_collection) == 1
 
         pulumi.Output.all(
@@ -162,7 +166,7 @@ class TestSREFirewallComponent:
         firewall_props_internet_disabled: SREFirewallProps,
         stack_name: str,
         tags: dict[str, str],
-    ):
+    ) -> None:
         firewall_component: SREFirewallComponent = SREFirewallComponent(
             name="sre_firewall_with_internet",
             stack_name=stack_name,
@@ -172,7 +176,7 @@ class TestSREFirewallComponent:
 
         def assert_on_firewall_rules(
             args: list,
-        ):
+        ) -> None:
             application_rule_collections = args[0]
             network_rule_collections = args[1]
 

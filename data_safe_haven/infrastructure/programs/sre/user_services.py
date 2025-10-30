@@ -3,6 +3,7 @@ from collections.abc import Mapping
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import network
 
+from data_safe_haven.config.config_sections import ConfigSubsectionGiteaMirror
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     get_id_from_subnet,
@@ -13,6 +14,10 @@ from data_safe_haven.infrastructure.components import (
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps
+from .gitea_mirror_manager import (
+    SREGiteaMirrorManagerComponent,
+    SREGiteaMirrorManagerProps,
+)
 from .gitea_server import SREGiteaServerComponent, SREGiteaServerProps
 from .hedgedoc_server import SREHedgeDocServerComponent, SREHedgeDocServerProps
 from .software_repositories import (
@@ -26,11 +31,13 @@ class SREUserServicesProps:
 
     def __init__(
         self,
+        allow_workspace_internet: Input[bool],
         database_service_admin_password: Input[str],
         databases: list[DatabaseSystem],  # this must *not* be passed as an Input[T]
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         gitea_database_password: Input[str],
+        gitea_mirror_database_password: Input[str],
         hedgedoc_database_password: Input[str],
         ldap_server_hostname: Input[str],
         ldap_server_port: Input[int],
@@ -44,18 +51,22 @@ class SREUserServicesProps:
         software_packages: SoftwarePackageCategory,
         sre_fqdn: Input[str],
         nexus_persistent_quota_gb: Input[int],
+        repository_data: ConfigSubsectionGiteaMirror,
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
         subnet_containers_support: Input[network.GetSubnetResult],
+        subnet_gitea_mirrors: Input[network.GetSubnetResult],
         subnet_databases: Input[network.GetSubnetResult],
-        subnet_software_repositories: Input[network.GetSubnetResult],
+        subnet_software_repositories: Input[network.GetSubnetResult] | None,
     ) -> None:
+        self.allow_workspace_internet = allow_workspace_internet
         self.database_service_admin_password = database_service_admin_password
         self.databases = databases
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.gitea_database_password = gitea_database_password
+        self.gitea_mirror_database_password = gitea_mirror_database_password
         self.hedgedoc_database_password = hedgedoc_database_password
         self.ldap_server_hostname = ldap_server_hostname
         self.ldap_server_port = ldap_server_port
@@ -65,6 +76,7 @@ class SREUserServicesProps:
         self.location = location
         self.log_analytics_workspace = log_analytics_workspace
         self.nexus_admin_password = Output.secret(nexus_admin_password)
+        self.repository_data = repository_data
         self.resource_group_name = resource_group_name
         self.nexus_persistent_quota_gb = nexus_persistent_quota_gb
         self.software_packages = software_packages
@@ -80,9 +92,18 @@ class SREUserServicesProps:
         self.subnet_databases_id = Output.from_input(subnet_databases).apply(
             get_id_from_subnet
         )
-        self.subnet_software_repositories_id = Output.from_input(
-            subnet_software_repositories
-        ).apply(get_id_from_subnet)
+
+        self.subnet_gitea_mirrors_id: Output[str] | None = None
+        if subnet_gitea_mirrors is not None:
+            self.subnet_gitea_mirrors_id = Output.from_input(
+                subnet_gitea_mirrors
+            ).apply(get_id_from_subnet)
+
+        self.subnet_software_repositories_id: Output[str] | None = None
+        if subnet_software_repositories is not None:
+            self.subnet_software_repositories_id = Output.from_input(
+                subnet_software_repositories
+            ).apply(get_id_from_subnet)
 
 
 class SREUserServicesComponent(ComponentResource):
@@ -126,6 +147,32 @@ class SREUserServicesComponent(ComponentResource):
             tags=child_tags,
         )
 
+        # Deploy the Gitea Mirror
+        if props.subnet_gitea_mirrors_id is not None:
+            self.mirror_monitor = SREGiteaMirrorManagerComponent(
+                "gitea_mirror_monitor",
+                stack_name,
+                SREGiteaMirrorManagerProps(
+                    database_subnet_id=props.subnet_containers_support_id,
+                    database_password=props.gitea_mirror_database_password,
+                    dns_server_ip=props.dns_server_ip,
+                    dockerhub_credentials=props.dockerhub_credentials,
+                    gitea_workspace_dns_record=self.gitea_server.dns_record_name,
+                    location=props.location,
+                    log_analytics_workspace=props.log_analytics_workspace,
+                    mirror_manager_subnet_id=props.subnet_gitea_mirrors_id,
+                    repository_data=props.repository_data,
+                    resource_group_name=props.resource_group_name,
+                    sre_fqdn=props.sre_fqdn,
+                    storage_account_key=props.storage_account_key,
+                    storage_account_name=props.storage_account_name,
+                    workspace_username=self.gitea_server.workspace_username,
+                    workspace_password=self.gitea_server.workspace_password,
+                ),
+                opts=child_opts,
+                tags=child_tags,
+            )
+
         # Deploy the HedgeDoc server
         self.hedgedoc_server = SREHedgeDocServerComponent(
             "sre_hedgedoc_server",
@@ -153,26 +200,27 @@ class SREUserServicesComponent(ComponentResource):
         )
 
         # Deploy software repository servers
-        self.software_repositories = SRESoftwareRepositoriesComponent(
-            "sre_software_repositories",
-            stack_name,
-            SRESoftwareRepositoriesProps(
-                dns_server_ip=props.dns_server_ip,
-                dockerhub_credentials=props.dockerhub_credentials,
-                location=props.location,
-                log_analytics_workspace=props.log_analytics_workspace,
-                nexus_admin_password=props.nexus_admin_password,
-                resource_group_name=props.resource_group_name,
-                sre_fqdn=props.sre_fqdn,
-                software_packages=props.software_packages,
-                nexus_persistent_quota_gb=props.nexus_persistent_quota_gb,
-                storage_account_key=props.storage_account_key,
-                storage_account_name=props.storage_account_name,
-                subnet_id=props.subnet_software_repositories_id,
-            ),
-            opts=child_opts,
-            tags=child_tags,
-        )
+        if props.subnet_software_repositories_id is not None:
+            self.software_repositories = SRESoftwareRepositoriesComponent(
+                "sre_software_repositories",
+                stack_name,
+                SRESoftwareRepositoriesProps(
+                    dns_server_ip=props.dns_server_ip,
+                    dockerhub_credentials=props.dockerhub_credentials,
+                    location=props.location,
+                    log_analytics_workspace=props.log_analytics_workspace,
+                    nexus_admin_password=props.nexus_admin_password,
+                    resource_group_name=props.resource_group_name,
+                    sre_fqdn=props.sre_fqdn,
+                    software_packages=props.software_packages,
+                    nexus_persistent_quota_gb=props.nexus_persistent_quota_gb,
+                    storage_account_key=props.storage_account_key,
+                    storage_account_name=props.storage_account_name,
+                    subnet_id=props.subnet_software_repositories_id,
+                ),
+                opts=child_opts,
+                tags=child_tags,
+            )
 
         # Deploy whichever database systems are selected
         for database in props.databases:

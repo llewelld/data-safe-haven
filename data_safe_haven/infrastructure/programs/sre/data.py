@@ -7,10 +7,12 @@ import pulumi_random
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import (
     authorization,
-    insights,
+    dns,
     keyvault,
     managedidentity,
+    monitor,
     network,
+    privatedns,
     resources,
     storage,
 )
@@ -50,8 +52,8 @@ class SREDataProps:
         admin_group_id: Input[str],
         admin_ip_addresses: Input[Sequence[str]],
         data_provider_ip_addresses: Input[list[str]],
-        dns_private_zones: Input[dict[str, network.PrivateZone]],
-        dns_record: Input[network.RecordSet],
+        dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
+        dns_record: Input[dns.RecordSet],
         dns_server_admin_password: Input[pulumi_random.RandomPassword],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
@@ -295,6 +297,28 @@ class SREDataComponent(ComponentResource):
             tags=child_tags,
         )
 
+        # Secret: Gitea mirror database password.
+        password_gitea_mirror_database_admin = pulumi_random.RandomPassword(
+            f"{self._name}_password_gitea_mirror_database_admin",
+            length=20,
+            special=True,
+            opts=ResourceOptions.merge(child_opts, ResourceOptions(parent=key_vault)),
+        )
+
+        keyvault.Secret(
+            f"{self._name}_kvs_password_gitea_mirror_database_admin",
+            properties=keyvault.SecretPropertiesArgs(
+                value=password_gitea_mirror_database_admin.result
+            ),
+            resource_group_name=props.resource_group_name,
+            secret_name="password-gitea-mirror-database-admin",
+            vault_name=key_vault.name,
+            opts=ResourceOptions.merge(
+                child_opts, ResourceOptions(parent=password_gitea_mirror_database_admin)
+            ),
+            tags=child_tags,
+        )
+
         # Secret: Hedgedoc database admin password
         password_hedgedoc_database_admin = pulumi_random.RandomPassword(
             f"{self._name}_password_hedgedoc_database_admin",
@@ -422,7 +446,7 @@ class SREDataComponent(ComponentResource):
             )
         )
         # Add diagnostic setting for files
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{storage_account_data_configuration._name}_diagnostic_setting",
             name=f"{storage_account_data_configuration._name}_diagnostic_setting",
             log_analytics_destination_type="Dedicated",
@@ -660,7 +684,7 @@ class SREDataComponent(ComponentResource):
             tags=child_tags,
         )
         # Add diagnostic setting for files
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{storage_account_data_private_user._name}_diagnostic_setting",
             name=f"{storage_account_data_private_user._name}_diagnostic_setting",
             log_analytics_destination_type="Dedicated",
@@ -802,6 +826,9 @@ class SREDataComponent(ComponentResource):
         )
         self.password_gitea_database_admin = Output.secret(
             password_gitea_database_admin.result
+        )
+        self.password_gitea_mirror_database_admin = Output.secret(
+            password_gitea_mirror_database_admin.result
         )
         self.password_hedgedoc_database_admin = Output.secret(
             password_hedgedoc_database_admin.result

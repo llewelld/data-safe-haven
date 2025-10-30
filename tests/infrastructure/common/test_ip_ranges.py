@@ -4,7 +4,7 @@ from data_safe_haven.infrastructure.common import SREDnsIpRanges, SREIpRanges
 
 class TestSREIpRanges:
 
-    def test_vnet_and_subnets(self):
+    def test_vnet_and_subnets(self) -> None:
         assert SREIpRanges.vnet == AzureIPv4Range("10.0.0.0", "10.0.255.255")
         assert SREIpRanges.application_gateway == AzureIPv4Range(
             "10.0.0.0", "10.0.0.255"
@@ -44,7 +44,13 @@ class TestSREIpRanges:
         )
         assert SREIpRanges.workspaces == AzureIPv4Range("10.0.2.0", "10.0.2.255")
 
+        assert SREIpRanges.dns_sidecar == AzureIPv4Range("10.0.3.0", "10.0.3.31")
+
+        assert SREIpRanges.user_services_gitea_mirror == AzureIPv4Range(
+            "10.0.3.32", "10.0.3.39"
+        )
+
 
 class TestSREDnsIpRanges:
-    def test_vnet(self):
+    def test_vnet(self) -> None:
         assert SREDnsIpRanges.vnet == AzureIPv4Range("192.168.0.0", "192.168.0.7")

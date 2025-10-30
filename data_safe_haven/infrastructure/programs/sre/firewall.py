@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import insights, network
+from pulumi_azure_native import monitor, network
 
 from data_safe_haven.infrastructure.common import (
     get_address_prefixes_from_subnet,
@@ -37,7 +37,10 @@ class SREFirewallProps:
         subnet_firewall_management: Input[network.GetSubnetResult],
         subnet_guacamole_containers: Input[network.GetSubnetResult],
         subnet_identity_containers: Input[network.GetSubnetResult],
-        subnet_user_services_software_repositories: Input[network.GetSubnetResult],
+        subnet_user_services_gitea_mirror: Input[network.GetSubnetResult] | None,
+        subnet_user_services_software_repositories: (
+            Input[network.GetSubnetResult] | None
+        ),
         subnet_workspaces: Input[network.GetSubnetResult],
     ) -> None:
         self.allow_workspace_internet = allow_workspace_internet
@@ -68,9 +71,23 @@ class SREFirewallProps:
         self.subnet_guacamole_containers_prefixes = Output.from_input(
             subnet_guacamole_containers
         ).apply(get_address_prefixes_from_subnet)
-        self.subnet_user_services_software_repositories_prefixes = Output.from_input(
-            subnet_user_services_software_repositories
-        ).apply(get_address_prefixes_from_subnet)
+
+        self.subnet_user_services_software_repositories_prefixes: (
+            Output[list[str]] | None
+        ) = None
+
+        if subnet_user_services_software_repositories is not None:
+            self.subnet_user_services_software_repositories_prefixes = (
+                Output.from_input(subnet_user_services_software_repositories).apply(
+                    get_address_prefixes_from_subnet
+                )
+            )
+
+        self.subnet_user_services_gitea_mirror_prefixes: Output[list[str]] | None = None
+        if subnet_user_services_gitea_mirror is not None:
+            self.subnet_user_services_gitea_mirror_prefixes = Output.from_input(
+                subnet_user_services_gitea_mirror
+            ).apply(get_address_prefixes_from_subnet)
         self.subnet_workspaces_prefixes = Output.from_input(subnet_workspaces).apply(
             get_address_prefixes_from_subnet
         )
@@ -218,39 +235,6 @@ class SREFirewallComponent(ComponentResource):
                 action=network.AzureFirewallRCActionArgs(
                     type=network.AzureFirewallRCActionType.ALLOW
                 ),
-                name="software-repositories-allow",
-                priority=FirewallPriorities.SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
-                rules=[
-                    network.AzureFirewallApplicationRuleArgs(
-                        description="Allow external CRAN package requests",
-                        name="AllowCRANPackageDownload",
-                        protocols=[
-                            network.AzureFirewallApplicationRuleProtocolArgs(
-                                port=int(Ports.HTTPS),
-                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
-                            )
-                        ],
-                        source_addresses=props.subnet_user_services_software_repositories_prefixes,
-                        target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_R,
-                    ),
-                    network.AzureFirewallApplicationRuleArgs(
-                        description="Allow external PyPI package requests",
-                        name="AllowPyPIPackageDownload",
-                        protocols=[
-                            network.AzureFirewallApplicationRuleProtocolArgs(
-                                port=int(Ports.HTTPS),
-                                protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
-                            )
-                        ],
-                        source_addresses=props.subnet_user_services_software_repositories_prefixes,
-                        target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_PYTHON,
-                    ),
-                ],
-            ),
-            network.AzureFirewallApplicationRuleCollectionArgs(
-                action=network.AzureFirewallRCActionArgs(
-                    type=network.AzureFirewallRCActionType.ALLOW
-                ),
                 name="dns-sidecar-allow",
                 priority=FirewallPriorities.SRE_DNS_SIDECAR,
                 rules=[
@@ -386,6 +370,74 @@ class SREFirewallComponent(ComponentResource):
                         ),
                     ],
                 ),
+            ]
+
+            if props.subnet_user_services_software_repositories_prefixes is not None:
+                application_rule_collections.append(
+                    network.AzureFirewallApplicationRuleCollectionArgs(
+                        action=network.AzureFirewallRCActionArgs(
+                            type=network.AzureFirewallRCActionType.ALLOW
+                        ),
+                        name="software-repositories-allow",
+                        priority=FirewallPriorities.SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
+                        rules=[
+                            network.AzureFirewallApplicationRuleArgs(
+                                description="Allow external CRAN package requests",
+                                name="AllowCRANPackageDownload",
+                                protocols=[
+                                    network.AzureFirewallApplicationRuleProtocolArgs(
+                                        port=int(Ports.HTTPS),
+                                        protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                                    )
+                                ],
+                                source_addresses=props.subnet_user_services_software_repositories_prefixes,
+                                target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_R,
+                            ),
+                            network.AzureFirewallApplicationRuleArgs(
+                                description="Allow external PyPI package requests",
+                                name="AllowPyPIPackageDownload",
+                                protocols=[
+                                    network.AzureFirewallApplicationRuleProtocolArgs(
+                                        port=int(Ports.HTTPS),
+                                        protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                                    )
+                                ],
+                                source_addresses=props.subnet_user_services_software_repositories_prefixes,
+                                target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_PYTHON,
+                            ),
+                        ],
+                    )
+                )
+
+            if props.subnet_user_services_gitea_mirror_prefixes is not None:
+                application_rule_collections.append(
+                    network.AzureFirewallApplicationRuleCollectionArgs(
+                        action=network.AzureFirewallRCActionArgs(
+                            type=network.AzureFirewallRCActionType.ALLOW
+                        ),
+                        name="user-services-gitea-mirror-allow",
+                        priority=FirewallPriorities.SRE_USER_SERVICES_GITEA_MIRROR,
+                        rules=[
+                            network.AzureFirewallApplicationRuleArgs(
+                                description="Allow external GitHub repository update requests",
+                                name="AllowGitHubRepositoryUpdates",
+                                protocols=[
+                                    network.AzureFirewallApplicationRuleProtocolArgs(
+                                        port=int(Ports.HTTP),
+                                        protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTP,
+                                    ),
+                                    network.AzureFirewallApplicationRuleProtocolArgs(
+                                        port=int(Ports.HTTPS),
+                                        protocol_type=network.AzureFirewallApplicationRuleProtocolType.HTTPS,
+                                    ),
+                                ],
+                                source_addresses=props.subnet_user_services_gitea_mirror_prefixes,
+                                target_fqdns=PermittedDomains.SOFTWARE_REPOSITORIES_GITHUB,
+                            ),
+                        ],
+                    )
+                )
+            application_rule_collections.append(
                 network.AzureFirewallApplicationRuleCollectionArgs(
                     action=network.AzureFirewallRCActionArgs(
                         type=network.AzureFirewallRCActionType.DENY
@@ -410,8 +462,8 @@ class SREFirewallComponent(ComponentResource):
                             target_fqdns=ForbiddenDomains.UBUNTU_SNAPCRAFT,
                         ),
                     ],
-                ),
-            ]
+                )
+            )
 
         # Deploy firewall
         self.firewall = network.AzureFirewall(
@@ -443,7 +495,7 @@ class SREFirewallComponent(ComponentResource):
 
         # Add diagnostic settings for firewall
         # This links the firewall to the log analytics workspace
-        insights.DiagnosticSetting(
+        monitor.DiagnosticSetting(
             f"{self._name}_firewall_diagnostic_settings",
             name="firewall_diagnostic_settings",
             log_analytics_destination_type="Dedicated",

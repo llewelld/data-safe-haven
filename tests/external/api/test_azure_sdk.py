@@ -1,11 +1,9 @@
 import pytest
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
-from azure.mgmt.keyvault.v2023_07_01.models import DeletedVault
+from azure.mgmt.keyvault.models import DeletedVault
 from azure.mgmt.resource.subscriptions import SubscriptionClient
 from azure.mgmt.resource.subscriptions.models import Subscription
-from azure.mgmt.storage.v2024_01_01.models import (
-    StorageAccountListKeysResult,
-)
+from azure.mgmt.storage.models import StorageAccountListKeysResult
 from pytest import fixture
 
 import data_safe_haven.external.api.azure_sdk
@@ -51,7 +49,9 @@ def mock_blob_client(monkeypatch):
         )
 
     monkeypatch.setattr(
-        data_safe_haven.external.api.azure_sdk.AzureSdk, "blob_client", mock_blob_client
+        data_safe_haven.external.api.azure_sdk.AzureSdk,
+        "blob_client_",
+        mock_blob_client,
     )
 
 
@@ -97,7 +97,7 @@ def mock_share_client(monkeypatch):
 
     monkeypatch.setattr(
         data_safe_haven.external.api.azure_sdk.AzureSdk,
-        "share_client",
+        "share_client_",
         mock_share_client,
     )
 
@@ -114,7 +114,7 @@ def mock_share_service_client(monkeypatch):
 
     monkeypatch.setattr(
         data_safe_haven.external.api.azure_sdk.AzureSdk,
-        "share_service_client",
+        "share_service_client_",
         MockShareServiceClient,
     )
 
@@ -313,11 +313,6 @@ class TestAzureSdk:
         mock_storage_exists.assert_called_once_with(
             "storage_account",
         )
-
-    def test_file_share_list(self, mock_share_service_client):  # noqa: ARG002
-        sdk = AzureSdk("subscription name")
-        shares = sdk.list_shares("resource_group", "storage_account")
-        assert shares == ["file_share_name", "file_share_name2"]
 
     def test_get_keyvault_key(self, mock_key_client):  # noqa: ARG002
         sdk = AzureSdk("subscription name")

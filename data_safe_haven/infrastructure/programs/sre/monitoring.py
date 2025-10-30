@@ -3,7 +3,13 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import insights, maintenance, network, operationalinsights
+from pulumi_azure_native import (
+    maintenance,
+    monitor,
+    network,
+    operationalinsights,
+    privatedns,
+)
 
 from data_safe_haven.functions import next_occurrence, replace_separators
 from data_safe_haven.infrastructure.common import get_id_from_subnet
@@ -16,7 +22,7 @@ class SREMonitoringProps:
 
     def __init__(
         self,
-        dns_private_zones: Input[dict[str, network.PrivateZone]],
+        dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
         location: Input[str],
         resource_group_name: Input[str],
         subnet: Input[network.GetSubnetResult],
@@ -96,11 +102,11 @@ class SREMonitoringComponent(ComponentResource):
         )
 
         # Create a private linkscope
-        log_analytics_private_link_scope = insights.PrivateLinkScope(
+        log_analytics_private_link_scope = monitor.PrivateLinkScope(
             f"{self._name}_log_analytics_private_link_scope",
-            access_mode_settings=insights.AccessModeSettingsArgs(
-                ingestion_access_mode=insights.AccessMode.PRIVATE_ONLY,
-                query_access_mode=insights.AccessMode.PRIVATE_ONLY,
+            access_mode_settings=monitor.AccessModeSettingsArgs(
+                ingestion_access_mode=monitor.AccessMode.PRIVATE_ONLY,
+                query_access_mode=monitor.AccessMode.PRIVATE_ONLY,
             ),
             location="Global",
             resource_group_name=props.resource_group_name,
@@ -114,8 +120,9 @@ class SREMonitoringComponent(ComponentResource):
             tags=child_tags,
         )
         # Link the private linkscope to the log analytics workspace
-        insights.PrivateLinkScopedResource(
+        monitor.PrivateLinkScopedResource(
             f"{self._name}_log_analytics_ampls_connection",
+            kind=monitor.ScopedResourceKind.RESOURCE,
             linked_resource_id=self.log_analytics.id,
             name=f"{stack_name}-cnxn-ampls-to-log-analytics",
             resource_group_name=props.resource_group_name,
@@ -176,12 +183,12 @@ class SREMonitoringComponent(ComponentResource):
         )
 
         # Create a data collection endpoint
-        self.data_collection_endpoint = insights.DataCollectionEndpoint(
+        self.data_collection_endpoint = monitor.DataCollectionEndpoint(
             f"{self._name}_data_collection_endpoint",
             data_collection_endpoint_name=f"{stack_name}-dce",
             location=props.location,
-            network_acls=insights.DataCollectionEndpointNetworkAclsArgs(
-                public_network_access=insights.KnownPublicNetworkAccessOptions.DISABLED,
+            network_acls=monitor.DataCollectionEndpointNetworkAclsArgs(
+                public_network_access=monitor.KnownPublicNetworkAccessOptions.DISABLED,
             ),
             resource_group_name=props.resource_group_name,
             opts=ResourceOptions.merge(
@@ -191,8 +198,9 @@ class SREMonitoringComponent(ComponentResource):
             tags=child_tags,
         )
         # Link the private linkscope to the data collection endpoint
-        insights.PrivateLinkScopedResource(
+        monitor.PrivateLinkScopedResource(
             f"{self._name}_data_collection_endpoint_ampls_connection",
+            kind=monitor.ScopedResourceKind.RESOURCE,
             linked_resource_id=self.data_collection_endpoint.id,
             name=f"{stack_name}-cnxn-ampls-to-dce",
             resource_group_name=props.resource_group_name,
@@ -203,39 +211,39 @@ class SREMonitoringComponent(ComponentResource):
         )
 
         # Create a data collection rule for VM logs
-        self.data_collection_rule_vms = insights.DataCollectionRule(
+        self.data_collection_rule_vms = monitor.DataCollectionRule(
             f"{self._name}_data_collection_rule_vms",
             data_collection_rule_name=f"{stack_name}-dcr-vms",
             data_collection_endpoint_id=self.data_collection_endpoint.id,  # used by Logs Ingestion API
-            destinations=insights.DataCollectionRuleDestinationsArgs(
+            destinations=monitor.DataCollectionRuleDestinationsArgs(
                 log_analytics=[
-                    insights.LogAnalyticsDestinationArgs(
+                    monitor.LogAnalyticsDestinationArgs(
                         name=self.log_analytics.name,
                         workspace_resource_id=self.log_analytics.id,
                     )
                 ],
             ),
             data_flows=[
-                insights.DataFlowArgs(
+                monitor.DataFlowArgs(
                     destinations=[self.log_analytics.name],
                     streams=[
-                        insights.KnownDataFlowStreams.MICROSOFT_PERF,
+                        monitor.KnownDataFlowStreams.MICROSOFT_PERF,
                     ],
                     transform_kql="source",
-                    output_stream=insights.KnownDataFlowStreams.MICROSOFT_PERF,
+                    output_stream=monitor.KnownDataFlowStreams.MICROSOFT_PERF,
                 ),
-                insights.DataFlowArgs(
+                monitor.DataFlowArgs(
                     destinations=[self.log_analytics.name],
                     streams=[
-                        insights.KnownDataFlowStreams.MICROSOFT_SYSLOG,
+                        monitor.KnownDataFlowStreams.MICROSOFT_SYSLOG,
                     ],
                     transform_kql="source",
-                    output_stream=insights.KnownDataFlowStreams.MICROSOFT_SYSLOG,
+                    output_stream=monitor.KnownDataFlowStreams.MICROSOFT_SYSLOG,
                 ),
             ],
-            data_sources=insights.DataCollectionRuleDataSourcesArgs(
+            data_sources=monitor.DataCollectionRuleDataSourcesArgs(
                 performance_counters=[
-                    insights.PerfCounterDataSourceArgs(
+                    monitor.PerfCounterDataSourceArgs(
                         counter_specifiers=[
                             "Processor(*)\\% Processor Time",
                             "Memory(*)\\% Used Memory",
@@ -245,48 +253,46 @@ class SREMonitoringComponent(ComponentResource):
                         name="LinuxPerfCounters",
                         sampling_frequency_in_seconds=60,
                         streams=[
-                            insights.KnownPerfCounterDataSourceStreams.MICROSOFT_PERF,
+                            monitor.KnownPerfCounterDataSourceStreams.MICROSOFT_PERF,
                         ],
                     ),
                 ],
                 syslog=[
-                    insights.SyslogDataSourceArgs(
+                    monitor.SyslogDataSourceArgs(
                         facility_names=[
                             # Note that ASTERISK is not currently working
-                            insights.KnownSyslogDataSourceFacilityNames.ALERT,
-                            insights.KnownSyslogDataSourceFacilityNames.AUDIT,
-                            insights.KnownSyslogDataSourceFacilityNames.AUTH,
-                            insights.KnownSyslogDataSourceFacilityNames.AUTHPRIV,
-                            insights.KnownSyslogDataSourceFacilityNames.CLOCK,
-                            insights.KnownSyslogDataSourceFacilityNames.CRON,
-                            insights.KnownSyslogDataSourceFacilityNames.DAEMON,
-                            insights.KnownSyslogDataSourceFacilityNames.FTP,
-                            insights.KnownSyslogDataSourceFacilityNames.KERN,
-                            insights.KnownSyslogDataSourceFacilityNames.LPR,
-                            insights.KnownSyslogDataSourceFacilityNames.MAIL,
-                            insights.KnownSyslogDataSourceFacilityNames.MARK,
-                            insights.KnownSyslogDataSourceFacilityNames.NEWS,
-                            insights.KnownSyslogDataSourceFacilityNames.NOPRI,
-                            insights.KnownSyslogDataSourceFacilityNames.NTP,
-                            insights.KnownSyslogDataSourceFacilityNames.SYSLOG,
-                            insights.KnownSyslogDataSourceFacilityNames.USER,
-                            insights.KnownSyslogDataSourceFacilityNames.UUCP,
+                            monitor.KnownSyslogDataSourceFacilityNames.ALERT,
+                            monitor.KnownSyslogDataSourceFacilityNames.AUDIT,
+                            monitor.KnownSyslogDataSourceFacilityNames.AUTH,
+                            monitor.KnownSyslogDataSourceFacilityNames.AUTHPRIV,
+                            monitor.KnownSyslogDataSourceFacilityNames.CLOCK,
+                            monitor.KnownSyslogDataSourceFacilityNames.CRON,
+                            monitor.KnownSyslogDataSourceFacilityNames.DAEMON,
+                            monitor.KnownSyslogDataSourceFacilityNames.FTP,
+                            monitor.KnownSyslogDataSourceFacilityNames.KERN,
+                            monitor.KnownSyslogDataSourceFacilityNames.LPR,
+                            monitor.KnownSyslogDataSourceFacilityNames.MAIL,
+                            monitor.KnownSyslogDataSourceFacilityNames.MARK,
+                            monitor.KnownSyslogDataSourceFacilityNames.NEWS,
+                            monitor.KnownSyslogDataSourceFacilityNames.NOPRI,
+                            monitor.KnownSyslogDataSourceFacilityNames.NTP,
+                            monitor.KnownSyslogDataSourceFacilityNames.SYSLOG,
+                            monitor.KnownSyslogDataSourceFacilityNames.USER,
+                            monitor.KnownSyslogDataSourceFacilityNames.UUCP,
                         ],
                         log_levels=[
                             # Note that ASTERISK is not currently working
-                            insights.KnownSyslogDataSourceLogLevels.DEBUG,
-                            insights.KnownSyslogDataSourceLogLevels.INFO,
-                            insights.KnownSyslogDataSourceLogLevels.NOTICE,
-                            insights.KnownSyslogDataSourceLogLevels.WARNING,
-                            insights.KnownSyslogDataSourceLogLevels.ERROR,
-                            insights.KnownSyslogDataSourceLogLevels.CRITICAL,
-                            insights.KnownSyslogDataSourceLogLevels.ALERT,
-                            insights.KnownSyslogDataSourceLogLevels.EMERGENCY,
+                            monitor.KnownSyslogDataSourceLogLevels.DEBUG,
+                            monitor.KnownSyslogDataSourceLogLevels.INFO,
+                            monitor.KnownSyslogDataSourceLogLevels.NOTICE,
+                            monitor.KnownSyslogDataSourceLogLevels.WARNING,
+                            monitor.KnownSyslogDataSourceLogLevels.ERROR,
+                            monitor.KnownSyslogDataSourceLogLevels.CRITICAL,
+                            monitor.KnownSyslogDataSourceLogLevels.ALERT,
+                            monitor.KnownSyslogDataSourceLogLevels.EMERGENCY,
                         ],
                         name="LinuxSyslog",
-                        streams=[
-                            insights.KnownSyslogDataSourceStreams.MICROSOFT_SYSLOG
-                        ],
+                        streams=[monitor.KnownSyslogDataSourceStreams.MICROSOFT_SYSLOG],
                     ),
                 ],
             ),

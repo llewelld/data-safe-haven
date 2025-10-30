@@ -21,7 +21,6 @@ from .sre.application_gateway import (
     SREApplicationGatewayProps,
 )
 from .sre.apt_proxy_server import SREAptProxyServerComponent, SREAptProxyServerProps
-from .sre.backup import SREBackupComponent, SREBackupProps
 from .sre.clamav_mirror import SREClamAVMirrorComponent, SREClamAVMirrorProps
 from .sre.data import SREDataComponent, SREDataProps
 from .sre.desired_state import SREDesiredStateComponent, SREDesiredStateProps
@@ -30,7 +29,10 @@ from .sre.entra import SREEntraComponent, SREEntraProps
 from .sre.firewall import SREFirewallComponent, SREFirewallProps
 from .sre.identity import SREIdentityComponent, SREIdentityProps
 from .sre.monitoring import SREMonitoringComponent, SREMonitoringProps
-from .sre.networking import SRENetworkingComponent, SRENetworkingProps
+from .sre.networking import (
+    SRENetworkingComponent,
+    SRENetworkingProps,
+)
 from .sre.remote_desktop import SRERemoteDesktopComponent, SRERemoteDesktopProps
 from .sre.user_services import SREUserServicesComponent, SREUserServicesProps
 from .sre.workspaces import SREWorkspacesComponent, SREWorkspacesProps
@@ -156,6 +158,9 @@ class DeclarativeSRE:
                 shm_subscription_id=shm_subscription_id,
                 shm_zone_name=shm_fqdn,
                 sre_name=self.config.name,
+                use_gitea_mirror=not self.config.sre.allow_workspace_internet
+                and len(self.config.user_services.gitea_mirror.repositories) > 0,
+                use_software_repositories=not self.config.sre.allow_workspace_internet,
                 user_public_ip_ranges=self.config.sre.research_user_ip_addresses,
             ),
             tags=self.tags,
@@ -203,6 +208,7 @@ class DeclarativeSRE:
                 subnet_firewall_management=networking.subnet_firewall_management,
                 subnet_guacamole_containers=networking.subnet_guacamole_containers,
                 subnet_identity_containers=networking.subnet_identity_containers,
+                subnet_user_services_gitea_mirror=networking.subnet_user_services_gitea_mirror,
                 subnet_user_services_software_repositories=networking.subnet_user_services_software_repositories,
                 subnet_workspaces=networking.subnet_workspaces,
             ),
@@ -344,11 +350,13 @@ class DeclarativeSRE:
             "sre_user_services",
             self.stack_name,
             SREUserServicesProps(
+                allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 database_service_admin_password=data.password_database_service_admin,
                 databases=self.config.sre.databases,
                 dns_server_ip=dns.ip_address,
                 dockerhub_credentials=dockerhub_credentials,
                 gitea_database_password=data.password_gitea_database_admin,
+                gitea_mirror_database_password=data.password_gitea_mirror_database_admin,
                 hedgedoc_database_password=data.password_hedgedoc_database_admin,
                 ldap_server_hostname=identity.hostname,
                 ldap_server_port=identity.server_port,
@@ -359,6 +367,7 @@ class DeclarativeSRE:
                 log_analytics_workspace=monitoring.log_analytics,
                 nexus_admin_password=data.password_nexus_admin,
                 resource_group_name=resource_group.name,
+                repository_data=self.config.user_services.gitea_mirror,
                 software_packages=self.config.sre.software_packages,
                 sre_fqdn=networking.sre_fqdn,
                 nexus_persistent_quota_gb=self.config.user_services.nexus.persistent_quota_gb,
@@ -366,6 +375,7 @@ class DeclarativeSRE:
                 storage_account_name=data.storage_account_data_configuration_name,
                 subnet_containers=networking.subnet_user_services_containers,
                 subnet_containers_support=networking.subnet_user_services_containers_support,
+                subnet_gitea_mirrors=networking.subnet_user_services_gitea_mirror,
                 subnet_databases=networking.subnet_user_services_databases,
                 subnet_software_repositories=networking.subnet_user_services_software_repositories,
             ),
@@ -378,6 +388,7 @@ class DeclarativeSRE:
             self.stack_name,
             SREDesiredStateProps(
                 admin_ip_addresses=self.config.sre.admin_ip_addresses,
+                allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 clamav_mirror_hostname=clamav_mirror.hostname,
                 database_service_admin_password=data.password_database_service_admin,
                 dns_private_zones=dns.private_zones,
@@ -392,7 +403,11 @@ class DeclarativeSRE:
                 location=self.config.azure.location,
                 log_analytics_workspace=monitoring.log_analytics,
                 resource_group=resource_group,
-                software_repository_hostname=user_services.software_repositories.hostname,
+                software_repository_hostname=(
+                    user_services.software_repositories.hostname
+                    if not self.config.sre.allow_workspace_internet
+                    else ""
+                ),
                 subnet_desired_state=networking.subnet_desired_state,
                 subscription_name=sre_subscription_name,
             ),
@@ -423,28 +438,18 @@ class DeclarativeSRE:
             tags=self.tags,
         )
 
-        # Deploy backup service
-        SREBackupComponent(
-            "sre_backup",
-            self.stack_name,
-            SREBackupProps(
-                location=self.config.azure.location,
-                resource_group_name=resource_group.name,
-                storage_account_data_private_sensitive_id=data.storage_account_data_private_sensitive_id,
-                storage_account_data_private_sensitive_name=data.storage_account_data_private_sensitive_name,
-            ),
-            tags=self.tags,
-        )
-
         # Deploy the DNS Sidecar
         container_instance_information: list[SupportsDnsSidecar] = [
             user_services.gitea_server,
             user_services.hedgedoc_server,
-            user_services.software_repositories,
             apt_proxy_server,
             clamav_mirror,
             identity,
         ]
+        if hasattr(user_services, "software_repositories"):
+            container_instance_information.append(
+                user_services.software_repositories,
+            )
 
         DnsSidecarComponent(
             "dns_sidecar",
@@ -464,18 +469,21 @@ class DeclarativeSRE:
                 subscription_id=self.config.azure.subscription_id,
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
+                workload_maximum_count=self.config.user_services.dns_sidecar.workload_maximum_count,
+                workload_minimum_count=self.config.user_services.dns_sidecar.workload_minimum_count,
             ),
         )
 
         # Export values for later use
-        pulumi.export(
-            "allowlist_share_name",
-            user_services.software_repositories.allowlist_file_share_name,
-        )
-        pulumi.export(
-            "allowlist_share_filenames",
-            user_services.software_repositories.allowlist_file_names,
-        )
+        if not self.config.sre.allow_workspace_internet:
+            pulumi.export(
+                "allowlist_share_name",
+                user_services.software_repositories.allowlist_file_share_name,
+            )
+            pulumi.export(
+                "allowlist_share_filenames",
+                user_services.software_repositories.allowlist_file_names,
+            )
         pulumi.export("data", data.exports)
         pulumi.export("ldap", ldap_group_names)
         pulumi.export("remote_desktop", remote_desktop.exports)

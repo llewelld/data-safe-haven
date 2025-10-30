@@ -4,7 +4,7 @@ from collections.abc import Mapping
 
 import pulumi_random
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, network
+from pulumi_azure_native import containerinstance, network, privatedns
 
 from data_safe_haven.functions import b64encode, replace_separators
 from data_safe_haven.infrastructure.common import (
@@ -31,7 +31,7 @@ class SREDnsServerProps:
         *,
         allow_workspace_internet: bool,
         dockerhub_credentials: DockerHubCredentials,
-        location: Input[str],
+        location: str,
         resource_group_name: Input[str],
         shm_fqdn: Input[str],
     ) -> None:
@@ -76,7 +76,7 @@ class SREDnsServerComponent(ComponentResource):
             filter_allow = Output.from_input(props.shm_fqdn).apply(
                 lambda fqdn: [
                     f"*.{fqdn}",
-                    *PermittedDomains.ALL,
+                    *PermittedDomains.all(mapping={"location": props.location}),
                 ]
             )
             filter_block = ["*.*"]
@@ -212,7 +212,7 @@ class SREDnsServerComponent(ComponentResource):
             container_group_name=f"{stack_name}-container-group-dns",
             containers=[
                 containerinstance.ContainerArgs(
-                    image="adguard/adguardhome:v0.107.62",
+                    image="adguard/adguardhome:v0.107.67",
                     name="adguard",
                     # Providing "command" overwrites the CMD arguments in the Docker
                     # image, so we can either provide them here or set defaults in our
@@ -298,7 +298,7 @@ class SREDnsServerComponent(ComponentResource):
 
         # Create a private DNS zone for each Azure DNS zone name
         self.private_zones = {
-            dns_zone_name: network.PrivateZone(
+            dns_zone_name: privatedns.PrivateZone(
                 replace_separators(f"{self._name}_private_zone_{dns_zone_name}", "_"),
                 location="Global",
                 private_zone_name=f"privatelink.{dns_zone_name}",
@@ -311,7 +311,7 @@ class SREDnsServerComponent(ComponentResource):
 
         # Link Azure private DNS zones to virtual network
         for dns_zone_name, private_dns_zone in self.private_zones.items():
-            network.VirtualNetworkLink(
+            privatedns.VirtualNetworkLink(
                 replace_separators(
                     f"{self._name}_private_zone_{dns_zone_name}_vnet_dns_link", "_"
                 ),

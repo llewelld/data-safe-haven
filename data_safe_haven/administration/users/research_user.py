@@ -4,7 +4,7 @@ from typing import Any
 class ResearchUser:
     def __init__(
         self,
-        account_enabled: bool | None = None,
+        account_enabled: bool | None = None,  # noqa: FBT001
         country: str | None = None,
         domain: str | None = None,
         email_address: str | None = None,
@@ -23,6 +23,21 @@ class ResearchUser:
         self.sam_account_name = sam_account_name
         self.surname = surname
         self.user_principal_name = user_principal_name
+
+    def __hash__(self) -> int:
+        return hash(
+            (
+                self.account_enabled,
+                self.country,
+                self.domain,
+                self.email_address,
+                self.given_name,
+                self.phone_number,
+                self.sam_account_name,
+                self.surname,
+                self.user_principal_name,
+            )
+        )
 
     @property
     def display_name(self) -> str:

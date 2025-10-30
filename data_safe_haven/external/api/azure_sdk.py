@@ -15,15 +15,10 @@ from azure.core.exceptions import (
 from azure.keyvault.certificates import CertificateClient, KeyVaultCertificate
 from azure.keyvault.keys import KeyClient, KeyVaultKey
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
-from azure.mgmt.compute.v2021_07_01 import ComputeManagementClient
-from azure.mgmt.compute.v2021_07_01.models import (
-    ResourceSkuCapabilities,
-    RunCommandInput,
-    RunCommandInputParameter,
-    RunCommandResult,
-)
-from azure.mgmt.dns.v2018_05_01 import DnsManagementClient
-from azure.mgmt.dns.v2018_05_01.models import (
+from azure.mgmt.compute import ComputeManagementClient
+from azure.mgmt.compute.models import ResourceSkuCapabilities
+from azure.mgmt.dns import DnsManagementClient
+from azure.mgmt.dns.models import (
     CaaRecord,
     RecordSet,
     RecordType,
@@ -31,8 +26,8 @@ from azure.mgmt.dns.v2018_05_01.models import (
     Zone,
     ZoneType,
 )
-from azure.mgmt.keyvault.v2021_06_01_preview import KeyVaultManagementClient
-from azure.mgmt.keyvault.v2021_06_01_preview.models import (
+from azure.mgmt.keyvault import KeyVaultManagementClient
+from azure.mgmt.keyvault.models import (
     AccessPolicyEntry,
     Permissions,
     Sku as KeyVaultSku,
@@ -40,14 +35,14 @@ from azure.mgmt.keyvault.v2021_06_01_preview.models import (
     VaultCreateOrUpdateParameters,
     VaultProperties,
 )
-from azure.mgmt.msi.v2022_01_31_preview import ManagedServiceIdentityClient
-from azure.mgmt.msi.v2022_01_31_preview.models import Identity
-from azure.mgmt.resource.resources.v2021_04_01 import ResourceManagementClient
-from azure.mgmt.resource.resources.v2021_04_01.models import ResourceGroup
+from azure.mgmt.msi import ManagedServiceIdentityClient
+from azure.mgmt.msi.models import Identity
+from azure.mgmt.resource.resources import ResourceManagementClient
+from azure.mgmt.resource.resources.models import ResourceGroup
 from azure.mgmt.resource.subscriptions import SubscriptionClient
-from azure.mgmt.resource.subscriptions.models import Location, Subscription
-from azure.mgmt.storage.v2024_01_01 import StorageManagementClient
-from azure.mgmt.storage.v2024_01_01.models import (
+from azure.mgmt.resource.subscriptions.models import Subscription
+from azure.mgmt.storage import StorageManagementClient
+from azure.mgmt.storage.models import (
     BlobContainer,
     Kind as StorageAccountKind,
     MinimumTlsVersion,
@@ -108,7 +103,7 @@ class AzureSdk:
             )
         return self.tenant_id_
 
-    def blob_client(
+    def blob_client_(
         self,
         resource_group_name: str,
         storage_account_name: str,
@@ -117,7 +112,7 @@ class AzureSdk:
     ) -> BlobClient:
         try:
             # Get the blob client from the blob service client
-            blob_service_client = self.blob_service_client(
+            blob_service_client = self.blob_service_client_(
                 resource_group_name, storage_account_name
             )
             blob_client = blob_service_client.get_blob_client(
@@ -148,7 +143,7 @@ class AzureSdk:
             msg = f"Storage account '{storage_account_name}' could not be found."
             raise DataSafeHavenAzureStorageError(msg)
         try:
-            blob_client = self.blob_client(
+            blob_client = self.blob_client_(
                 resource_group_name,
                 storage_account_name,
                 storage_container_name,
@@ -163,114 +158,7 @@ class AzureSdk:
         )
         return exists
 
-    def list_shares(
-        self,
-        resource_group_name: str,
-        storage_account_name: str,
-    ) -> list[str]:
-        """List all shares in a container
-
-        Returns:
-            List[str]: The list of share names
-        """
-
-        share_client = self.share_service_client(
-            resource_group_name=resource_group_name,
-            storage_account_name=storage_account_name,
-        )
-        share_list = share_client.list_shares()
-        return list(share_list)
-
-    def share_client(
-        self, resource_group_name: str, storage_account_name: str, file_share_name: str
-    ) -> ShareClient:
-
-        share_service_client = self.share_service_client(
-            resource_group_name, storage_account_name
-        )
-        share_client = share_service_client.get_share_client(share=file_share_name)
-        return share_client
-
-    def share_service_client(
-        self, resource_group_name: str, storage_account_name: str
-    ) -> ShareServiceClient:
-        storage_account_keys = self.get_storage_account_keys(
-            resource_group_name, storage_account_name
-        )
-
-        share_service_client = ShareServiceClient(
-            account_url=f"https://{storage_account_name}.file.core.windows.net",
-            credential=storage_account_keys[0].value,
-        )
-        return share_service_client
-
-    def download_share_file(
-        self,
-        file_name: str,
-        resource_group_name: str,
-        storage_account_name: str,
-        file_share_name: str,
-    ) -> str:
-        """Download a share file from Azure storage
-
-        Returns:
-            str: The contents of the share
-
-        Raises:
-            DataSafeHavenAzureError if the share could not be downloaded
-        """
-        try:
-            # Get the share client
-            share_client = self.share_client(
-                resource_group_name,
-                storage_account_name,
-                file_share_name,
-            )
-            share_file_client = share_client.get_file_client(file_name)
-            # Download the requested file
-            share_content = share_file_client.download_file(encoding="utf-8").readall()
-            self.logger.debug(
-                f"Downloaded file [green]{file_name}[/] from share storage.",
-            )
-            return str(share_content)
-        except (AzureError, DataSafeHavenAzureStorageError) as exc:
-            msg = f"Share file '{file_name}' could not be downloaded from '{storage_account_name}'."
-            raise DataSafeHavenAzureError(msg) from exc
-
-    def file_share_exists(
-        self,
-        file_name: str,
-        resource_group_name: str,
-        storage_account_name: str,
-        storage_share_name: str,
-    ) -> bool:
-        """Find out whether a file share exists in Azure storage
-
-        Returns:
-            bool: Whether or not the file share exists
-        """
-
-        if not self.storage_exists(storage_account_name):
-            msg = f"Storage account '{storage_account_name}' could not be found."
-            raise DataSafeHavenAzureStorageError(msg)
-
-        try:
-            share_client = self.share_client(
-                resource_group_name,
-                storage_account_name,
-                storage_share_name,
-            )
-            share_file_client = share_client.get_file_client(file_name)
-            exists = bool(share_file_client.exists())
-        except DataSafeHavenAzureStorageError:
-            exists = False
-        response = "exists" if exists else "does not exist"
-        self.logger.debug(
-            f"File [green]{file_name}[/] {response} in file share.",
-        )
-        return exists
-
-    def blob_service_client(
+    def blob_service_client_(
         self,
         resource_group_name: str,
         storage_account_name: str,
@@ -326,7 +214,7 @@ class AzureSdk:
         """
         try:
             # Get the blob client
-            blob_client = self.blob_client(
+            blob_client = self.blob_client_(
                 resource_group_name,
                 storage_account_name,
                 storage_container_name,
@@ -340,6 +228,39 @@ class AzureSdk:
             return str(blob_content)
         except (AzureError, DataSafeHavenAzureStorageError) as exc:
             msg = f"Blob file '{blob_name}' could not be downloaded from '{storage_account_name}'."
+            raise DataSafeHavenAzureError(msg) from exc
+
+    def download_share_file(
+        self,
+        file_name: str,
+        resource_group_name: str,
+        storage_account_name: str,
+        file_share_name: str,
+    ) -> str:
+        """Download a share file from Azure storage
+
+        Returns:
+            str: The contents of the share
+
+        Raises:
+            DataSafeHavenAzureError if the share could not be downloaded
+        """
+        try:
+            # Get the share client
+            share_client = self.share_client_(
+                resource_group_name,
+                storage_account_name,
+                file_share_name,
+            )
+            share_file_client = share_client.get_file_client(file_name)
+            # Download the requested file
+            share_content = share_file_client.download_file(encoding="utf-8").readall()
+            self.logger.debug(
+                f"Downloaded file [green]{file_name}[/] from share storage.",
+            )
+            return str(share_content)
+        except (AzureError, DataSafeHavenAzureStorageError) as exc:
+            msg = f"Share file '{file_name}' could not be downloaded from '{storage_account_name}'."
             raise DataSafeHavenAzureError(msg) from exc
 
     def ensure_dns_caa_record(
@@ -743,6 +664,39 @@ class AzureSdk:
             msg = f"Failed to create storage container '{container_name}'."
             raise DataSafeHavenAzureStorageError(msg) from exc
 
+    def file_share_exists(
+        self,
+        file_name: str,
+        resource_group_name: str,
+        storage_account_name: str,
+        storage_share_name: str,
+    ) -> bool:
+        """Find out whether a file share exists in Azure storage
+
+        Returns:
+            bool: Whether or not the file share exists
+        """
+
+        if not self.storage_exists(storage_account_name):
+            msg = f"Storage account '{storage_account_name}' could not be found."
+            raise DataSafeHavenAzureStorageError(msg)
+
+        try:
+            share_client = self.share_client_(
+                resource_group_name,
+                storage_account_name,
+                storage_share_name,
+            )
+            share_file_client = share_client.get_file_client(file_name)
+            exists = bool(share_file_client.exists())
+        except DataSafeHavenAzureStorageError:
+            exists = False
+        response = "exists" if exists else "does not exist"
+        self.logger.debug(
+            f"File [green]{file_name}[/] {response} in file share.",
+        )
+        return exists
+
     def get_keyvault_certificate(
         self, certificate_name: str, key_vault_name: str
     ) -> KeyVaultCertificate:
@@ -810,27 +764,6 @@ class AzureSdk:
             raise DataSafeHavenAzureError(msg)
         except AzureError as exc:
             msg = f"Failed to retrieve secret {secret_name}."
-            raise DataSafeHavenAzureError(msg) from exc
-
-    def get_locations(self) -> list[str]:
-        """Retrieve list of Azure locations
-
-        Returns:
-            List[str]: Names of Azure locations
-        """
-        try:
-            subscription_client = SubscriptionClient(self.credential())
-            return [
-                str(location.name)
-                for location in cast(
-                    list[Location],
-                    subscription_client.subscriptions.list_locations(
-                        subscription_id=self.subscription_id
-                    ),
-                )
-            ]
-        except AzureError as exc:
-            msg = "Azure locations could not be loaded."
             raise DataSafeHavenAzureError(msg) from exc
 
     def get_storage_account_keys(
@@ -985,14 +918,13 @@ class AzureSdk:
         """List all blobs with a given prefix in a container
 
         Returns:
-            List[str]: The list of blob names
+            list[str]: The list of blob names
         """
-
-        blob_client = self.blob_service_client(
+        blob_service_client = self.blob_service_client_(
             resource_group_name=resource_group_name,
             storage_account_name=storage_account_name,
         )
-        container_client = blob_client.get_container_client(container=container_name)
+        container_client = blob_service_client.get_container_client(container_name)
         blob_list = container_client.list_blob_names(name_starts_with=prefix)
         return list(blob_list)
 
@@ -1110,7 +1042,7 @@ class AzureSdk:
         """
         try:
             # Get the blob client
-            blob_client = self.blob_client(
+            blob_client = self.blob_client_(
                 resource_group_name=resource_group_name,
                 storage_account_name=storage_account_name,
                 storage_container_name=storage_container_name,
@@ -1278,94 +1210,6 @@ class AzureSdk:
             msg = f"Failed to remove resource group {resource_group_name}."
             raise DataSafeHavenAzureError(msg) from exc
 
-    def run_remote_script(
-        self,
-        resource_group_name: str,
-        script: str,
-        script_parameters: dict[str, str],
-        vm_name: str,
-    ) -> str:
-        """Run a script on a remote virtual machine
-
-        Returns:
-            str: The script output
-
-        Raises:
-            DataSafeHavenAzureError if running the script failed
-        """
-        try:
-            # Connect to Azure clients
-            compute_client = ComputeManagementClient(
-                self.credential(), self.subscription_id
-            )
-            vm = compute_client.virtual_machines.get(resource_group_name, vm_name)
-            if not vm.os_profile:
-                msg = f"No OSProfile available for VM {vm_name}"
-                raise ValueError(msg)
-            command_id = (
-                "RunPowerShellScript"
-                if (
-                    vm.os_profile.windows_configuration
-                    and not vm.os_profile.linux_configuration
-                )
-                else "RunShellScript"
-            )
-            run_command_parameters = RunCommandInput(
-                command_id=command_id,
-                script=list(script.split("\n")),
-                parameters=[
-                    RunCommandInputParameter(name=name, value=value)
-                    for name, value in script_parameters.items()
-                ],
-            )
-            # Run the command and wait until finished
-            poller = compute_client.virtual_machines.begin_run_command(
-                resource_group_name, vm_name, run_command_parameters
-            )
-            # Cast to correct spurious type hint in Azure libraries
-            result = cast(RunCommandResult, poller.result())
-            # Return any stdout/stderr from the command
-            return str(result.value[0].message) if result.value else ""
-        except AzureError as exc:
-            msg = f"Failed to run command on '{vm_name}'."
-            raise DataSafeHavenAzureError(msg) from exc
-
-    def run_remote_script_waiting(
-        self,
-        resource_group_name: str,
-        script: str,
-        script_parameters: dict[str, str],
-        vm_name: str,
-    ) -> str:
-        """Run a script on a remote virtual machine waiting for other scripts to complete
-
-        Returns:
-            str: The script output
-
-        Raises:
-            DataSafeHavenAzureError if running the script failed
-        """
-        while True:
-            try:
-                script_output = self.run_remote_script(
-                    resource_group_name=resource_group_name,
-                    script=script,
-                    script_parameters=script_parameters,
-                    vm_name=vm_name,
-                )
-                break
-            except AzureError as exc:
-                if all(
-                    reason not in str(exc)
-                    for reason in (
-                        "The request failed due to conflict with a concurrent request",
-                        "Run command extension execution is in progress",
-                    )
-                ):
-                    raise
-                time.sleep(5)
-        return script_output
-
     def set_blob_container_acl(
         self,
         container_name: str,
@@ -1444,6 +1288,29 @@ class AzureSdk:
             )
             raise DataSafeHavenAzureError(msg) from exc
 
+    def share_client_(
+        self, resource_group_name: str, storage_account_name: str, file_share_name: str
+    ) -> ShareClient:
+
+        share_service_client = self.share_service_client_(
+            resource_group_name, storage_account_name
+        )
+        share_client = share_service_client.get_share_client(share=file_share_name)
+        return share_client
+
+    def share_service_client_(
+        self, resource_group_name: str, storage_account_name: str
+    ) -> ShareServiceClient:
+        storage_account_keys = self.get_storage_account_keys(
+            resource_group_name, storage_account_name
+        )
+
+        share_service_client = ShareServiceClient(
+            account_url=f"https://{storage_account_name}.file.core.windows.net",
+            credential=storage_account_keys[0].value,
+        )
+        return share_service_client
+
     def storage_exists(
         self,
         storage_account_name: str,
@@ -1478,7 +1345,7 @@ class AzureSdk:
         """
         try:
             # Get the blob client
-            blob_client = self.blob_client(
+            blob_client = self.blob_client_(
                 resource_group_name,
                 storage_account_name,
                 storage_container_name,
@@ -1511,7 +1378,7 @@ class AzureSdk:
         """
         try:
             # Get the share client
-            share_client = self.share_client(
+            share_client = self.share_client_(
                 resource_group_name,
                 storage_account_name,
                 file_share_name,
