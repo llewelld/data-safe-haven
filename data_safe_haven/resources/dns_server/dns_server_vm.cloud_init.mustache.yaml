@@ -1,0 +1,29 @@
+#cloud-config
+
+groups:
+  - docker
+
+system_info:
+  default_user:
+    groups: [docker]
+
+mounts:
+  # Mount ephemeral storage at resource instead of default /mnt
+  - [ephemeral0, /mnt/scratch]
+
+# Install necessary apt packages
+packages:
+  - docker.io
+  - unattended-upgrades
+package_update: true
+package_upgrade: true
+
+runcmd:
+  # Mount all external volumes
+  # --------------------------
+  - echo ">=== Mounting all external volumes... ===<"
+  - grep -v -e '^[[:space:]]*$' /etc/fstab | sed 's|^|  /etc/fstab  |'
+  - mount -fav
+  - findmnt
+
+final_message: "The system is finally up, after $UPTIME seconds"

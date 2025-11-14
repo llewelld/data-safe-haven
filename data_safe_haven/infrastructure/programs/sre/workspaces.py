@@ -55,7 +55,7 @@ class SREWorkspacesProps:
             storage_account_data_private_sensitive_name
         )
         self.subscription_name = subscription_name
-        self.virtual_network_name = Output.from_input(virtual_network).apply(
+        self.virtual_network_name: Output[str] = Output.from_input(virtual_network).apply(
             get_name_from_vnet
         )
         self.subnet_workspaces_name = Output.from_input(subnet_workspaces).apply(

@@ -22,6 +22,11 @@ from data_safe_haven.types import (
 )
 from data_safe_haven.utility import FileReader
 
+from .dns_server_vm import (
+    SREDnsServerVMComponent,
+    SREDnsServerVMProps,
+)
+
 
 class SREDnsServerProps:
     """Properties for SREDnsServerComponent"""
@@ -177,13 +182,14 @@ class SREDnsServerComponent(ComponentResource):
                 # DNS subnet
                 network.SubnetArgs(
                     address_prefix=SREDnsIpRanges.vnet.prefix,
-                    delegations=[
-                        network.DelegationArgs(
-                            name="SubnetDelegationContainerGroups",
-                            service_name="Microsoft.ContainerInstance/containerGroups",
-                            type="Microsoft.Network/virtualNetworks/subnets/delegations",
-                        ),
-                    ],
+                    # TODO(cgavidia): Removing delegations.
+                    # delegations=[
+                    #     network.DelegationArgs(
+                    #         name="SubnetDelegationContainerGroups",
+                    #         service_name="Microsoft.ContainerInstance/containerGroups",
+                    #         type="Microsoft.Network/virtualNetworks/subnets/delegations",
+                    #     ),
+                    # ],
                     name=subnet_name,
                     network_security_group=network.NetworkSecurityGroupArgs(id=nsg.id),
                     route_table=None,
@@ -194,7 +200,9 @@ class SREDnsServerComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    ignore_changes=["virtual_network_peerings"]
+                    ignore_changes=["virtual_network_peerings"],
+                    delete_before_replace=True,
+                    replace_on_changes=["subnets[*].delegations"]
                 ),  # allow peering to SRE virtual network
             ),
             tags=child_tags,
@@ -206,95 +214,110 @@ class SREDnsServerComponent(ComponentResource):
             virtual_network_name=virtual_network.name,
         )
 
-        # Define the DNS container group with AdGuard
-        container_group = containerinstance.ContainerGroup(
-            f"{self._name}_container_group",
-            container_group_name=f"{stack_name}-container-group-dns",
-            containers=[
-                containerinstance.ContainerArgs(
-                    image="adguard/adguardhome:v0.107.67",
-                    name="adguard",
-                    # Providing "command" overwrites the CMD arguments in the Docker
-                    # image, so we can either provide them here or set defaults in our
-                    # custom entrypoint.
-                    #
-                    # The entrypoint script will not be executable when mounted so we
-                    # need to explicitly run it with /bin/sh
-                    command=["/bin/sh", "/opt/adguardhome/custom/entrypoint.sh"],
-                    environment_variables=[],
-                    # All Azure Container Instances need to expose port 80 on at least
-                    # one container. In this case, the web interface is on 3000 so we
-                    # are not exposing that to users.
-                    ports=[
-                        containerinstance.ContainerPortArgs(
-                            port=53,
-                            protocol=containerinstance.ContainerGroupNetworkProtocol.UDP,
-                        ),
-                        containerinstance.ContainerPortArgs(
-                            port=80,
-                            protocol=containerinstance.ContainerGroupNetworkProtocol.TCP,
-                        ),
-                    ],
-                    resources=containerinstance.ResourceRequirementsArgs(
-                        requests=containerinstance.ResourceRequestsArgs(
-                            cpu=1,
-                            memory_in_gb=1,
-                        ),
-                    ),
-                    volume_mounts=[
-                        containerinstance.VolumeMountArgs(
-                            mount_path="/opt/adguardhome/custom",
-                            name="adguard-opt-adguardhome-custom",
-                            read_only=True,
-                        ),
-                    ],
-                ),
-            ],
-            # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
-            image_registry_credentials=[
-                {
-                    "password": Output.secret(props.dockerhub_credentials.access_token),
-                    "server": props.dockerhub_credentials.server,
-                    "username": props.dockerhub_credentials.username,
-                }
-            ],
-            ip_address=containerinstance.IpAddressArgs(
-                ports=[
-                    containerinstance.PortArgs(
-                        port=80,
-                        protocol=containerinstance.ContainerGroupNetworkProtocol.TCP,
-                    )
-                ],
-                type=containerinstance.ContainerGroupIpAddressType.PRIVATE,
-            ),
-            location=props.location,
-            os_type=containerinstance.OperatingSystemTypes.LINUX,
-            resource_group_name=props.resource_group_name,
-            restart_policy=containerinstance.ContainerGroupRestartPolicy.ALWAYS,
-            sku=containerinstance.ContainerGroupSku.STANDARD,
-            subnet_ids=[containerinstance.ContainerGroupSubnetIdArgs(id=subnet_dns.id)],
-            volumes=[
-                containerinstance.VolumeArgs(
-                    name="adguard-opt-adguardhome-custom",
-                    secret={
-                        "entrypoint.sh": b64encode(
-                            adguard_entrypoint_sh_reader.file_contents()
-                        ),
-                        "AdGuardHome.yaml": adguard_adguardhome_yaml_contents.apply(
-                            lambda s: b64encode(s)
-                        ),
-                    },
-                ),
-            ],
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(
-                    delete_before_replace=True,
-                    replace_on_changes=["containers"],
-                ),
+        dns_server_vm_component = SREDnsServerVMComponent(
+            "dns_server_vm",
+            stack_name,
+            SREDnsServerVMProps(
+                admin_password="AzureUser1*",  # TODO(cgavida): Hardcoded, for now.
+                location=props.location,
+                resource_group_name=props.resource_group_name,
+                subnet_dns=subnet_dns,
+                virtual_network=virtual_network,
+                vm_size="Standard_D2s_v5",  # TODO(cgavidia): Hardcoded, for now.
             ),
             tags=child_tags,
         )
+
+        # TODO(cgavidia): Temporarily disabled.
+        # Define the DNS container group with AdGuard
+        # container_group = containerinstance.ContainerGroup(
+        #     f"{self._name}_container_group",
+        #     container_group_name=f"{stack_name}-container-group-dns",
+        #     containers=[
+        #         containerinstance.ContainerArgs(
+        #             image="adguard/adguardhome:v0.107.67",
+        #             name="adguard",
+        #             # Providing "command" overwrites the CMD arguments in the Docker
+        #             # image, so we can either provide them here or set defaults in our
+        #             # custom entrypoint.
+        #             #
+        #             # The entrypoint script will not be executable when mounted so we
+        #             # need to explicitly run it with /bin/sh
+        #             command=["/bin/sh", "/opt/adguardhome/custom/entrypoint.sh"],
+        #             environment_variables=[],
+        #             # All Azure Container Instances need to expose port 80 on at least
+        #             # one container. In this case, the web interface is on 3000 so we
+        #             # are not exposing that to users.
+        #             ports=[
+        #                 containerinstance.ContainerPortArgs(
+        #                     port=53,
+        #                     protocol=containerinstance.ContainerGroupNetworkProtocol.UDP,
+        #                 ),
+        #                 containerinstance.ContainerPortArgs(
+        #                     port=80,
+        #                     protocol=containerinstance.ContainerGroupNetworkProtocol.TCP,
+        #                 ),
+        #             ],
+        #             resources=containerinstance.ResourceRequirementsArgs(
+        #                 requests=containerinstance.ResourceRequestsArgs(
+        #                     cpu=1,
+        #                     memory_in_gb=1,
+        #                 ),
+        #             ),
+        #             volume_mounts=[
+        #                 containerinstance.VolumeMountArgs(
+        #                     mount_path="/opt/adguardhome/custom",
+        #                     name="adguard-opt-adguardhome-custom",
+        #                     read_only=True,
+        #                 ),
+        #             ],
+        #         ),
+        #     ],
+        #     # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
+        #     image_registry_credentials=[
+        #         {
+        #             "password": Output.secret(props.dockerhub_credentials.access_token),
+        #             "server": props.dockerhub_credentials.server,
+        #             "username": props.dockerhub_credentials.username,
+        #         }
+        #     ],
+        #     ip_address=containerinstance.IpAddressArgs(
+        #         ports=[
+        #             containerinstance.PortArgs(
+        #                 port=80,
+        #                 protocol=containerinstance.ContainerGroupNetworkProtocol.TCP,
+        #             )
+        #         ],
+        #         type=containerinstance.ContainerGroupIpAddressType.PRIVATE,
+        #     ),
+        #     location=props.location,
+        #     os_type=containerinstance.OperatingSystemTypes.LINUX,
+        #     resource_group_name=props.resource_group_name,
+        #     restart_policy=containerinstance.ContainerGroupRestartPolicy.ALWAYS,
+        #     sku=containerinstance.ContainerGroupSku.STANDARD,
+        #     subnet_ids=[containerinstance.ContainerGroupSubnetIdArgs(id=subnet_dns.id)],
+        #     volumes=[
+        #         containerinstance.VolumeArgs(
+        #             name="adguard-opt-adguardhome-custom",
+        #             secret={
+        #                 "entrypoint.sh": b64encode(
+        #                     adguard_entrypoint_sh_reader.file_contents()
+        #                 ),
+        #                 "AdGuardHome.yaml": adguard_adguardhome_yaml_contents.apply(
+        #                     lambda s: b64encode(s)
+        #                 ),
+        #             },
+        #         ),
+        #     ],
+        #     opts=ResourceOptions.merge(
+        #         child_opts,
+        #         ResourceOptions(
+        #             delete_before_replace=True,
+        #             replace_on_changes=["containers"],
+        #         ),
+        #     ),
+        #     tags=child_tags,
+        # )
 
         # Create a private DNS zone for each Azure DNS zone name
         self.private_zones = {
@@ -312,7 +335,7 @@ class SREDnsServerComponent(ComponentResource):
         # Link Azure private DNS zones to virtual network
         for dns_zone_name, private_dns_zone in self.private_zones.items():
             privatedns.VirtualNetworkLink(
-                replace_separators(
+                resource_name=replace_separators(
                     f"{self._name}_private_zone_{dns_zone_name}_vnet_dns_link", "_"
                 ),
                 location="Global",
@@ -330,6 +353,8 @@ class SREDnsServerComponent(ComponentResource):
             )
 
         # Register outputs
-        self.ip_address = get_ip_address_from_container_group(container_group)
+        # TODO(cgavidia): Temporarily disabled
+        # self.ip_address = get_ip_address_from_container_group(container_group)
+        self.ip_address = dns_server_vm_component.exports["ip_address"]
         self.password_admin = password_admin
         self.virtual_network = virtual_network
