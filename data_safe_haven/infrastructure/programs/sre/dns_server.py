@@ -147,8 +147,20 @@ class SREDnsServerComponent(ComponentResource):
                     destination_port_ranges=[Ports.DNS],
                     direction=network.SecurityRuleDirection.OUTBOUND,
                     name="AllowDnsInternetOutbound",
-                    priority=NetworkingPriorities.EXTERNAL_INTERNET,
+                    priority=NetworkingPriorities.EXTERNAL_INTERNET_DNS,
                     protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix=SREDnsIpRanges.vnet.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to external repositories over the internet.",
+                    destination_address_prefix="Internet",
+                    destination_port_ranges=[Ports.HTTP, Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowPackagesInternetOutbound",
+                    priority=NetworkingPriorities.EXTERNAL_INTERNET,
+                    protocol=network.SecurityRuleProtocol.TCP,
                     source_address_prefix=SREDnsIpRanges.vnet.prefix,
                     source_port_range="*",
                 ),
@@ -202,7 +214,7 @@ class SREDnsServerComponent(ComponentResource):
                 ResourceOptions(
                     ignore_changes=["virtual_network_peerings"],
                     delete_before_replace=True,
-                    replace_on_changes=["subnets[*].delegations"]
+                    replace_on_changes=["subnets[*].delegations"],
                 ),  # allow peering to SRE virtual network
             ),
             tags=child_tags,
