@@ -20,15 +20,21 @@ class SREDnsServerVMProps:
 
     def __init__(
         self,
+        adguardhome_yaml_content: Input[str],
         admin_password: Input[str],
+        entrypoint_sh_content: str,
         location: Input[str],
         resource_group_name: Input[str],
         subnet_dns: Input[network.GetSubnetResult],
         virtual_network: Input[network.VirtualNetwork],
         vm_size: Input[str],
     ):
+        self.adguardhome_yaml_content_encoded = Output.from_input(
+            adguardhome_yaml_content
+        ).apply(b64encode)
         self.admin_password = Output.secret(admin_password)
         self.admin_username = "dshadmin"
+        self.entrypoint_sh_content_encoded = b64encode(entrypoint_sh_content)
         self.location = location
         self.resource_group_name = resource_group_name
 
@@ -68,14 +74,17 @@ class SREDnsServerVMComponent(ComponentResource):
         child_tags = {"component": "workspaces"} | (tags if tags else {})
 
         # Load cloud-init file
-        cloud_init = self.template_cloudinit()
+        cloud_init = Output.all(
+            entrypoint_sh_content_encoded=props.entrypoint_sh_content_encoded,
+            adguardhome_yaml_content_encoded=props.adguardhome_yaml_content_encoded,
+        ).apply(lambda kwargs: self.template_cloudinit(**kwargs))
 
         container_host_vm = VMComponent(
             name=replace_separators(f"{self._name}_vm_workspace_", "_"),
             props=LinuxVMComponentProps(
                 admin_password=props.admin_password,
                 admin_username=props.admin_username,
-                b64cloudinit=b64encode(cloud_init),
+                b64cloudinit=cloud_init.apply(b64encode),
                 ip_address_private=props.subnet_ip_addresses[0],
                 location=props.location,
                 resource_group_name=props.resource_group_name,
@@ -101,6 +110,7 @@ class SREDnsServerVMComponent(ComponentResource):
     @staticmethod
     def template_cloudinit(**kwargs: str) -> str:
         logger = get_logger()
+
         with open(
             resources_path / "dns_server" / "dns_server_vm.cloud_init.mustache.yaml",
             encoding="utf-8",
@@ -109,4 +119,5 @@ class SREDnsServerVMComponent(ComponentResource):
             logger.debug(
                 f"Generated cloud-init config: {cloudinit.replace('\n', r'\n')}"
             )
+
             return cloudinit
