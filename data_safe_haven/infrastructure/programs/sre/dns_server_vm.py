@@ -87,7 +87,6 @@ class SREDnsServerVMComponent(ComponentResource):
                 ip_address_private=props.subnet_ip_addresses[0],
                 location=props.location,
                 resource_group_name=props.resource_group_name,
-                # secondary_private_ip_address=props.subnet_ip_addresses[1],
                 subnet_name=props.subnet_dns_server_name,
                 virtual_network_name=props.virtual_network_name,
                 virtual_network_resource_group_name=props.resource_group_name,
