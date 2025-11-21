@@ -232,6 +232,7 @@ class SREDnsServerComponent(ComponentResource):
             SREDnsServerVMProps(
                 adguardhome_yaml_content=adguard_adguardhome_yaml_contents,
                 admin_password="AzureUser1*",  # TODO(cgavida): Hardcoded, for now.
+                dockerhub_credentials=props.dockerhub_credentials,
                 entrypoint_sh_content=adguard_entrypoint_sh_reader.file_contents(),
                 location=props.location,
                 resource_group_name=props.resource_group_name,

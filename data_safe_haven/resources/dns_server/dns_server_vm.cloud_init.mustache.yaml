@@ -14,32 +14,39 @@ write_files:
     path: "/opt/adguardhome/custom/AdGuardHome.yaml"
     permissions: "0644"
 
-  - path: "/home/adguardhome/install_cni_plugin.sh"
-    permissions: "0700"
+  # - path: "/home/adguardhome/install_cni_plugin.sh"
+  #   permissions: "0700"
+  #   content: |
+  #     #!/usr/bin/env bash
+  #     pushd /home/adguardhome
+  #     git clone https://github.com/Azure/azure-container-networking.git
+  #     cd ./azure-container-networking/scripts
+  #     chmod u+x install-cni-plugin.sh
+  #     sudo ./install-cni-plugin.sh v1.7.9
+  #     popd
+  - path: "/etc/systemd/resolved.conf.d/adguardhome.conf"
+    permissions: "0644"
     content: |
-      #!/usr/bin/env bash
-      pushd /home/adguardhome
-      git clone https://github.com/Azure/azure-container-networking.git
-      cd ./azure-container-networking/scripts
-      chmod u+x install-cni-plugin.sh
-      sudo ./install-cni-plugin.sh v1.7.9
-      popd
+      [Resolve]
+      DNS=127.0.0.1
+      DNSStubListener=no
 
   - path: "/etc/systemd/system/adguardhome.service"
     permissions: "0644"
     content: |
       [Unit]
       Description=Starts the AdGuardHome container.
-      Wants=network-online.target
-      After=network-online.target
+      After=docker.service
+      Requires=docker.service
 
       [Service]
-      Type=oneshot
+      TimeoutStartSec=0
+      Restart=always
       Environment="HOME=/home/adguardhome"
-      ExecStartPre=-/home/adguardhome/install_cni_plugin.sh
-      ExecStartPre=/usr/bin/docker login -u <USERNAMEA> -p <PASSWORD>
-      ExecStart=/home/adguardhome/azure-container-networking/scripts/docker-run.sh adguardhome default "--restart unless-stopped -v /opt/adguardhome/custom:/opt/adguardhome/custom -p 53:53/tcp -p 53:53/udp -p 80:80/tcp --entrypoint /bin/sh adguard/adguardhome:v0.107.67 /opt/adguardhome/custom/entrypoint.sh"
-      ExecStop=/home/adguardhome/azure-container-networking/scripts/docker-del.sh adguardhome default
+      ExecStartPre=/usr/bin/docker login -u {{dockerhub_username}} -p {{dockerhub_access_token}}
+      ExecStart=/usr/bin/docker run --rm --name adguardhome -v /opt/adguardhome/custom:/opt/adguardhome/custom -p 53:53/tcp -p 53:53/udp -p 80:80/tcp --entrypoint /bin/sh adguard/adguardhome:v0.107.67 /opt/adguardhome/custom/entrypoint.sh
+      ExecStop=/usr/bin/docker stop adguardhome
+      ExecStopPost=/usr/bin/docker rm adguardhome
 
 system_info:
   default_user:
@@ -64,5 +71,18 @@ runcmd:
   - grep -v -e '^[[:space:]]*$' /etc/fstab | sed 's|^|  /etc/fstab  |'
   - mount -fav
   - findmnt
+
+  # Disabling the systemd-resolved daemon
+  # -------------------------------------
+  - echo ">=== Disabling the systemd-resolved daemon... ===<"
+  - mv /etc/resolv.conf /etc/resolv.conf.backup
+  - ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+  - systemctl reload-or-restart systemd-resolved
+
+  # Run the adguardhome service
+  # ---------------------------
+  - echo ">=== Run the adguardhome service... ===<"
+  - systemctl daemon-reload
+  - systemctl start adguardhome
 
 final_message: "The system is finally up, after $UPTIME seconds"
