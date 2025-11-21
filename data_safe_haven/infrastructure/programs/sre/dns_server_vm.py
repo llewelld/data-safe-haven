@@ -54,13 +54,6 @@ class SREDnsServerVMProps:
         ).apply(get_name_from_vnet)
         self.vm_size = vm_size
 
-        # TODO(cgavidia): Only for testing
-        # import pulumi
-
-        # self.subnet_dns_server_name.apply(lambda value: pulumi.error(value))
-        # self.subnet_ip_addresses.apply(lambda value: pulumi.error(value))
-        # self.virtual_network_name.apply(lambda value: pulumi.error(value))
-
 
 class SREDnsServerVMComponent(ComponentResource):
     """Deploy a VM-based DNS Server with Pulumi"""

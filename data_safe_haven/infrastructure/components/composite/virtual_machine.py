@@ -33,7 +33,6 @@ class VMComponentProps:
         data_collection_endpoint_id: Input[str] | None = None,
         ip_address_public: Input[bool] | None = None,
         maintenance_configuration_id: Input[str] | None = None,
-        secondary_private_ip_address: Input[str] | None = None,
     ) -> None:
         self.admin_password = admin_password
         self.admin_username = admin_username if admin_username else "dshvmadmin"
@@ -49,7 +48,6 @@ class VMComponentProps:
         self.maintenance_configuration_id = maintenance_configuration_id
         self.os_profile_args = None
         self.resource_group_name = resource_group_name
-        self.secondary_private_ip_address = secondary_private_ip_address
         self.subnet_name = subnet_name
         self.virtual_network_name = virtual_network_name
         self.virtual_network_resource_group_name = virtual_network_resource_group_name
@@ -147,36 +145,20 @@ class VMComponent(ComponentResource):
             )
 
         # Define network card
-        ip_configurations: list[network.NetworkInterfaceIPConfigurationArgs] = [
-            network.NetworkInterfaceIPConfigurationArgs(
-                name=props.vm_name_underscored.apply(
-                    lambda n: replace_separators(f"ipconfig{n}", "")
-                ),
-                primary=True,
-                private_ip_address=props.ip_address_private,
-                private_ip_allocation_method=network.IPAllocationMethod.STATIC,
-                subnet=network.SubnetArgs(id=subnet.id),
-                **network_interface_ip_params,
-            )
-        ]
-
-        if props.secondary_private_ip_address is not None:
-            ip_configurations.append(
+        network_interface = network.NetworkInterface(
+            f"{name_underscored}_network_interface",
+            enable_accelerated_networking=True,
+            ip_configurations=[
                 network.NetworkInterfaceIPConfigurationArgs(
                     name=props.vm_name_underscored.apply(
-                        lambda n: replace_separators(f"secipconfig{n}", "")
+                        lambda n: replace_separators(f"ipconfig{n}", "")
                     ),
-                    private_ip_address=props.secondary_private_ip_address,
+                    private_ip_address=props.ip_address_private,
                     private_ip_allocation_method=network.IPAllocationMethod.STATIC,
                     subnet=network.SubnetArgs(id=subnet.id),
                     **network_interface_ip_params,
                 )
-            )
-
-        network_interface = network.NetworkInterface(
-            f"{name_underscored}_network_interface",
-            enable_accelerated_networking=True,
-            ip_configurations=ip_configurations,
+            ],
             location=props.location,
             network_interface_name=Output.concat(props.vm_name, "-nic"),
             resource_group_name=props.resource_group_name,

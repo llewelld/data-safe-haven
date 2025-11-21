@@ -14,16 +14,6 @@ write_files:
     path: "/opt/adguardhome/custom/AdGuardHome.yaml"
     permissions: "0644"
 
-  # - path: "/home/adguardhome/install_cni_plugin.sh"
-  #   permissions: "0700"
-  #   content: |
-  #     #!/usr/bin/env bash
-  #     pushd /home/adguardhome
-  #     git clone https://github.com/Azure/azure-container-networking.git
-  #     cd ./azure-container-networking/scripts
-  #     chmod u+x install-cni-plugin.sh
-  #     sudo ./install-cni-plugin.sh v1.7.9
-  #     popd
   - path: "/etc/systemd/resolved.conf.d/adguardhome.conf"
     permissions: "0644"
     content: |
