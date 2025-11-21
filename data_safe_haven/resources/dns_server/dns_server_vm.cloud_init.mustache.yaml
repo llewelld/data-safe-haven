@@ -5,12 +5,12 @@ groups:
 
 write_files:
   - encoding: b64
-    content: { { entrypoint_sh_content_encoded } }
+    content: {{entrypoint_sh_content_encoded}}
     path: "/opt/adguardhome/custom/entrypoint.sh"
     permissions: "0644"
 
   - encoding: b64
-    content: { { adguardhome_yaml_content_encoded } }
+    content: {{adguardhome_yaml_content_encoded}}
     path: "/opt/adguardhome/custom/AdGuardHome.yaml"
     permissions: "0644"
 
