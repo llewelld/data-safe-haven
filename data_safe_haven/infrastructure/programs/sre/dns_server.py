@@ -4,9 +4,9 @@ from collections.abc import Mapping
 
 import pulumi_random
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import network, privatedns
+from pulumi_azure_native import maintenance, network, privatedns
 
-from data_safe_haven.functions import replace_separators
+from data_safe_haven.functions import next_occurrence, replace_separators
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     SREDnsIpRanges,
@@ -38,6 +38,7 @@ class SREDnsServerProps:
         location: str,
         resource_group_name: Input[str],
         shm_fqdn: Input[str],
+        timezone: Input[str],
     ) -> None:
         self.admin_username = "dshadmin"
         self.allow_workspace_internet = allow_workspace_internet
@@ -45,6 +46,7 @@ class SREDnsServerProps:
         self.location = location
         self.resource_group_name = resource_group_name
         self.shm_fqdn = shm_fqdn
+        self.timezone = timezone
 
 
 class SREDnsServerComponent(ComponentResource):
@@ -217,6 +219,43 @@ class SREDnsServerComponent(ComponentResource):
             virtual_network_name=virtual_network.name,
         )
 
+        # Deploy maintenance configuration
+        # See https://learn.microsoft.com/en-us/azure/update-manager/scheduled-patching
+        maintenance_configuration = maintenance.MaintenanceConfiguration(
+            f"{self._name}_dns_server_maintenance_configuration",
+            duration="03:55",  # Maximum allowed value for this parameter
+            extension_properties={"InGuestPatchMode": "User"},
+            install_patches=maintenance.InputPatchConfigurationArgs(
+                linux_parameters=maintenance.InputLinuxParametersArgs(
+                    classifications_to_include=["Critical", "Security"],
+                ),
+                reboot_setting="IfRequired",
+            ),
+            location=props.location,
+            maintenance_scope=maintenance.MaintenanceScope.IN_GUEST_PATCH,
+            recur_every="1Day",
+            resource_group_name=props.resource_group_name,
+            resource_name_=f"{stack_name}-dns-server-maintenance-configuration",
+            start_date_time=Output.from_input(props.timezone).apply(
+                lambda timezone: next_occurrence(
+                    hour=2,
+                    minute=4,
+                    timezone=timezone,
+                    time_format="iso_minute",
+                )  # Run maintenance at 02:04 local time every night
+            ),
+            time_zone="UTC",  # Our start time is given in UTC
+            visibility=maintenance.Visibility.CUSTOM,
+            opts=ResourceOptions.merge(
+                child_opts,
+                ResourceOptions(
+                    # Ignore start_date_time or this will be changed on each redeploy
+                    ignore_changes=["start_date_time"]
+                ),
+            ),
+            tags=child_tags,
+        )
+
         dns_server_vm_component = SREDnsServerVMComponent(
             "dns_server_vm",
             stack_name,
@@ -226,6 +265,7 @@ class SREDnsServerComponent(ComponentResource):
                 dockerhub_credentials=props.dockerhub_credentials,
                 entrypoint_sh_content=adguard_entrypoint_sh_reader.file_contents(),
                 location=props.location,
+                maintenance_configuration_id=maintenance_configuration.id,
                 resource_group_name=props.resource_group_name,
                 subnet_dns=subnet_dns,
                 virtual_network=virtual_network,

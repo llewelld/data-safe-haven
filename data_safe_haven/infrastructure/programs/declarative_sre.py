@@ -138,6 +138,7 @@ class DeclarativeSRE:
                 location=self.config.azure.location,
                 resource_group_name=resource_group.name,
                 shm_fqdn=shm_fqdn,
+                timezone=self.config.sre.timezone,
             ),
             tags=self.tags,
         )

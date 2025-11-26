@@ -26,6 +26,7 @@ class SREDnsServerVMProps:
         dockerhub_credentials: DockerHubCredentials,
         entrypoint_sh_content: str,
         location: Input[str],
+        maintenance_configuration_id: Input[str],
         resource_group_name: Input[str],
         subnet_dns: Input[network.GetSubnetResult],
         virtual_network: Input[network.VirtualNetwork],
@@ -40,6 +41,7 @@ class SREDnsServerVMProps:
         self.dockerhub_access_token = dockerhub_credentials.access_token
         self.entrypoint_sh_content_encoded = b64encode(entrypoint_sh_content)
         self.location = location
+        self.maintenance_configuration_id = maintenance_configuration_id
         self.resource_group_name = resource_group_name
 
         self.subnet_dns_server_name = Output.from_input(subnet_dns).apply(
@@ -87,6 +89,7 @@ class SREDnsServerVMComponent(ComponentResource):
                 b64cloudinit=cloud_init.apply(b64encode),
                 ip_address_private=props.subnet_ip_addresses[0],
                 location=props.location,
+                maintenance_configuration_id=props.maintenance_configuration_id,
                 resource_group_name=props.resource_group_name,
                 subnet_name=props.subnet_dns_server_name,
                 virtual_network_name=props.virtual_network_name,
