@@ -40,7 +40,7 @@ jobs:
           hatch -e test run true
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v6.0.1
+        uses: stefanzweifel/git-auto-commit-action@v7.0.0
         with:
           commit_message: "[dependabot skip] :wrench: Update Python requirements files"
           branch: ${{ github.head_ref }}
