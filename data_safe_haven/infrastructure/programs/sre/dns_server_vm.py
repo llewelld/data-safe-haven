@@ -31,15 +31,21 @@ class SREDnsServerVMProps:
         subnet_dns: Input[network.GetSubnetResult],
         virtual_network: Input[network.VirtualNetwork],
         vm_size: Input[str],
+        data_collection_endpoint_id: Input[str] | None = None,
+        data_collection_rule_id: Input[str] | None = None,
     ):
         self.adguardhome_yaml_content_encoded = Output.from_input(
             adguardhome_yaml_content
         ).apply(b64encode)
         self.admin_password = Output.secret(admin_password)
         self.admin_username = "dshadmin"
+        self.data_collection_endpoint_id = data_collection_endpoint_id
+        self.data_collection_rule_id = data_collection_rule_id
+
         self.dockerhub_username = dockerhub_credentials.username
         self.dockerhub_access_token = dockerhub_credentials.access_token
         self.entrypoint_sh_content_encoded = b64encode(entrypoint_sh_content)
+        self.maintenance_configuration_id = maintenance_configuration_id
         self.location = location
         self.maintenance_configuration_id = maintenance_configuration_id
         self.resource_group_name = resource_group_name
@@ -87,6 +93,8 @@ class SREDnsServerVMComponent(ComponentResource):
                 admin_password=props.admin_password,
                 admin_username=props.admin_username,
                 b64cloudinit=cloud_init.apply(b64encode),
+                data_collection_rule_id=props.data_collection_rule_id,
+                data_collection_endpoint_id=props.data_collection_endpoint_id,
                 ip_address_private=props.subnet_ip_addresses[0],
                 location=props.location,
                 maintenance_configuration_id=props.maintenance_configuration_id,

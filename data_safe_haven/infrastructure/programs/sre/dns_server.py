@@ -34,16 +34,22 @@ class SREDnsServerProps:
         self,
         *,
         allow_workspace_internet: bool,
+        data_collection_endpoint_id: Input[str] | None,
+        data_collection_rule_id: Input[str] | None,
         dockerhub_credentials: DockerHubCredentials,
         location: str,
+        maintenance_configuration_id: Input[str],
         resource_group_name: Input[str],
         shm_fqdn: Input[str],
         timezone: Input[str],
     ) -> None:
         self.admin_username = "dshadmin"
         self.allow_workspace_internet = allow_workspace_internet
+        self.data_collection_endpoint_id = data_collection_endpoint_id
+        self.data_collection_rule_id = data_collection_rule_id
         self.dockerhub_credentials = dockerhub_credentials
         self.location = location
+        self.maintenance_configuration_id = maintenance_configuration_id
         self.resource_group_name = resource_group_name
         self.shm_fqdn = shm_fqdn
         self.timezone = timezone
@@ -118,6 +124,18 @@ class SREDnsServerComponent(ComponentResource):
                 # Inbound
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow inbound connections from monitoring tools.",
+                    destination_address_prefix=SREDnsIpRanges.vnet.prefix,
+                    destination_port_ranges=[Ports.AZURE_MONITORING],
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="AllowMonitoringToolsInbound",
+                    priority=NetworkingPriorities.AZURE_MONITORING_SOURCES,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix=SREIpRanges.monitoring.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
                     description="Allow inbound connections from attached.",
                     destination_address_prefix=SREDnsIpRanges.vnet.prefix,
                     destination_port_ranges=[Ports.DNS],
@@ -150,6 +168,18 @@ class SREDnsServerComponent(ComponentResource):
                     name="AllowDnsInternetOutbound",
                     priority=NetworkingPriorities.EXTERNAL_INTERNET_DNS,
                     protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix=SREDnsIpRanges.vnet.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to monitoring tools.",
+                    destination_address_prefix=SREIpRanges.monitoring.prefix,
+                    destination_port_ranges=[Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowMonitoringToolsOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_MONITORING_TOOLS,
+                    protocol=network.SecurityRuleProtocol.TCP,
                     source_address_prefix=SREDnsIpRanges.vnet.prefix,
                     source_port_range="*",
                 ),
@@ -262,10 +292,12 @@ class SREDnsServerComponent(ComponentResource):
             SREDnsServerVMProps(
                 adguardhome_yaml_content=adguard_adguardhome_yaml_contents,
                 admin_password=password_admin.result,
+                data_collection_rule_id=props.data_collection_rule_id,
+                data_collection_endpoint_id=props.data_collection_endpoint_id,
                 dockerhub_credentials=props.dockerhub_credentials,
                 entrypoint_sh_content=adguard_entrypoint_sh_reader.file_contents(),
                 location=props.location,
-                maintenance_configuration_id=maintenance_configuration.id,
+                maintenance_configuration_id=props.maintenance_configuration_id,
                 resource_group_name=props.resource_group_name,
                 subnet_dns=subnet_dns,
                 virtual_network=virtual_network,
