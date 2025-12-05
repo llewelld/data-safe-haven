@@ -249,43 +249,6 @@ class SREDnsServerComponent(ComponentResource):
             virtual_network_name=virtual_network.name,
         )
 
-        # Deploy maintenance configuration
-        # See https://learn.microsoft.com/en-us/azure/update-manager/scheduled-patching
-        maintenance_configuration = maintenance.MaintenanceConfiguration(
-            f"{self._name}_dns_server_maintenance_configuration",
-            duration="03:55",  # Maximum allowed value for this parameter
-            extension_properties={"InGuestPatchMode": "User"},
-            install_patches=maintenance.InputPatchConfigurationArgs(
-                linux_parameters=maintenance.InputLinuxParametersArgs(
-                    classifications_to_include=["Critical", "Security"],
-                ),
-                reboot_setting="IfRequired",
-            ),
-            location=props.location,
-            maintenance_scope=maintenance.MaintenanceScope.IN_GUEST_PATCH,
-            recur_every="1Day",
-            resource_group_name=props.resource_group_name,
-            resource_name_=f"{stack_name}-dns-server-maintenance-configuration",
-            start_date_time=Output.from_input(props.timezone).apply(
-                lambda timezone: next_occurrence(
-                    hour=2,
-                    minute=4,
-                    timezone=timezone,
-                    time_format="iso_minute",
-                )  # Run maintenance at 02:04 local time every night
-            ),
-            time_zone="UTC",  # Our start time is given in UTC
-            visibility=maintenance.Visibility.CUSTOM,
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(
-                    # Ignore start_date_time or this will be changed on each redeploy
-                    ignore_changes=["start_date_time"]
-                ),
-            ),
-            tags=child_tags,
-        )
-
         dns_server_vm_component = SREDnsServerVMComponent(
             "dns_server_vm",
             stack_name,
