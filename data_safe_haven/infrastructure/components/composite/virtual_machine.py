@@ -231,7 +231,7 @@ class VMComponent(ComponentResource):
         )
 
         # Register with maintenance configuration
-        if props.maintenance_configuration_id is not None:
+        if props.maintenance_configuration_id:
             maintenance.ConfigurationAssignment(
                 f"{name_underscored}_configuration_assignment",
                 configuration_assignment_name=Output.concat(
@@ -250,7 +250,7 @@ class VMComponent(ComponentResource):
             )
 
         # Register with data collection rule
-        if props.data_collection_rule_id is not None:
+        if props.data_collection_rule_id:
             monitor.DataCollectionRuleAssociation(
                 f"{name_underscored}_dcra_to_dcr",
                 association_name=Output.concat(
@@ -266,7 +266,7 @@ class VMComponent(ComponentResource):
             )
 
         # Register with data collection endpoint
-        if props.data_collection_endpoint_id is not None:
+        if props.data_collection_endpoint_id:
             monitor.DataCollectionRuleAssociation(
                 f"{name_underscored}_dcra_to_dce",
                 association_name="configurationAccessEndpoint",  # this name is required
