@@ -4,9 +4,9 @@ from collections.abc import Mapping
 
 import pulumi_random
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import maintenance, network, privatedns
+from pulumi_azure_native import network, privatedns
 
-from data_safe_haven.functions import next_occurrence, replace_separators
+from data_safe_haven.functions import replace_separators
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     SREDnsIpRanges,

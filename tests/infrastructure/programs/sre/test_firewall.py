@@ -1,9 +1,8 @@
 import pulumi
 import pulumi.runtime
-from pulumi_azure_native import network, privatedns
+from pulumi_azure_native import network
 from pytest import fixture
 
-from data_safe_haven.functions import replace_separators
 from data_safe_haven.infrastructure.programs.sre.firewall import (
     SREFirewallComponent,
     SREFirewallProps,
@@ -12,7 +11,6 @@ from data_safe_haven.infrastructure.programs.sre.monitoring_elements import (
     SREMonitoringElementsComponent,
     SREMonitoringElementsProps,
 )
-from data_safe_haven.types import AzureDnsZoneNames
 
 
 @fixture
@@ -20,7 +18,6 @@ def sre_monitoring_elements_component(
     location: str,
     resource_group_name: str,
     stack_name: str,
-    subnet_monitoring: network.GetSubnetResult,
     tags: dict[str, str],
 ) -> SREMonitoringElementsComponent:
     return SREMonitoringElementsComponent(

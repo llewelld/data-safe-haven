@@ -76,7 +76,7 @@ class SREDnsServerVMComponent(ComponentResource):
     ) -> None:
         super().__init__("dsh:sre:SREDnsServerVMComponent", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
-        child_tags = {"component": "workspaces"} | (tags if tags else {})
+        child_tags = {"component": "DNS server"} | (tags if tags else {})
 
         # Load cloud-init file
         cloud_init = Output.all(
@@ -88,7 +88,7 @@ class SREDnsServerVMComponent(ComponentResource):
         ).apply(lambda kwargs: self.template_cloudinit(**kwargs))
 
         container_host_vm = VMComponent(
-            name=replace_separators(f"{self._name}_vm_workspace_", "_"),
+            name=replace_separators(f"{self._name}_vm_dns_server_", "_"),
             props=LinuxVMComponentProps(
                 admin_password=props.admin_password,
                 admin_username=props.admin_username,
