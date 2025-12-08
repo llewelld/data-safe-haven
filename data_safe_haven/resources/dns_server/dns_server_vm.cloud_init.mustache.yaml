@@ -54,13 +54,6 @@ package_update: true
 package_upgrade: true
 
 runcmd:
-  # Mount all external volumes
-  # --------------------------
-  - echo ">=== Mounting all external volumes... ===<"
-  - grep -v -e '^[[:space:]]*$' /etc/fstab | sed 's|^|  /etc/fstab  |'
-  - mount -fav
-  - findmnt
-
   # Disabling the systemd-resolved daemon
   # -------------------------------------
   - echo ">=== Disabling the systemd-resolved daemon... ===<"
