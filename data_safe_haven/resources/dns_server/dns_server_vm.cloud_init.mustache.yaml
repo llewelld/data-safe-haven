@@ -34,7 +34,7 @@ write_files:
       Restart=always
       Environment="HOME=/home/adguardhome"
       ExecStartPre=/usr/bin/docker login -u {{dockerhub_username}} -p {{dockerhub_access_token}}
-      ExecStart=/usr/bin/docker run --rm --name adguardhome -v /opt/adguardhome/custom:/opt/adguardhome/custom -p 53:53/tcp -p 53:53/udp -p 80:80/tcp --entrypoint /bin/sh {{container_image}} /opt/adguardhome/custom/entrypoint.sh
+      ExecStart=/usr/bin/docker run --rm --name adguardhome -v /opt/adguardhome/custom:/opt/adguardhome/custom -p 53:53/tcp -p 53:53/udp --entrypoint /bin/sh {{container_image}} /opt/adguardhome/custom/entrypoint.sh
       ExecStop=/usr/bin/docker stop adguardhome
       ExecStopPost=/usr/bin/docker rm adguardhome
 
