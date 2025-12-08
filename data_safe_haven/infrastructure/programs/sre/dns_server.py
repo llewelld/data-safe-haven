@@ -4,14 +4,13 @@ from collections.abc import Mapping
 
 import pulumi_random
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, network, privatedns
+from pulumi_azure_native import network, privatedns
 
-from data_safe_haven.functions import b64encode, replace_separators
+from data_safe_haven.functions import replace_separators
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
     SREDnsIpRanges,
     SREIpRanges,
-    get_ip_address_from_container_group,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.types import (
@@ -22,6 +21,11 @@ from data_safe_haven.types import (
 )
 from data_safe_haven.utility import FileReader
 
+from .dns_server_vm import (
+    SREDnsServerVMComponent,
+    SREDnsServerVMProps,
+)
+
 
 class SREDnsServerProps:
     """Properties for SREDnsServerComponent"""
@@ -30,17 +34,25 @@ class SREDnsServerProps:
         self,
         *,
         allow_workspace_internet: bool,
+        data_collection_endpoint_id: Input[str] | None,
+        data_collection_rule_id: Input[str] | None,
         dockerhub_credentials: DockerHubCredentials,
         location: str,
+        maintenance_configuration_id: Input[str],
         resource_group_name: Input[str],
         shm_fqdn: Input[str],
+        timezone: Input[str],
     ) -> None:
         self.admin_username = "dshadmin"
         self.allow_workspace_internet = allow_workspace_internet
+        self.data_collection_endpoint_id = data_collection_endpoint_id
+        self.data_collection_rule_id = data_collection_rule_id
         self.dockerhub_credentials = dockerhub_credentials
         self.location = location
+        self.maintenance_configuration_id = maintenance_configuration_id
         self.resource_group_name = resource_group_name
         self.shm_fqdn = shm_fqdn
+        self.timezone = timezone
 
 
 class SREDnsServerComponent(ComponentResource):
@@ -112,6 +124,18 @@ class SREDnsServerComponent(ComponentResource):
                 # Inbound
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow inbound connections from monitoring tools.",
+                    destination_address_prefix=SREDnsIpRanges.vnet.prefix,
+                    destination_port_ranges=[Ports.AZURE_MONITORING],
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="AllowMonitoringToolsInbound",
+                    priority=NetworkingPriorities.AZURE_MONITORING_SOURCES,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix=SREIpRanges.monitoring.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
                     description="Allow inbound connections from attached.",
                     destination_address_prefix=SREDnsIpRanges.vnet.prefix,
                     destination_port_ranges=[Ports.DNS],
@@ -142,8 +166,32 @@ class SREDnsServerComponent(ComponentResource):
                     destination_port_ranges=[Ports.DNS],
                     direction=network.SecurityRuleDirection.OUTBOUND,
                     name="AllowDnsInternetOutbound",
-                    priority=NetworkingPriorities.EXTERNAL_INTERNET,
+                    priority=NetworkingPriorities.EXTERNAL_INTERNET_DNS,
                     protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix=SREDnsIpRanges.vnet.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to monitoring tools.",
+                    destination_address_prefix=SREIpRanges.monitoring.prefix,
+                    destination_port_ranges=[Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowMonitoringToolsOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_MONITORING_TOOLS,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREDnsIpRanges.vnet.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to external repositories over the internet.",
+                    destination_address_prefix="Internet",
+                    destination_port_ranges=[Ports.HTTP, Ports.HTTPS],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowPackagesInternetOutbound",
+                    priority=NetworkingPriorities.EXTERNAL_INTERNET,
+                    protocol=network.SecurityRuleProtocol.TCP,
                     source_address_prefix=SREDnsIpRanges.vnet.prefix,
                     source_port_range="*",
                 ),
@@ -177,13 +225,6 @@ class SREDnsServerComponent(ComponentResource):
                 # DNS subnet
                 network.SubnetArgs(
                     address_prefix=SREDnsIpRanges.vnet.prefix,
-                    delegations=[
-                        network.DelegationArgs(
-                            name="SubnetDelegationContainerGroups",
-                            service_name="Microsoft.ContainerInstance/containerGroups",
-                            type="Microsoft.Network/virtualNetworks/subnets/delegations",
-                        ),
-                    ],
                     name=subnet_name,
                     network_security_group=network.NetworkSecurityGroupArgs(id=nsg.id),
                     route_table=None,
@@ -194,7 +235,9 @@ class SREDnsServerComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    ignore_changes=["virtual_network_peerings"]
+                    ignore_changes=["virtual_network_peerings"],
+                    delete_before_replace=True,
+                    replace_on_changes=["subnets[*].delegations"],
                 ),  # allow peering to SRE virtual network
             ),
             tags=child_tags,
@@ -206,92 +249,22 @@ class SREDnsServerComponent(ComponentResource):
             virtual_network_name=virtual_network.name,
         )
 
-        # Define the DNS container group with AdGuard
-        container_group = containerinstance.ContainerGroup(
-            f"{self._name}_container_group",
-            container_group_name=f"{stack_name}-container-group-dns",
-            containers=[
-                containerinstance.ContainerArgs(
-                    image="adguard/adguardhome:v0.107.69",
-                    name="adguard",
-                    # Providing "command" overwrites the CMD arguments in the Docker
-                    # image, so we can either provide them here or set defaults in our
-                    # custom entrypoint.
-                    #
-                    # The entrypoint script will not be executable when mounted so we
-                    # need to explicitly run it with /bin/sh
-                    command=["/bin/sh", "/opt/adguardhome/custom/entrypoint.sh"],
-                    environment_variables=[],
-                    # All Azure Container Instances need to expose port 80 on at least
-                    # one container. In this case, the web interface is on 3000 so we
-                    # are not exposing that to users.
-                    ports=[
-                        containerinstance.ContainerPortArgs(
-                            port=53,
-                            protocol=containerinstance.ContainerGroupNetworkProtocol.UDP,
-                        ),
-                        containerinstance.ContainerPortArgs(
-                            port=80,
-                            protocol=containerinstance.ContainerGroupNetworkProtocol.TCP,
-                        ),
-                    ],
-                    resources=containerinstance.ResourceRequirementsArgs(
-                        requests=containerinstance.ResourceRequestsArgs(
-                            cpu=1,
-                            memory_in_gb=1,
-                        ),
-                    ),
-                    volume_mounts=[
-                        containerinstance.VolumeMountArgs(
-                            mount_path="/opt/adguardhome/custom",
-                            name="adguard-opt-adguardhome-custom",
-                            read_only=True,
-                        ),
-                    ],
-                ),
-            ],
-            # Required due to DockerHub rate-limit: https://docs.docker.com/docker-hub/download-rate-limit/
-            image_registry_credentials=[
-                {
-                    "password": Output.secret(props.dockerhub_credentials.access_token),
-                    "server": props.dockerhub_credentials.server,
-                    "username": props.dockerhub_credentials.username,
-                }
-            ],
-            ip_address=containerinstance.IpAddressArgs(
-                ports=[
-                    containerinstance.PortArgs(
-                        port=80,
-                        protocol=containerinstance.ContainerGroupNetworkProtocol.TCP,
-                    )
-                ],
-                type=containerinstance.ContainerGroupIpAddressType.PRIVATE,
-            ),
-            location=props.location,
-            os_type=containerinstance.OperatingSystemTypes.LINUX,
-            resource_group_name=props.resource_group_name,
-            restart_policy=containerinstance.ContainerGroupRestartPolicy.ALWAYS,
-            sku=containerinstance.ContainerGroupSku.STANDARD,
-            subnet_ids=[containerinstance.ContainerGroupSubnetIdArgs(id=subnet_dns.id)],
-            volumes=[
-                containerinstance.VolumeArgs(
-                    name="adguard-opt-adguardhome-custom",
-                    secret={
-                        "entrypoint.sh": b64encode(
-                            adguard_entrypoint_sh_reader.file_contents()
-                        ),
-                        "AdGuardHome.yaml": adguard_adguardhome_yaml_contents.apply(
-                            lambda s: b64encode(s)
-                        ),
-                    },
-                ),
-            ],
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(
-                    delete_before_replace=True,
-                    replace_on_changes=["containers"],
-                ),
+        dns_server_vm_component = SREDnsServerVMComponent(
+            "dns_server_vm",
+            stack_name,
+            SREDnsServerVMProps(
+                adguardhome_yaml_content=adguard_adguardhome_yaml_contents,
+                admin_password=password_admin.result,
+                data_collection_rule_id=props.data_collection_rule_id,
+                data_collection_endpoint_id=props.data_collection_endpoint_id,
+                dockerhub_credentials=props.dockerhub_credentials,
+                entrypoint_sh_content=adguard_entrypoint_sh_reader.file_contents(),
+                location=props.location,
+                maintenance_configuration_id=props.maintenance_configuration_id,
+                resource_group_name=props.resource_group_name,
+                subnet_dns=subnet_dns,
+                virtual_network=virtual_network,
+                vm_size="Standard_B2ats_v2",
             ),
             tags=child_tags,
         )
@@ -312,7 +285,7 @@ class SREDnsServerComponent(ComponentResource):
         # Link Azure private DNS zones to virtual network
         for dns_zone_name, private_dns_zone in self.private_zones.items():
             privatedns.VirtualNetworkLink(
-                replace_separators(
+                resource_name=replace_separators(
                     f"{self._name}_private_zone_{dns_zone_name}_vnet_dns_link", "_"
                 ),
                 location="Global",
@@ -330,6 +303,6 @@ class SREDnsServerComponent(ComponentResource):
             )
 
         # Register outputs
-        self.ip_address = get_ip_address_from_container_group(container_group)
+        self.ip_address = dns_server_vm_component.exports["ip_address"]
         self.password_admin = password_admin
         self.virtual_network = virtual_network

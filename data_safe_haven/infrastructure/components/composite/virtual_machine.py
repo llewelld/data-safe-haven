@@ -20,8 +20,6 @@ class VMComponentProps:
     def __init__(
         self,
         admin_password: Input[str],
-        data_collection_rule_id: Input[str],
-        data_collection_endpoint_id: Input[str],
         ip_address_private: Input[str],
         location: Input[str],
         resource_group_name: Input[str],
@@ -31,6 +29,8 @@ class VMComponentProps:
         vm_name: Input[str],
         vm_size: Input[str],
         admin_username: Input[str] | None = None,
+        data_collection_rule_id: Input[str] | None = None,
+        data_collection_endpoint_id: Input[str] | None = None,
         ip_address_public: Input[bool] | None = None,
         maintenance_configuration_id: Input[str] | None = None,
     ) -> None:
@@ -231,48 +231,52 @@ class VMComponent(ComponentResource):
         )
 
         # Register with maintenance configuration
-        maintenance.ConfigurationAssignment(
-            f"{name_underscored}_configuration_assignment",
-            configuration_assignment_name=Output.concat(
-                props.vm_name, "-maintenance-configuration"
-            ),
-            location=props.location,
-            maintenance_configuration_id=props.maintenance_configuration_id,
-            provider_name="Microsoft.Compute",
-            resource_group_name=props.resource_group_name,
-            resource_name_=virtual_machine.name,
-            resource_type="VirtualMachines",
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(parent=virtual_machine),
-            ),
-        )
+        if props.maintenance_configuration_id:
+            maintenance.ConfigurationAssignment(
+                f"{name_underscored}_configuration_assignment",
+                configuration_assignment_name=Output.concat(
+                    props.vm_name, "-maintenance-configuration"
+                ),
+                location=props.location,
+                maintenance_configuration_id=props.maintenance_configuration_id,
+                provider_name="Microsoft.Compute",
+                resource_group_name=props.resource_group_name,
+                resource_name_=virtual_machine.name,
+                resource_type="VirtualMachines",
+                opts=ResourceOptions.merge(
+                    child_opts,
+                    ResourceOptions(parent=virtual_machine),
+                ),
+            )
 
         # Register with data collection rule
-        monitor.DataCollectionRuleAssociation(
-            f"{name_underscored}_dcra_to_dcr",
-            association_name=Output.concat(
-                props.data_collection_rule_name, "-association"  # this name is required
-            ),
-            data_collection_rule_id=props.data_collection_rule_id,
-            resource_uri=virtual_machine.id,
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(parent=virtual_machine),
-            ),
-        )
+        if props.data_collection_rule_id:
+            monitor.DataCollectionRuleAssociation(
+                f"{name_underscored}_dcra_to_dcr",
+                association_name=Output.concat(
+                    props.data_collection_rule_name,
+                    "-association",  # this name is required
+                ),
+                data_collection_rule_id=props.data_collection_rule_id,
+                resource_uri=virtual_machine.id,
+                opts=ResourceOptions.merge(
+                    child_opts,
+                    ResourceOptions(parent=virtual_machine),
+                ),
+            )
 
         # Register with data collection endpoint
-        monitor.DataCollectionRuleAssociation(
-            f"{name_underscored}_dcra_to_dce",
-            association_name="configurationAccessEndpoint",  # this name is required
-            data_collection_endpoint_id=props.data_collection_endpoint_id,
-            resource_uri=virtual_machine.id,
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(parent=virtual_machine),
-            ),
-        )
+        if props.data_collection_endpoint_id:
+            monitor.DataCollectionRuleAssociation(
+                f"{name_underscored}_dcra_to_dce",
+                association_name="configurationAccessEndpoint",  # this name is required
+                data_collection_endpoint_id=props.data_collection_endpoint_id,
+                resource_uri=virtual_machine.id,
+                opts=ResourceOptions.merge(
+                    child_opts,
+                    ResourceOptions(parent=virtual_machine),
+                ),
+            )
 
         # Register outputs
         self.ip_address_private: Output[str] = Output.from_input(

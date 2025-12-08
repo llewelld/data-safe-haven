@@ -1,0 +1,70 @@
+#cloud-config
+
+groups:
+  - docker
+
+write_files:
+  - encoding: b64
+    content: {{entrypoint_sh_content_encoded}}
+    path: "/opt/adguardhome/custom/entrypoint.sh"
+    permissions: "0644"
+
+  - encoding: b64
+    content: {{adguardhome_yaml_content_encoded}}
+    path: "/opt/adguardhome/custom/AdGuardHome.yaml"
+    permissions: "0644"
+
+  - path: "/etc/systemd/resolved.conf.d/adguardhome.conf"
+    permissions: "0644"
+    content: |
+      [Resolve]
+      DNS=127.0.0.1
+      DNSStubListener=no
+
+  - path: "/etc/systemd/system/adguardhome.service"
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Starts the AdGuardHome container.
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      TimeoutStartSec=0
+      Restart=always
+      Environment="HOME=/home/adguardhome"
+      ExecStartPre=/usr/bin/docker login -u {{dockerhub_username}} -p {{dockerhub_access_token}}
+      ExecStart=/usr/bin/docker run --rm --name adguardhome -v /opt/adguardhome/custom:/opt/adguardhome/custom -p 53:53/tcp -p 53:53/udp --entrypoint /bin/sh {{container_image}} /opt/adguardhome/custom/entrypoint.sh
+      ExecStop=/usr/bin/docker stop adguardhome
+      ExecStopPost=/usr/bin/docker rm adguardhome
+
+system_info:
+  default_user:
+    groups: [docker]
+
+mounts:
+  # Mount ephemeral storage at resource instead of default /mnt
+  - [ephemeral0, /mnt/scratch]
+
+# Install necessary apt packages
+packages:
+  - docker.io
+  - unattended-upgrades
+package_update: true
+package_upgrade: true
+
+runcmd:
+  # Disabling the systemd-resolved daemon
+  # -------------------------------------
+  - echo ">=== Disabling the systemd-resolved daemon... ===<"
+  - mv /etc/resolv.conf /etc/resolv.conf.backup
+  - ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+  - systemctl reload-or-restart systemd-resolved
+
+  # Run the adguardhome service
+  # ---------------------------
+  - echo ">=== Run the adguardhome service... ===<"
+  - systemctl daemon-reload
+  - systemctl start adguardhome
+
+final_message: "The system is finally up, after $UPTIME seconds"

@@ -131,6 +131,7 @@ class NetworkingPriorities(int, Enum):
     AUTHORISED_EXTERNAL_SSL_LABS_IPS = 3200
     # Wider internet: 3500-3999
     EXTERNAL_LINUX_UPDATES = 3600
+    EXTERNAL_INTERNET_DNS = 3700
     EXTERNAL_INTERNET = 3999
     # Deny all other: 4096
     ALL_OTHER = 4096

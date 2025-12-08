@@ -3,103 +3,49 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import (
-    maintenance,
-    monitor,
-    network,
-    operationalinsights,
-    privatedns,
-)
+from pulumi_azure_native import monitor, network, operationalinsights, privatedns
 
-from data_safe_haven.functions import next_occurrence, replace_separators
+from data_safe_haven.functions import replace_separators
 from data_safe_haven.infrastructure.common import get_id_from_subnet
-from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
 from data_safe_haven.types import AzureDnsZoneNames
 
 
-class SREMonitoringProps:
+class SREMonitoringNetworkingProps:
     """Properties for SREMonitoringComponent"""
 
     def __init__(
         self,
+        data_collection_endpoint_id: Input[str],
         dns_private_zones: Input[dict[str, privatedns.PrivateZone]],
         location: Input[str],
+        log_analytics: operationalinsights.Workspace,
         resource_group_name: Input[str],
         subnet: Input[network.GetSubnetResult],
         timezone: Input[str],
     ) -> None:
+        self.data_collection_endpoint_id = data_collection_endpoint_id
         self.dns_private_zones = dns_private_zones
         self.location = location
+        self.log_analytics = log_analytics
         self.resource_group_name = resource_group_name
         self.subnet_id = Output.from_input(subnet).apply(get_id_from_subnet)
         self.timezone = timezone
 
 
-class SREMonitoringComponent(ComponentResource):
+class SREMonitoringNetworkingComponent(ComponentResource):
     """Deploy SRE monitoring with Pulumi"""
 
     def __init__(
         self,
         name: str,
         stack_name: str,
-        props: SREMonitoringProps,
+        props: SREMonitoringNetworkingProps,
         opts: ResourceOptions | None = None,
         tags: Input[Mapping[str, Input[str]]] | None = None,
     ) -> None:
         super().__init__("dsh:sre:MonitoringComponent", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
         child_tags = {"component": "monitoring"} | (tags if tags else {})
-
-        # Deploy maintenance configuration
-        # See https://learn.microsoft.com/en-us/azure/update-manager/scheduled-patching
-        self.maintenance_configuration = maintenance.MaintenanceConfiguration(
-            f"{self._name}_maintenance_configuration",
-            duration="03:55",  # Maximum allowed value for this parameter
-            extension_properties={"InGuestPatchMode": "User"},
-            install_patches=maintenance.InputPatchConfigurationArgs(
-                linux_parameters=maintenance.InputLinuxParametersArgs(
-                    classifications_to_include=["Critical", "Security"],
-                ),
-                reboot_setting="IfRequired",
-            ),
-            location=props.location,
-            maintenance_scope=maintenance.MaintenanceScope.IN_GUEST_PATCH,
-            recur_every="1Day",
-            resource_group_name=props.resource_group_name,
-            resource_name_=f"{stack_name}-maintenance-configuration",
-            start_date_time=Output.from_input(props.timezone).apply(
-                lambda timezone: next_occurrence(
-                    hour=2,
-                    minute=4,
-                    timezone=timezone,
-                    time_format="iso_minute",
-                )  # Run maintenance at 02:04 local time every night
-            ),
-            time_zone="UTC",  # Our start time is given in UTC
-            visibility=maintenance.Visibility.CUSTOM,
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(
-                    # Ignore start_date_time or this will be changed on each redeploy
-                    ignore_changes=["start_date_time"]
-                ),
-            ),
-            tags=child_tags,
-        )
-
-        # Deploy log analytics workspace and get workspace keys
-        self.log_analytics = WrappedLogAnalyticsWorkspace(
-            f"{self._name}_log_analytics",
-            location=props.location,
-            resource_group_name=props.resource_group_name,
-            retention_in_days=30,
-            sku=operationalinsights.WorkspaceSkuArgs(
-                name=operationalinsights.WorkspaceSkuNameEnum.PER_GB2018,
-            ),
-            workspace_name=f"{stack_name}-log",
-            opts=child_opts,
-            tags=child_tags,
-        )
 
         # Create a private linkscope
         log_analytics_private_link_scope = monitor.PrivateLinkScope(
@@ -114,7 +60,7 @@ class SREMonitoringComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    parent=self.log_analytics,
+                    parent=props.log_analytics,
                 ),
             ),
             tags=child_tags,
@@ -123,7 +69,7 @@ class SREMonitoringComponent(ComponentResource):
         monitor.PrivateLinkScopedResource(
             f"{self._name}_log_analytics_ampls_connection",
             kind=monitor.ScopedResourceKind.RESOURCE,
-            linked_resource_id=self.log_analytics.id,
+            linked_resource_id=props.log_analytics.id,
             name=f"{stack_name}-cnxn-ampls-to-log-analytics",
             resource_group_name=props.resource_group_name,
             scope_name=log_analytics_private_link_scope.name,
@@ -150,9 +96,9 @@ class SREMonitoringComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    depends_on=[log_analytics_private_link_scope, self.log_analytics],
+                    depends_on=[log_analytics_private_link_scope, props.log_analytics],
                     ignore_changes=["custom_dns_configs"],
-                    parent=self.log_analytics,
+                    parent=props.log_analytics,
                 ),
             ),
             tags=child_tags,
@@ -182,125 +128,15 @@ class SREMonitoringComponent(ComponentResource):
             ),
         )
 
-        # Create a data collection endpoint
-        self.data_collection_endpoint = monitor.DataCollectionEndpoint(
-            f"{self._name}_data_collection_endpoint",
-            data_collection_endpoint_name=f"{stack_name}-dce",
-            location=props.location,
-            network_acls=monitor.DataCollectionEndpointNetworkAclsArgs(
-                public_network_access=monitor.KnownPublicNetworkAccessOptions.DISABLED,
-            ),
-            resource_group_name=props.resource_group_name,
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(parent=self.log_analytics),
-            ),
-            tags=child_tags,
-        )
         # Link the private linkscope to the data collection endpoint
         monitor.PrivateLinkScopedResource(
             f"{self._name}_data_collection_endpoint_ampls_connection",
             kind=monitor.ScopedResourceKind.RESOURCE,
-            linked_resource_id=self.data_collection_endpoint.id,
+            linked_resource_id=props.data_collection_endpoint_id,
             name=f"{stack_name}-cnxn-ampls-to-dce",
             resource_group_name=props.resource_group_name,
             scope_name=log_analytics_private_link_scope.name,
             opts=ResourceOptions.merge(
                 child_opts, ResourceOptions(parent=log_analytics_private_link_scope)
             ),
-        )
-
-        # Create a data collection rule for VM logs
-        self.data_collection_rule_vms = monitor.DataCollectionRule(
-            f"{self._name}_data_collection_rule_vms",
-            data_collection_rule_name=f"{stack_name}-dcr-vms",
-            data_collection_endpoint_id=self.data_collection_endpoint.id,  # used by Logs Ingestion API
-            destinations=monitor.DataCollectionRuleDestinationsArgs(
-                log_analytics=[
-                    monitor.LogAnalyticsDestinationArgs(
-                        name=self.log_analytics.name,
-                        workspace_resource_id=self.log_analytics.id,
-                    )
-                ],
-            ),
-            data_flows=[
-                monitor.DataFlowArgs(
-                    destinations=[self.log_analytics.name],
-                    streams=[
-                        monitor.KnownDataFlowStreams.MICROSOFT_PERF,
-                    ],
-                    transform_kql="source",
-                    output_stream=monitor.KnownDataFlowStreams.MICROSOFT_PERF,
-                ),
-                monitor.DataFlowArgs(
-                    destinations=[self.log_analytics.name],
-                    streams=[
-                        monitor.KnownDataFlowStreams.MICROSOFT_SYSLOG,
-                    ],
-                    transform_kql="source",
-                    output_stream=monitor.KnownDataFlowStreams.MICROSOFT_SYSLOG,
-                ),
-            ],
-            data_sources=monitor.DataCollectionRuleDataSourcesArgs(
-                performance_counters=[
-                    monitor.PerfCounterDataSourceArgs(
-                        counter_specifiers=[
-                            "Processor(*)\\% Processor Time",
-                            "Memory(*)\\% Used Memory",
-                            "Logical Disk(*)\\% Used Space",
-                            "System(*)\\Unique Users",
-                        ],
-                        name="LinuxPerfCounters",
-                        sampling_frequency_in_seconds=60,
-                        streams=[
-                            monitor.KnownPerfCounterDataSourceStreams.MICROSOFT_PERF,
-                        ],
-                    ),
-                ],
-                syslog=[
-                    monitor.SyslogDataSourceArgs(
-                        facility_names=[
-                            # Note that ASTERISK is not currently working
-                            monitor.KnownSyslogDataSourceFacilityNames.ALERT,
-                            monitor.KnownSyslogDataSourceFacilityNames.AUDIT,
-                            monitor.KnownSyslogDataSourceFacilityNames.AUTH,
-                            monitor.KnownSyslogDataSourceFacilityNames.AUTHPRIV,
-                            monitor.KnownSyslogDataSourceFacilityNames.CLOCK,
-                            monitor.KnownSyslogDataSourceFacilityNames.CRON,
-                            monitor.KnownSyslogDataSourceFacilityNames.DAEMON,
-                            monitor.KnownSyslogDataSourceFacilityNames.FTP,
-                            monitor.KnownSyslogDataSourceFacilityNames.KERN,
-                            monitor.KnownSyslogDataSourceFacilityNames.LPR,
-                            monitor.KnownSyslogDataSourceFacilityNames.MAIL,
-                            monitor.KnownSyslogDataSourceFacilityNames.MARK,
-                            monitor.KnownSyslogDataSourceFacilityNames.NEWS,
-                            monitor.KnownSyslogDataSourceFacilityNames.NOPRI,
-                            monitor.KnownSyslogDataSourceFacilityNames.NTP,
-                            monitor.KnownSyslogDataSourceFacilityNames.SYSLOG,
-                            monitor.KnownSyslogDataSourceFacilityNames.USER,
-                            monitor.KnownSyslogDataSourceFacilityNames.UUCP,
-                        ],
-                        log_levels=[
-                            # Note that ASTERISK is not currently working
-                            monitor.KnownSyslogDataSourceLogLevels.DEBUG,
-                            monitor.KnownSyslogDataSourceLogLevels.INFO,
-                            monitor.KnownSyslogDataSourceLogLevels.NOTICE,
-                            monitor.KnownSyslogDataSourceLogLevels.WARNING,
-                            monitor.KnownSyslogDataSourceLogLevels.ERROR,
-                            monitor.KnownSyslogDataSourceLogLevels.CRITICAL,
-                            monitor.KnownSyslogDataSourceLogLevels.ALERT,
-                            monitor.KnownSyslogDataSourceLogLevels.EMERGENCY,
-                        ],
-                        name="LinuxSyslog",
-                        streams=[monitor.KnownSyslogDataSourceStreams.MICROSOFT_SYSLOG],
-                    ),
-                ],
-            ),
-            location=props.location,
-            resource_group_name=props.resource_group_name,
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(parent=self.log_analytics),
-            ),
-            tags=child_tags,
         )

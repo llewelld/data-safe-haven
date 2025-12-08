@@ -1,47 +1,31 @@
 import pulumi
 import pulumi.runtime
-from pulumi_azure_native import network, privatedns
+from pulumi_azure_native import network
 from pytest import fixture
 
-from data_safe_haven.functions import replace_separators
 from data_safe_haven.infrastructure.programs.sre.firewall import (
     SREFirewallComponent,
     SREFirewallProps,
 )
-from data_safe_haven.infrastructure.programs.sre.monitoring import (
-    SREMonitoringComponent,
-    SREMonitoringProps,
+from data_safe_haven.infrastructure.programs.sre.monitoring_elements import (
+    SREMonitoringElementsComponent,
+    SREMonitoringElementsProps,
 )
-from data_safe_haven.types import AzureDnsZoneNames
 
 
 @fixture
-def sre_monitoring_component(
+def sre_monitoring_elements_component(
     location: str,
     resource_group_name: str,
     stack_name: str,
-    subnet_monitoring: network.GetSubnetResult,
     tags: dict[str, str],
-) -> SREMonitoringComponent:
-    return SREMonitoringComponent(
+) -> SREMonitoringElementsComponent:
+    return SREMonitoringElementsComponent(
         "test_sre_monitoring",
         stack_name,
-        SREMonitoringProps(
-            dns_private_zones={
-                dns_zone_name: privatedns.PrivateZone(
-                    replace_separators(
-                        f"test_sre_dns_server_private_zone_{dns_zone_name}", "_"
-                    ),
-                    location="Global",
-                    private_zone_name=f"privatelink.{dns_zone_name}",
-                    resource_group_name=resource_group_name,
-                    tags=tags,
-                )
-                for dns_zone_name in AzureDnsZoneNames.ALL
-            },  # TODO: Check if this works
+        SREMonitoringElementsProps(
             location=location,
             resource_group_name=resource_group_name,
-            subnet=subnet_monitoring,
             timezone="Europe/London",
         ),
         tags=tags,
@@ -53,7 +37,7 @@ def firewall_props_internet_enabled(
     location: str,
     resource_group_name: str,
     stack_name: str,
-    sre_monitoring_component: SREMonitoringComponent,
+    sre_monitoring_elements_component: SREMonitoringElementsComponent,
     subnet_apt_proxy_server: network.GetSubnetResult,
     subnet_clamav_mirror: network.GetSubnetResult,
     subnet_firewall: network.GetSubnetResult,
@@ -68,7 +52,7 @@ def firewall_props_internet_enabled(
     return SREFirewallProps(
         allow_workspace_internet=True,
         location=location,
-        log_analytics_workspace=sre_monitoring_component,
+        log_analytics_workspace=sre_monitoring_elements_component.log_analytics,
         resource_group_name=resource_group_name,
         route_table_name=f"{stack_name}-route-table",
         subnet_apt_proxy_server=subnet_apt_proxy_server,
@@ -89,7 +73,7 @@ def firewall_props_internet_disabled(
     location: str,
     resource_group_name: str,
     stack_name: str,
-    sre_monitoring_component: SREMonitoringComponent,
+    sre_monitoring_elements_component: SREMonitoringElementsComponent,
     subnet_apt_proxy_server: network.GetSubnetResult,
     subnet_clamav_mirror: network.GetSubnetResult,
     subnet_dns_sidecar: network.GetSubnetResult,
@@ -104,7 +88,7 @@ def firewall_props_internet_disabled(
     return SREFirewallProps(
         allow_workspace_internet=False,
         location=location,
-        log_analytics_workspace=sre_monitoring_component,
+        log_analytics_workspace=sre_monitoring_elements_component.log_analytics,
         resource_group_name=resource_group_name,
         route_table_name=f"{stack_name}-route-table",
         subnet_apt_proxy_server=subnet_apt_proxy_server,

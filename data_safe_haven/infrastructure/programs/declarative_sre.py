@@ -28,7 +28,14 @@ from .sre.dns_server import SREDnsServerComponent, SREDnsServerProps
 from .sre.entra import SREEntraComponent, SREEntraProps
 from .sre.firewall import SREFirewallComponent, SREFirewallProps
 from .sre.identity import SREIdentityComponent, SREIdentityProps
-from .sre.monitoring import SREMonitoringComponent, SREMonitoringProps
+from .sre.monitoring import (
+    SREMonitoringNetworkingComponent,
+    SREMonitoringNetworkingProps,
+)
+from .sre.monitoring_elements import (
+    SREMonitoringElementsComponent,
+    SREMonitoringElementsProps,
+)
 from .sre.networking import (
     SRENetworkingComponent,
     SRENetworkingProps,
@@ -128,16 +135,32 @@ class DeclarativeSRE:
             tags=self.tags,
         )
 
+        # Deploy monitoring elements
+        monitoring_elements = SREMonitoringElementsComponent(
+            "sre_monitoring_elements",
+            self.stack_name,
+            SREMonitoringElementsProps(
+                location=self.config.azure.location,
+                resource_group_name=resource_group.name,
+                timezone=self.config.sre.timezone,
+            ),
+            tags=self.tags,
+        )
+
         # Deploy SRE DNS server
         dns = SREDnsServerComponent(
             "sre_dns_server",
             self.stack_name,
             SREDnsServerProps(
                 allow_workspace_internet=self.config.sre.allow_workspace_internet,
+                data_collection_endpoint_id=monitoring_elements.data_collection_endpoint.id,
+                data_collection_rule_id=monitoring_elements.data_collection_rule_vms.id,
                 dockerhub_credentials=dockerhub_credentials,
                 location=self.config.azure.location,
                 resource_group_name=resource_group.name,
+                maintenance_configuration_id=monitoring_elements.maintenance_configuration.id,
                 shm_fqdn=shm_fqdn,
+                timezone=self.config.sre.timezone,
             ),
             tags=self.tags,
         )
@@ -177,13 +200,15 @@ class DeclarativeSRE:
             ),
         )
 
-        # Deploy monitoring
-        monitoring = SREMonitoringComponent(
+        # Deploy monitoring networking
+        SREMonitoringNetworkingComponent(
             "sre_monitoring",
             self.stack_name,
-            SREMonitoringProps(
+            SREMonitoringNetworkingProps(
+                data_collection_endpoint_id=monitoring_elements.data_collection_endpoint.id,
                 dns_private_zones=dns.private_zones,
                 location=self.config.azure.location,
+                log_analytics=monitoring_elements.log_analytics,
                 resource_group_name=resource_group.name,
                 subnet=networking.subnet_monitoring,
                 timezone=self.config.sre.timezone,
@@ -198,7 +223,7 @@ class DeclarativeSRE:
             SREFirewallProps(
                 allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring.log_analytics,
+                log_analytics_workspace=monitoring_elements.log_analytics,
                 resource_group_name=resource_group.name,
                 route_table_name=networking.route_table_name,
                 subnet_apt_proxy_server=networking.subnet_apt_proxy_server,
@@ -228,7 +253,7 @@ class DeclarativeSRE:
                 dns_record=networking.shm_ns_record,
                 dns_server_admin_password=dns.password_admin,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring.log_analytics,
+                log_analytics_workspace=monitoring_elements.log_analytics,
                 resource_group=resource_group,
                 sre_fqdn=networking.sre_fqdn,
                 storage_quota_gb_home=self.config.sre.storage_quota_gb.home,
@@ -250,7 +275,7 @@ class DeclarativeSRE:
                 containers_subnet=networking.subnet_apt_proxy_server,
                 dns_server_ip=dns.ip_address,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring.log_analytics,
+                log_analytics_workspace=monitoring_elements.log_analytics,
                 resource_group_name=resource_group.name,
                 sre_fqdn=networking.sre_fqdn,
                 storage_account_key=data.storage_account_data_configuration_key,
@@ -267,7 +292,7 @@ class DeclarativeSRE:
                 dns_server_ip=dns.ip_address,
                 dockerhub_credentials=dockerhub_credentials,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring.log_analytics,
+                log_analytics_workspace=monitoring_elements.log_analytics,
                 resource_group_name=resource_group.name,
                 sre_fqdn=networking.sre_fqdn,
                 storage_account_key=data.storage_account_data_configuration_key,
@@ -288,7 +313,7 @@ class DeclarativeSRE:
                 entra_application_secret=entra.identity_application_secret,
                 entra_tenant_id=shm_entra_tenant_id,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring.log_analytics,
+                log_analytics_workspace=monitoring_elements.log_analytics,
                 resource_group_name=resource_group.name,
                 shm_fqdn=shm_fqdn,
                 sre_fqdn=networking.sre_fqdn,
@@ -335,7 +360,7 @@ class DeclarativeSRE:
                 ldap_user_filter=ldap_user_filter,
                 ldap_user_search_base=ldap_user_search_base,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring.log_analytics,
+                log_analytics_workspace=monitoring_elements.log_analytics,
                 resource_group_name=resource_group.name,
                 storage_account_key=data.storage_account_data_configuration_key,
                 storage_account_name=data.storage_account_data_configuration_name,
@@ -364,7 +389,7 @@ class DeclarativeSRE:
                 ldap_username_attribute=ldap_username_attribute,
                 ldap_user_search_base=ldap_user_search_base,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring.log_analytics,
+                log_analytics_workspace=monitoring_elements.log_analytics,
                 nexus_admin_password=data.password_nexus_admin,
                 resource_group_name=resource_group.name,
                 repository_data=self.config.user_services.gitea_mirror,
@@ -401,7 +426,7 @@ class DeclarativeSRE:
                 ldap_user_filter=ldap_user_filter,
                 ldap_user_search_base=ldap_user_search_base,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring.log_analytics,
+                log_analytics_workspace=monitoring_elements.log_analytics,
                 resource_group=resource_group,
                 software_repository_hostname=(
                     user_services.software_repositories.hostname
@@ -420,10 +445,10 @@ class DeclarativeSRE:
             SREWorkspacesProps(
                 admin_password=data.password_workspace_admin,
                 apt_proxy_server_hostname=apt_proxy_server.hostname,
-                data_collection_rule_id=monitoring.data_collection_rule_vms.id,
-                data_collection_endpoint_id=monitoring.data_collection_endpoint.id,
+                data_collection_rule_id=monitoring_elements.data_collection_rule_vms.id,
+                data_collection_endpoint_id=monitoring_elements.data_collection_endpoint.id,
                 location=self.config.azure.location,
-                maintenance_configuration_id=monitoring.maintenance_configuration.id,
+                maintenance_configuration_id=monitoring_elements.maintenance_configuration.id,
                 resource_group_name=resource_group.name,
                 sre_name=self.config.name,
                 storage_account_desired_state_name=desired_state.storage_account_name,
@@ -460,7 +485,7 @@ class DeclarativeSRE:
                 subnet_id=Output.from_input(networking.subnet_dns_sidecar).apply(
                     get_id_from_subnet
                 ),
-                log_analytics_workspace=monitoring.log_analytics,
+                log_analytics_workspace=monitoring_elements.log_analytics,
                 location=self.config.azure.location,
                 resource_group_name=resource_group.name,
                 replica_timeout=self.config.user_services.dns_sidecar.replica_timeout,
