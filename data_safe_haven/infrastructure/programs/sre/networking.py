@@ -1658,6 +1658,9 @@ class SRENetworkingComponent(ComponentResource):
         self.subnet_user_services_software_repositories_name = (
             "UserServicesSoftwareRepositoriesSubnet"
         )
+        self.subnet_user_services_software_repositories_support_name = (
+            "UserServicesSoftwareRepositoriesSupportSubnet"
+        )
         self.subnet_workspaces_name = "WorkspacesSubnet"
         self.subnet_dns_sidecar_name = "DnsSidecarSubnet"
         sre_virtual_network = network.VirtualNetwork(

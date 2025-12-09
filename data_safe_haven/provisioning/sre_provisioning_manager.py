@@ -32,18 +32,32 @@ class SREProvisioningManager:
 
         # Read secrets from key vault
         keyvault_name = sre_stack.output("data")["key_vault_name"]
-        secret_name = sre_stack.output("data")["password_user_database_admin_secret"]
+        user_database_secret_name = sre_stack.output("data")[
+            "password_user_database_admin_secret"
+        ]
         azure_sdk = AzureSdk(self.subscription_name)
-        connection_db_server_password = azure_sdk.get_keyvault_secret(
-            keyvault_name, secret_name
+        connection_user_database_server_password = azure_sdk.get_keyvault_secret(
+            keyvault_name, user_database_secret_name
+        )
+        nexus_database_secret_name = sre_stack.output("data")[
+            "password_nexus_database_admin_secret"
+        ]
+        connection_nexus_database_server_password = azure_sdk.get_keyvault_secret(
+            keyvault_name, nexus_database_secret_name
         )
 
         # Construct remote desktop parameters
         self.remote_desktop_params = sre_stack.output("remote_desktop")
         self.remote_desktop_params["connection_db_server_password"] = (
-            connection_db_server_password
+            connection_user_database_server_password
         )
         self.remote_desktop_params["timezone"] = timezone
+
+        # Construct software repositories parameters
+        self.software_repository_params = sre_stack.output("software_repositories")
+        self.software_repository_params["connection_db_server_password"] = (
+            connection_nexus_database_server_password
+        )
 
         # Construct security group parameters
         self.security_group_params = dict(sre_stack.output("ldap"))
@@ -76,6 +90,35 @@ class SREProvisioningManager:
             self.subscription_name,
         )
         guacamole_provisioner.restart()
+
+    def initialise_software_repository_database(self) -> None:
+        """Configures a PostgreSQL database for the Nexus container"""
+        postgres_provisioner = AzurePostgreSQLDatabase(
+            self.software_repository_params["connection_db_name"],
+            self.software_repository_params["connection_db_server_password"],
+            self.software_repository_params["connection_db_server_name"],
+            self.software_repository_params["resource_group_name"],
+            self.subscription_name,
+        )
+
+        postgres_script_path = (
+            pathlib.Path(__file__).parent.parent
+            / "resources"
+            / "software_repositories"
+            / "postgresql"
+        )
+
+        connection_data: dict[str, str] = {
+            "nexus_password": self.software_repository_params[
+                "connection_db_server_password"
+            ]
+        }
+        postgres_provisioner.execute_scripts(
+            [
+                postgres_script_path / "init_db.mustache.sql",
+            ],
+            mustache_values=connection_data,
+        )
 
     def update_remote_desktop_connections(self) -> None:
         """Update connection information on the Guacamole PostgreSQL server"""
