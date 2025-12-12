@@ -1,3 +1,15 @@
 -- Initialization Script. Based on https://help.sonatype.com/en/install-nexus-repository-with-postgresql.html
 
-CREATE DATABASE nexus OWNER nexus ENCODING 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' TEMPLATE template0;
+-- Create a schema
+CREATE SCHEMA nexus;
+
+-- Create new user
+CREATE USER nexus WITH PASSWORD '{{nexus_password}}';
+
+-- Grant permissions for new user on the new database
+GRANT ALL PRIVILEGES ON DATABASE nexus TO nexus;
+GRANT ALL PRIVILEGES ON DATABASE nexus TO nexus;
+
+-- Create extensions
+CREATE EXTENSION pg_trgm SCHEMA nexus;
+ALTER EXTENSION pg_trgm OWNER TO nexus;

@@ -1,6 +1,7 @@
 """Pulumi component for SRE software repositories"""
 
 from collections.abc import Mapping
+from typing import Any
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import containerinstance, storage
@@ -14,6 +15,8 @@ from data_safe_haven.infrastructure.components import (
     FileShareFileProps,
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
+    PostgresqlDatabaseComponent,
+    PostgresqlDatabaseProps,
     WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
@@ -29,6 +32,7 @@ class SRESoftwareRepositoriesProps:
 
     def __init__(
         self,
+        database_password: Input[str],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         location: Input[str],
@@ -40,8 +44,14 @@ class SRESoftwareRepositoriesProps:
         nexus_persistent_quota_gb: Input[int],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
-        subnet_id: Input[str],
+        subnet_software_repositories_id: Input[str],
+        subnet_software_repositories_support_id: Input[str],
+        database_username: Input[str] | None = "postgresadmin",
     ) -> None:
+        self.database_password = database_password
+        self.database_username = (
+            database_username if database_username else "postgresadmin"
+        )
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.location = location
@@ -57,7 +67,10 @@ class SRESoftwareRepositoriesProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
-        self.subnet_id = subnet_id
+        self.subnet_software_repositories_id = subnet_software_repositories_id
+        self.subnet_software_repositories_support_id = (
+            subnet_software_repositories_support_id
+        )
 
 
 class SRESoftwareRepositoriesComponent(ComponentResource):
@@ -164,8 +177,32 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
             ),
         )
 
-        # Define the container group with nexus and caddy
+        self.container_group: containerinstance.ContainerGroup | None = None
+        self.exports: dict[str, Any] | None = None
+
         if props.nexus_packages:
+
+            # Define a PostgreSQL server for Nexus
+            db_software_repository_name: str = "nexus"
+            db_server_software_repositories: PostgresqlDatabaseComponent = (
+                PostgresqlDatabaseComponent(
+                    f"{self._name}_db_nexus",
+                    PostgresqlDatabaseProps(
+                        database_names=[db_software_repository_name],
+                        database_password=props.database_password,
+                        database_resource_group_name=props.resource_group_name,
+                        database_server_name=f"{stack_name}-db-server-software-repositories",
+                        database_subnet_id=props.subnet_software_repositories_support_id,
+                        database_username=props.database_username,
+                        disable_secure_transport=False,
+                        location=props.location,
+                    ),
+                    opts=child_opts,
+                    tags=child_tags,
+                )
+            )
+
+            # Define the container group with nexus and caddy
             self.dns_record_name = "nexus"
             self.container_group_name = (
                 f"{stack_name}-container-group-{self.dns_record_name}"
@@ -298,7 +335,9 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 restart_policy=containerinstance.ContainerGroupRestartPolicy.ALWAYS,
                 sku=containerinstance.ContainerGroupSku.STANDARD,
                 subnet_ids=[
-                    containerinstance.ContainerGroupSubnetIdArgs(id=props.subnet_id)
+                    containerinstance.ContainerGroupSubnetIdArgs(
+                        id=props.subnet_software_repositories_id
+                    )
                 ],
                 volumes=[
                     containerinstance.VolumeArgs(
@@ -353,6 +392,14 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
             )
 
             hostname = self.local_dns.hostname
+
+            # Register Nexus exports
+            self.exports = {
+                "connection_db_name": db_software_repository_name,
+                "connection_db_server_name": db_server_software_repositories.db_server.name,
+                "container_group_name": self.container_group.name,
+                "resource_group_name": props.resource_group_name,
+            }
 
         # Register outputs
         self.hostname = hostname

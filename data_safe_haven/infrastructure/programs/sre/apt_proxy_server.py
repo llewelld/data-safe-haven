@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, storage
+from pulumi_azure_native import containerinstance, network, storage
 
 from data_safe_haven.infrastructure.common import (
     get_id_from_subnet,
@@ -22,7 +22,7 @@ class SREAptProxyServerProps:
 
     def __init__(
         self,
-        containers_subnet: Input[str],
+        containers_subnet: Input[network.GetSubnetResult],
         dns_server_ip: Input[str],
         location: Input[str],
         log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
