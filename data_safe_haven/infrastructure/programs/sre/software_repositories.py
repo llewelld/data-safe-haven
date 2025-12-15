@@ -4,10 +4,12 @@ from collections.abc import Mapping
 from typing import Any
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, storage
+from pulumi_azure_native import containerinstance, network, storage
 
+from data_safe_haven.external import AzureIPv4Range
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
+    get_id_from_subnet,
     get_ip_address_from_container_group,
 )
 from data_safe_haven.infrastructure.components import (
@@ -45,7 +47,7 @@ class SRESoftwareRepositoriesProps:
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_software_repositories_id: Input[str],
-        subnet_software_repositories_support_id: Input[str],
+        subnet_software_repositories_support: Input[network.GetSubnetResult],
         database_username: Input[str] | None = "postgresadmin",
     ) -> None:
         self.database_password = database_password
@@ -68,8 +70,20 @@ class SRESoftwareRepositoriesProps:
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
         self.subnet_software_repositories_id = subnet_software_repositories_id
-        self.subnet_software_repositories_support_id = (
-            subnet_software_repositories_support_id
+        self.subnet_software_repositories_support_id = Output.from_input(
+            subnet_software_repositories_support
+        ).apply(get_id_from_subnet)
+        self.subnet_software_repositories_support_ip_addresses = Output.from_input(
+            subnet_software_repositories_support
+        ).apply(
+            lambda s: (
+                [
+                    str(ip)
+                    for ip in AzureIPv4Range.from_cidr(s.address_prefix).available()
+                ]
+                if s.address_prefix
+                else []
+            )
         )
 
 
@@ -238,7 +252,27 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                     containerinstance.ContainerArgs(
                         image="sonatype/nexus3:3.86.2",
                         name="nexus"[:63],
-                        environment_variables=[],
+                        environment_variables=[
+                            containerinstance.EnvironmentVariableArgs(
+                                name="NEXUS_DATASTORE_NEXUS_JDBCURL",
+                                value=Output.concat(
+                                    "jdbc:postgresql://",
+                                    props.subnet_software_repositories_support_ip_addresses[
+                                        0
+                                    ],
+                                    ":5432/nexus?",
+                                    "gssEncMode=disable&tcpKeepAlive=true&loginTimeout=5&connectionTimeout=5&socketTimeout=30&cancelSignalTimeout=5&targetServerType=primary",
+                                ),
+                            ),
+                            containerinstance.EnvironmentVariableArgs(
+                                name="NEXUS_DATASTORE_NEXUS_USERNAME",
+                                value="nexus",
+                            ),
+                            containerinstance.EnvironmentVariableArgs(
+                                name="NEXUS_DATASTORE_NEXUS_PASSWORD",
+                                secure_value=props.database_password,
+                            ),
+                        ],
                         ports=[],
                         resources=containerinstance.ResourceRequirementsArgs(
                             requests=containerinstance.ResourceRequestsArgs(

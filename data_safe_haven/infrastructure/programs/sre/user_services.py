@@ -103,16 +103,15 @@ class SREUserServicesProps:
             ).apply(get_id_from_subnet)
 
         self.subnet_software_repositories_id: Output[str] | None = None
-        self.subnet_software_repositories_support_id: Output[str] | None = None
 
         if subnet_software_repositories and subnet_software_repositories_support:
             self.subnet_software_repositories_id = Output.from_input(
                 subnet_software_repositories
             ).apply(get_id_from_subnet)
 
-            self.subnet_software_repositories_support_id = Output.from_input(
+            self.subnet_software_repositories_support = (
                 subnet_software_repositories_support
-            ).apply(get_id_from_subnet)
+            )
 
 
 class SREUserServicesComponent(ComponentResource):
@@ -211,7 +210,7 @@ class SREUserServicesComponent(ComponentResource):
         # Deploy software repository servers
         if (
             props.subnet_software_repositories_id
-            and props.subnet_software_repositories_support_id
+            and props.subnet_software_repositories_support
         ):
             self.software_repositories = SRESoftwareRepositoriesComponent(
                 "sre_software_repositories",
@@ -230,7 +229,7 @@ class SREUserServicesComponent(ComponentResource):
                     storage_account_key=props.storage_account_key,
                     storage_account_name=props.storage_account_name,
                     subnet_software_repositories_id=props.subnet_software_repositories_id,
-                    subnet_software_repositories_support_id=props.subnet_software_repositories_support_id,
+                    subnet_software_repositories_support=props.subnet_software_repositories_support,
                 ),
                 opts=child_opts,
                 tags=child_tags,
