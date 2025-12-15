@@ -40,7 +40,6 @@ class SREProvisioningManager:
             keyvault_name, user_database_secret_name
         )
 
-
         # Construct remote desktop parameters
         self.remote_desktop_params = sre_stack.output("remote_desktop")
         self.remote_desktop_params["connection_db_server_password"] = (
