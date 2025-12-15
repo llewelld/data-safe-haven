@@ -2180,6 +2180,18 @@ class SRENetworkingComponent(ComponentResource):
                 ),
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to Software Repositores support services.",
+                    destination_address_prefix=SREIpRanges.user_services_software_repositories_support.prefix,
+                    destination_port_ranges=[Ports.POSTGRESQL],
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowSoftwareRepositoriesSupportOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES_SUPPORT,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_software_repositories.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
                     description="Allow outbound connections to external repositories over the internet.",
                     destination_address_prefix="Internet",
                     destination_port_ranges=[Ports.HTTP, Ports.HTTPS],
