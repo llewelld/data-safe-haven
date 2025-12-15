@@ -1955,7 +1955,7 @@ class SRENetworkingComponent(ComponentResource):
                 virtual_network_name=sre_virtual_network.name,
             )
 
-            self.subnet_user_services_software_repositories_containers_support = network.get_subnet_output(
+            self.subnet_user_services_software_repositories_support = network.get_subnet_output(
                 subnet_name=self.subnet_user_services_software_repositories_support_name,
                 resource_group_name=props.resource_group_name,
                 virtual_network_name=sre_virtual_network.name,

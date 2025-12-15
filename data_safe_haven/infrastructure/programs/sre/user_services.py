@@ -103,7 +103,7 @@ class SREUserServicesProps:
             ).apply(get_id_from_subnet)
 
         self.subnet_software_repositories_id: Output[str] | None = None
-        self.subnet_software_repositories_support: Output[str] | None = None
+        self.subnet_software_repositories_support_id: Output[str] | None = None
 
         if subnet_software_repositories and subnet_software_repositories_support:
             self.subnet_software_repositories_id = Output.from_input(

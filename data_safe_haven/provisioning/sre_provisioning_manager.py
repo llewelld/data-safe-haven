@@ -108,6 +108,10 @@ class SREProvisioningManager:
     def initialise_software_repository_database(self) -> None:
         """Configures a PostgreSQL database for the Nexus container"""
         if self.software_repository_params:
+            self.logger.info(
+                "Setting up a PostgreSQL database for the Nexus repository..."
+            )
+
             postgres_provisioner = AzurePostgreSQLDatabase(
                 self.software_repository_params["connection_db_name"],
                 self.software_repository_params["connection_db_server_password"],
