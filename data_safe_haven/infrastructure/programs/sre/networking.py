@@ -2500,7 +2500,7 @@ class SRENetworkingComponent(ComponentResource):
                 )
             )
 
-            # Guacamole containers support
+            # Software repositories support
             subnets.append(
                 network.SubnetArgs(
                     address_prefix=SREIpRanges.user_services_software_repositories_support.prefix,

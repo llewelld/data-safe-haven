@@ -359,7 +359,7 @@ class SREDataComponent(ComponentResource):
             tags=child_tags,
         )
 
-        # Secret: Guacamole nexus database admin password
+        # Secret: Nexus database admin password
         password_nexus_database_admin = pulumi_random.RandomPassword(
             f"{self._name}_password_nexus_database_admin",
             length=20,
