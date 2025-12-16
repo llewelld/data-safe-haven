@@ -20,4 +20,3 @@ GRANT ALL PRIVILEGES ON DATABASE nexus TO nexus;
 
 -- Create extensions
 CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA nexus;
--- ALTER EXTENSION pg_trgm OWNER TO nexus;
