@@ -133,7 +133,7 @@ cryptography==46.0.3
     #   msal
     #   pyjwt
     #   pyopenssl
-debugpy==1.8.17
+debugpy==1.8.19
     # via pulumi
 dill==0.4.0
     # via pulumi
@@ -276,7 +276,7 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-urllib3==2.5.0
+urllib3==2.6.2
     # via requests
 validators==0.35.0
     # via simple-acme-dns

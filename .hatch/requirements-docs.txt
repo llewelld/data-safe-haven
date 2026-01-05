@@ -150,7 +150,7 @@ cryptography==46.0.3
     #   msal
     #   pyjwt
     #   pyopenssl
-debugpy==1.8.17
+debugpy==1.8.19
     # via pulumi
 dill==0.4.0
     # via pulumi
@@ -289,7 +289,9 @@ rich==14.2.0
     #   hatch.envs.docs
     #   typer
     #   typer-slim
-roman-numerals-py==3.1.0
+roman-numerals==4.0.0
+    # via roman-numerals-py
+roman-numerals-py==4.0.0
     # via sphinx
 semver==3.0.4
     # via
@@ -363,7 +365,7 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-urllib3==2.5.0
+urllib3==2.6.2
     # via requests
 validators==0.35.0
     # via simple-acme-dns
