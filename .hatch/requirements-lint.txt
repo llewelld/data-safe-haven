@@ -142,7 +142,7 @@ mypy-extensions==1.1.0
     # via
     #   black
     #   mypy
-numpy==2.4.0
+numpy==2.3.5
     # via pandas-stubs
 onigurumacffi==1.4.1
     # via ansible-navigator
