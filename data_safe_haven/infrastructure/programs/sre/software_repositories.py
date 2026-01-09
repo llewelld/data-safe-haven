@@ -24,6 +24,7 @@ from data_safe_haven.infrastructure.components import (
 from data_safe_haven.resources import resources_path
 from data_safe_haven.types import (
     Ports,
+    PostgreSqlExtension,
     SoftwarePackageCategory,
 )
 from data_safe_haven.utility import FileReader
@@ -202,7 +203,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 PostgresqlDatabaseComponent(
                     f"{self._name}_db_nexus",
                     PostgresqlDatabaseProps(
-                        azure_extensions="PG_TRGM",  # Extension required by Nexus.
+                        azure_extensions=PostgreSqlExtension.PG_TRGM,  # Extension required by Nexus.
                         database_names=[db_software_repository_name],
                         database_password=props.database_password,
                         database_resource_group_name=props.resource_group_name,

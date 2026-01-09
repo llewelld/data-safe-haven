@@ -27,6 +27,7 @@ from .enums import (
     NetworkingPriorities,
     PermittedDomains,
     Ports,
+    PostgreSqlExtension,
     SoftwarePackageCategory,
 )
 from .types import PathType
@@ -55,6 +56,7 @@ __all__ = [
     "PathType",
     "PermittedDomains",
     "Ports",
+    "PostgreSqlExtension",
     "SafeSreName",
     "SafeString",
     "SoftwarePackageCategory",

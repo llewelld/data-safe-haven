@@ -2182,7 +2182,9 @@ class SRENetworkingComponent(ComponentResource):
                     access=network.SecurityRuleAccess.ALLOW,
                     description="Allow outbound connections to Software Repositores support services.",
                     destination_address_prefix=SREIpRanges.user_services_software_repositories_support.prefix,
-                    destination_port_ranges=[Ports.POSTGRESQL],
+                    destination_port_ranges=[
+                        Ports.POSTGRESQL
+                    ],  # The only support service at the moment is a PostgreSQL database.
                     direction=network.SecurityRuleDirection.OUTBOUND,
                     name="AllowSoftwareRepositoriesSupportOutbound",
                     priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES_SUPPORT,

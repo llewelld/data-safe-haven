@@ -4,6 +4,7 @@ from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import dbforpostgresql, network
 
 from data_safe_haven.infrastructure.common import get_ip_addresses_from_private_endpoint
+from data_safe_haven.types import PostgreSqlExtension
 
 
 class PostgresqlDatabaseProps:
@@ -20,7 +21,7 @@ class PostgresqlDatabaseProps:
         database_username: Input[str],
         disable_secure_transport: bool,
         location: Input[str],
-        azure_extensions: Input[str] | None = None,
+        azure_extensions: Input[PostgreSqlExtension] | None = None,
     ) -> None:
         self.azure_extensions = azure_extensions
         self.database_names = Output.from_input(database_names)
