@@ -249,6 +249,7 @@ class AllowlistRepository(str, Enum):
     CRAN = "cran"
     PYPI = "pypi"
 
+
 @verify(UNIQUE)
 class PostgreSqlExtension(str, Enum):
     PG_TRGM = "PG_TRGM"
