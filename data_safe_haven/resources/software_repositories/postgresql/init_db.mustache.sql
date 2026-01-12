@@ -9,6 +9,8 @@ $$
 BEGIN
   IF NOT EXISTS (SELECT * FROM pg_user WHERE usename = 'nexus') THEN
     CREATE USER nexus WITH PASSWORD '{{nexus_password}}';
+  ELSE
+    ALTER USER nexus WITH PASSWORD '{{nexus_password}}';
   END IF;
 END
 $$

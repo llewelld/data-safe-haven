@@ -360,10 +360,12 @@ class SREDataComponent(ComponentResource):
         )
 
         # Secret: Nexus database admin password
+        # NOTE: Special characters cause connection to fail.
+        # See: https://dba.stackexchange.com/questions/286254/maximum-length-or-special-character-restrictions-for-postgresql-13-user-password
         password_nexus_database_admin = pulumi_random.RandomPassword(
             f"{self._name}_password_nexus_database_admin",
             length=20,
-            special=True,
+            special=False,
             opts=ResourceOptions.merge(child_opts, ResourceOptions(parent=key_vault)),
         )
 
