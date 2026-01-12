@@ -375,7 +375,6 @@ class DeclarativeSRE:
             "sre_user_services",
             self.stack_name,
             SREUserServicesProps(
-                allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 database_service_admin_password=data.password_database_service_admin,
                 databases=self.config.sre.databases,
                 dns_server_ip=dns.ip_address,
@@ -394,6 +393,7 @@ class DeclarativeSRE:
                 resource_group_name=resource_group.name,
                 repository_data=self.config.user_services.gitea_mirror,
                 software_packages=self.config.sre.software_packages,
+                software_repositories_database_password=data.password_nexus_database_admin,
                 sre_fqdn=networking.sre_fqdn,
                 nexus_persistent_quota_gb=self.config.user_services.nexus.persistent_quota_gb,
                 storage_account_key=data.storage_account_data_configuration_key,
@@ -403,6 +403,7 @@ class DeclarativeSRE:
                 subnet_gitea_mirrors=networking.subnet_user_services_gitea_mirror,
                 subnet_databases=networking.subnet_user_services_databases,
                 subnet_software_repositories=networking.subnet_user_services_software_repositories,
+                subnet_software_repositories_support=networking.subnet_user_services_software_repositories_support,
             ),
             tags=self.tags,
         )
@@ -430,7 +431,7 @@ class DeclarativeSRE:
                 resource_group=resource_group,
                 software_repository_hostname=(
                     user_services.software_repositories.hostname
-                    if not self.config.sre.allow_workspace_internet
+                    if hasattr(user_services, "software_repositories")
                     else ""
                 ),
                 subnet_desired_state=networking.subnet_desired_state,
@@ -500,7 +501,7 @@ class DeclarativeSRE:
         )
 
         # Export values for later use
-        if not self.config.sre.allow_workspace_internet:
+        if hasattr(user_services, "software_repositories"):
             pulumi.export(
                 "allowlist_share_name",
                 user_services.software_repositories.allowlist_file_share_name,
@@ -509,6 +510,10 @@ class DeclarativeSRE:
                 "allowlist_share_filenames",
                 user_services.software_repositories.allowlist_file_names,
             )
+            pulumi.export(
+                "software_repositories", user_services.software_repositories.exports
+            )
+
         pulumi.export("data", data.exports)
         pulumi.export("ldap", ldap_group_names)
         pulumi.export("remote_desktop", remote_desktop.exports)

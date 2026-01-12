@@ -31,7 +31,6 @@ class SREUserServicesProps:
 
     def __init__(
         self,
-        allow_workspace_internet: Input[bool],
         database_service_admin_password: Input[str],
         databases: list[DatabaseSystem],  # this must *not* be passed as an Input[T]
         dns_server_ip: Input[str],
@@ -54,13 +53,14 @@ class SREUserServicesProps:
         repository_data: ConfigSubsectionGiteaMirror,
         storage_account_key: Input[str],
         storage_account_name: Input[str],
+        software_repositories_database_password: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
         subnet_containers_support: Input[network.GetSubnetResult],
         subnet_gitea_mirrors: Input[network.GetSubnetResult],
         subnet_databases: Input[network.GetSubnetResult],
         subnet_software_repositories: Input[network.GetSubnetResult] | None,
+        subnet_software_repositories_support: Input[network.GetSubnetResult] | None,
     ) -> None:
-        self.allow_workspace_internet = allow_workspace_internet
         self.database_service_admin_password = database_service_admin_password
         self.databases = databases
         self.dns_server_ip = dns_server_ip
@@ -80,6 +80,9 @@ class SREUserServicesProps:
         self.resource_group_name = resource_group_name
         self.nexus_persistent_quota_gb = nexus_persistent_quota_gb
         self.software_packages = software_packages
+        self.software_repositories_database_password = Output.secret(
+            software_repositories_database_password
+        )
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
@@ -100,10 +103,15 @@ class SREUserServicesProps:
             ).apply(get_id_from_subnet)
 
         self.subnet_software_repositories_id: Output[str] | None = None
-        if subnet_software_repositories is not None:
+
+        if subnet_software_repositories and subnet_software_repositories_support:
             self.subnet_software_repositories_id = Output.from_input(
                 subnet_software_repositories
             ).apply(get_id_from_subnet)
+
+            self.subnet_software_repositories_support = (
+                subnet_software_repositories_support
+            )
 
 
 class SREUserServicesComponent(ComponentResource):
@@ -200,11 +208,15 @@ class SREUserServicesComponent(ComponentResource):
         )
 
         # Deploy software repository servers
-        if props.subnet_software_repositories_id is not None:
+        if (
+            props.subnet_software_repositories_id
+            and props.subnet_software_repositories_support
+        ):
             self.software_repositories = SRESoftwareRepositoriesComponent(
                 "sre_software_repositories",
                 stack_name,
                 SRESoftwareRepositoriesProps(
+                    database_password=props.software_repositories_database_password,
                     dns_server_ip=props.dns_server_ip,
                     dockerhub_credentials=props.dockerhub_credentials,
                     location=props.location,
@@ -216,7 +228,8 @@ class SREUserServicesComponent(ComponentResource):
                     nexus_persistent_quota_gb=props.nexus_persistent_quota_gb,
                     storage_account_key=props.storage_account_key,
                     storage_account_name=props.storage_account_name,
-                    subnet_id=props.subnet_software_repositories_id,
+                    subnet_software_repositories_id=props.subnet_software_repositories_id,
+                    subnet_software_repositories_support=props.subnet_software_repositories_support,
                 ),
                 opts=child_opts,
                 tags=child_tags,
