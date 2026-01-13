@@ -264,7 +264,7 @@ class SREDnsServerComponent(ComponentResource):
                 resource_group_name=props.resource_group_name,
                 subnet_dns=subnet_dns,
                 virtual_network=virtual_network,
-                vm_size="Standard_B2ats_v2",
+                vm_size="Standard_B2als_v2",
             ),
             tags=child_tags,
         )
