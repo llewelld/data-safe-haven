@@ -187,6 +187,14 @@ class VMComponent(ComponentResource):
             os_profile=props.os_profile,
             resource_group_name=props.resource_group_name,
             storage_profile=compute.StorageProfileArgs(
+                # TODO(cgavidia): Only for testing
+                data_disks=[
+                    compute.DataDiskArgs(
+                        lun=0,
+                        create_option=compute.DiskCreateOption.EMPTY,
+                        disk_size_gb=4,
+                    )
+                ],
                 image_reference=props.image_reference,
                 os_disk=compute.OSDiskArgs(
                     caching=compute.CachingTypes.READ_WRITE,
