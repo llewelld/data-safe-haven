@@ -58,6 +58,9 @@ class TestShowAllowlist:
         sre_name = "sandbox"
         repository = "cran"
         mocker.patch.object(Allowlist, "from_remote", return_value=mock_allowlist)
+        mocker.patch.object(
+            AzureSdk, "get_subscription_name", return_value="Subscription name"
+        )
         result = runner.invoke(
             allowlist_command_group,
             ["show", sre_name, repository],
@@ -82,6 +85,9 @@ class TestShowAllowlist:
             SREConfig, "from_remote_by_name", return_value=sre_config_any_packages
         )
         mocker.patch.object(Allowlist, "from_remote", return_value=mock_allowlist)
+        mocker.patch.object(
+            AzureSdk, "get_subscription_name", return_value="Subscription name"
+        )
         result = runner.invoke(
             allowlist_command_group,
             ["show", sre_name, repository],
@@ -143,6 +149,9 @@ class TestUploadAllowlist:
 
         mocker.patch.object(Allowlist, "remote_exists", return_value=False)
         mocker.patch.object(AzureSdk, "upload_file_share", return_value=None)
+        mocker.patch.object(
+            AzureSdk, "get_subscription_name", return_value="Subscription name"
+        )
 
         result = runner.invoke(
             allowlist_command_group,
@@ -179,6 +188,9 @@ class TestUploadAllowlist:
         mocker.patch.object(Allowlist, "remote_exists", return_value=True)
         mocker.patch.object(Allowlist, "from_remote", return_value=mock_allowlist)
         mocker.patch.object(Allowlist, "diff", return_value=[])
+        mocker.patch.object(
+            AzureSdk, "get_subscription_name", return_value="Subscription name"
+        )
 
         result = runner.invoke(
             allowlist_command_group,
@@ -210,6 +222,9 @@ class TestUploadAllowlist:
         mocker.patch.object(Allowlist, "remote_exists", return_value=True)
         mocker.patch.object(Allowlist, "from_remote", return_value=mock_allowlist)
         mocker.patch.object(Allowlist, "diff", return_value=["-numpy", "+pandas"])
+        mocker.patch.object(
+            AzureSdk, "get_subscription_name", return_value="Subscription name"
+        )
 
         result = runner.invoke(
             allowlist_command_group,
