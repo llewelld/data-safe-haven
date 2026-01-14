@@ -25,7 +25,7 @@ classifiers = [
 license = { text = "BSD-3-Clause" }
 dependencies = [
   "appdirs==1.4.4",
-  "azure-core==1.37.0",
+  "azure-core==1.38.0",
   "azure-identity==1.25.1",
   "azure-keyvault-certificates==4.10.0",
   "azure-keyvault-keys==4.11.0",
