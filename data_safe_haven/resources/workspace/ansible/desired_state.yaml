@@ -51,6 +51,10 @@
       ansible.builtin.import_tasks: tasks/scratchpad.yaml
       tags: scratchpad
 
+    - name: Configure data disk
+      ansible.builtin.import_tasks: tasks/datadisk.yaml
+      tags: datadisk
+
     - name: Provision smoke tests
       ansible.builtin.import_tasks: tasks/smoke_tests.yaml
       tags: smoke_tests
