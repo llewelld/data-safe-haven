@@ -7,6 +7,7 @@ from azure.core.credentials import AccessToken, TokenCredential
 from azure.mgmt.resource.subscriptions.models import Subscription
 from pulumi.automation import ProjectSettings
 from pytest import FixtureRequest, MonkeyPatch, fixture
+from pytest_mock import MockerFixture, MockType
 
 import data_safe_haven.config.context_manager as context_mod
 import data_safe_haven.logging.logger
@@ -191,7 +192,9 @@ def context_yaml() -> str:
 
 
 @fixture
-def local_project_settings(context_no_secrets: Context, mocker) -> None:  # noqa: ARG001
+def local_project_settings(
+    context_no_secrets: Context, mocker: MockerFixture
+) -> None:  # noqa: ARG001
     """Overwrite adjust project settings to work locally, no secrets"""
     mocker.patch.object(
         ProjectManager,
@@ -225,7 +228,7 @@ def log_directory(session_mocker, tmp_path_factory):
 
 
 @fixture
-def mock_azuresdk_blob_exists(mocker):
+def mock_azuresdk_blob_exists(mocker: MockerFixture) -> None:
     mocker.patch.object(
         AzureSdk,
         "blob_exists",
@@ -234,7 +237,9 @@ def mock_azuresdk_blob_exists(mocker):
 
 
 @fixture
-def mock_azuresdk_get_subscription(mocker, request: FixtureRequest) -> None:
+def mock_azuresdk_get_subscription(
+    mocker: MockerFixture, request: FixtureRequest
+) -> None:
     subscription = Subscription()
     subscription.display_name = "Data Safe Haven Acme"
     subscription.subscription_id = request.config.guid_subscription
@@ -247,7 +252,7 @@ def mock_azuresdk_get_subscription(mocker, request: FixtureRequest) -> None:
 
 
 @fixture
-def mock_azuresdk_get_subscription_name(mocker):
+def mock_azuresdk_get_subscription_name(mocker: MockerFixture) -> None:
     mocker.patch.object(
         AzureSdk,
         "get_subscription_name",
@@ -256,7 +261,7 @@ def mock_azuresdk_get_subscription_name(mocker):
 
 
 @fixture
-def mock_graphapi_get_credential(mocker):
+def mock_graphapi_get_credential(mocker: MockerFixture) -> None:
     class MockCredential(TokenCredential):
         def get_token(*args, **kwargs):  # noqa: ARG002
             return AccessToken("dummy-token", 0)
@@ -269,9 +274,9 @@ def mock_graphapi_get_credential(mocker):
 
 
 @fixture
-def mock_azuresdk_get_credential(mocker):
+def mock_azuresdk_get_credential(mocker: MockerFixture) -> None:
     class MockCredential(TokenCredential):
-        def get_token(*args, **kwargs):  # noqa: ARG002
+        def get_token(*args, **kwargs) -> AccessToken:  # noqa: ARG002
             return AccessToken("dummy-token", 0)
 
     mocker.patch.object(
@@ -282,8 +287,8 @@ def mock_azuresdk_get_credential(mocker):
 
 
 @fixture
-def mock_azuresdk_get_credential_failure(mocker):
-    def fail_get_credential():
+def mock_azuresdk_get_credential_failure(mocker: MockerFixture) -> None:
+    def fail_get_credential() -> DataSafeHavenAzureError:
         print("mock get_credential")  # noqa: T201
         msg = "mock get_credential error"
         raise DataSafeHavenAzureError(msg)
@@ -296,7 +301,7 @@ def mock_azuresdk_get_credential_failure(mocker):
 
 
 @fixture
-def mock_azuresdk_purge_keyvault(mocker):
+def mock_azuresdk_purge_keyvault(mocker: MockerFixture) -> None:
     mocker.patch.object(
         AzureSdk,
         "purge_keyvault",
@@ -305,7 +310,7 @@ def mock_azuresdk_purge_keyvault(mocker):
 
 
 @fixture
-def mock_azuresdk_remove_blob(mocker):
+def mock_azuresdk_remove_blob(mocker: MockerFixture) -> None:
     mocker.patch.object(
         AzureSdk,
         "remove_blob",
@@ -314,7 +319,7 @@ def mock_azuresdk_remove_blob(mocker):
 
 
 @fixture
-def mock_confirm_no(mocker):
+def mock_confirm_no(mocker: MockerFixture) -> MockType:
     return mocker.patch.object(
         console,
         "confirm",
@@ -323,7 +328,7 @@ def mock_confirm_no(mocker):
 
 
 @fixture
-def mock_confirm_yes(mocker):
+def mock_confirm_yes(mocker: MockerFixture) -> MockType:
     return mocker.patch.object(
         console,
         "confirm",
@@ -332,26 +337,28 @@ def mock_confirm_yes(mocker):
 
 
 @fixture
-def mock_install_plugins(mocker):
+def mock_install_plugins(mocker: MockerFixture) -> None:
     mocker.patch.object(ProjectManager, "install_plugins", return_value=None)
 
 
 @fixture
 def mock_key_vault_key(monkeypatch: MonkeyPatch) -> None:
     class MockKeyVaultKey:
-        def __init__(self, key_name, key_vault_name):
+        def __init__(self, key_name, key_vault_name) -> None:
             self.key_name = key_name
             self.key_vault_name = key_vault_name
             self.id = "mock_key/version"
 
-    def mock_get_keyvault_key(self, key_name, key_vault_name) -> MockKeyVaultKey:  # noqa: ARG001
+    def mock_get_keyvault_key(
+        self, key_name, key_vault_name
+    ) -> MockKeyVaultKey:  # noqa: ARG001
         return MockKeyVaultKey(key_name, key_vault_name)
 
     monkeypatch.setattr(AzureSdk, "get_keyvault_key", mock_get_keyvault_key)
 
 
 @fixture
-def mock_storage_exists(mocker):
+def mock_storage_exists(mocker: MockerFixture) -> MockType:
     return mocker.patch.object(
         AzureSdk,
         "storage_exists",
