@@ -6,7 +6,7 @@ import yaml
 from azure.core.credentials import AccessToken, TokenCredential
 from azure.mgmt.resource.subscriptions.models import Subscription
 from pulumi.automation import ProjectSettings
-from pytest import fixture
+from pytest import FixtureRequest, MonkeyPatch, fixture
 
 import data_safe_haven.config.context_manager as context_mod
 import data_safe_haven.logging.logger
@@ -38,7 +38,7 @@ from data_safe_haven.infrastructure.project_manager import ProjectManager
 from data_safe_haven.logging import init_logging
 
 
-def pytest_configure(config):
+def pytest_configure(config) -> None:
     """Define constants for use across multiple tests"""
     config.guid_admin = "00edec65-b071-4d26-8779-a9fe791c6e14"
     config.guid_application = "aa78dceb-4116-4713-8554-cf2b3027e119"
@@ -49,7 +49,7 @@ def pytest_configure(config):
 
 
 @fixture
-def config_section_azure(request):
+def config_section_azure(request: FixtureRequest) -> ConfigSectionAzure:
     return ConfigSectionAzure(
         location="uksouth",
         subscription_id=request.config.guid_subscription,
@@ -58,12 +58,12 @@ def config_section_azure(request):
 
 
 @fixture
-def config_section_shm(config_section_shm_dict):
+def config_section_shm(config_section_shm_dict: dict[str, str]) -> ConfigSectionSHM:
     return ConfigSectionSHM(**config_section_shm_dict)
 
 
 @fixture
-def config_section_shm_dict(request):
+def config_section_shm_dict(request: FixtureRequest) -> dict[str, str]:
     return {
         "admin_group_id": request.config.guid_admin,
         "entra_tenant_id": request.config.guid_entra,
@@ -81,7 +81,8 @@ def config_section_dockerhub() -> ConfigSectionDockerHub:
 
 @fixture
 def config_section_sre(
-    config_subsection_remote_desktop, config_subsection_storage_quota_gb
+    config_subsection_remote_desktop: ConfigSubsectionRemoteDesktopOpts,
+    config_subsection_storage_quota_gb: ConfigSubsectionStorageQuotaGB,
 ) -> ConfigSectionSRE:
     return ConfigSectionSRE(
         admin_email_address="admin@example.com",
@@ -95,7 +96,8 @@ def config_section_sre(
 
 @fixture
 def config_section_sre_allow_internet(
-    config_subsection_remote_desktop, config_subsection_storage_quota_gb
+    config_subsection_remote_desktop: ConfigSubsectionRemoteDesktopOpts,
+    config_subsection_storage_quota_gb: ConfigSubsectionStorageQuotaGB,
 ) -> ConfigSectionSRE:
     return ConfigSectionSRE(
         admin_email_address="admin@example.com",
@@ -110,7 +112,8 @@ def config_section_sre_allow_internet(
 
 @fixture
 def config_section_sre_any_packages(
-    config_subsection_remote_desktop, config_subsection_storage_quota_gb
+    config_subsection_remote_desktop: ConfigSubsectionRemoteDesktopOpts,
+    config_subsection_storage_quota_gb: ConfigSubsectionStorageQuotaGB,
 ) -> ConfigSectionSRE:
     return ConfigSectionSRE(
         admin_email_address="admin@example.com",
@@ -133,12 +136,12 @@ def config_subsection_storage_quota_gb() -> ConfigSubsectionStorageQuotaGB:
 
 
 @fixture
-def context(context_dict):
+def context(context_dict: dict[str, str]) -> Context:
     return Context(**context_dict)
 
 
 @fixture
-def context_dict():
+def context_dict() -> dict[str, str]:
     return {
         "admin_group_name": "Acme Admins",
         "description": "Acme Deployment",
@@ -148,24 +151,28 @@ def context_dict():
 
 
 @fixture
-def context_no_secrets(monkeypatch, context_dict) -> Context:
+def context_no_secrets(
+    monkeypatch: MonkeyPatch, context_dict: dict[str, str]
+) -> Context:
     monkeypatch.setattr(Context, "pulumi_secrets_provider_url", None)
     return Context(**context_dict)
 
 
 @fixture
-def context_manager(context_yaml) -> ContextManager:
+def context_manager(context_yaml: str) -> ContextManager:
     return ContextManager.from_yaml(context_yaml)
 
 
 @fixture
-def context_tmpdir(context_dict, tmpdir, monkeypatch) -> tuple[Context, Path]:
+def context_tmpdir(
+    context_dict: dict[str, str], tmpdir, monkeypatch: MonkeyPatch
+) -> tuple[Context, Path]:
     monkeypatch.setattr(context_mod, "config_dir", lambda: Path(tmpdir))
     return (Context(**context_dict), tmpdir)
 
 
 @fixture
-def context_yaml():
+def context_yaml() -> str:
     content = """---
     selected: acmedeployment
     contexts:
@@ -184,7 +191,7 @@ def context_yaml():
 
 
 @fixture
-def local_project_settings(context_no_secrets, mocker):  # noqa: ARG001
+def local_project_settings(context_no_secrets: Context, mocker) -> None:  # noqa: ARG001
     """Overwrite adjust project settings to work locally, no secrets"""
     mocker.patch.object(
         ProjectManager,
@@ -227,7 +234,7 @@ def mock_azuresdk_blob_exists(mocker):
 
 
 @fixture
-def mock_azuresdk_get_subscription(mocker, request):
+def mock_azuresdk_get_subscription(mocker, request: FixtureRequest) -> None:
     subscription = Subscription()
     subscription.display_name = "Data Safe Haven Acme"
     subscription.subscription_id = request.config.guid_subscription
@@ -330,14 +337,14 @@ def mock_install_plugins(mocker):
 
 
 @fixture
-def mock_key_vault_key(monkeypatch):
+def mock_key_vault_key(monkeypatch: MonkeyPatch) -> None:
     class MockKeyVaultKey:
         def __init__(self, key_name, key_vault_name):
             self.key_name = key_name
             self.key_vault_name = key_vault_name
             self.id = "mock_key/version"
 
-    def mock_get_keyvault_key(self, key_name, key_vault_name):  # noqa: ARG001
+    def mock_get_keyvault_key(self, key_name, key_vault_name) -> MockKeyVaultKey:  # noqa: ARG001
         return MockKeyVaultKey(key_name, key_vault_name)
 
     monkeypatch.setattr(AzureSdk, "get_keyvault_key", mock_get_keyvault_key)
@@ -353,7 +360,7 @@ def mock_storage_exists(mocker):
 
 
 @fixture
-def offline_pulumi_account(monkeypatch):
+def offline_pulumi_account(monkeypatch: MonkeyPatch) -> None:
     """Overwrite PulumiAccount so that it runs locally"""
     monkeypatch.setattr(
         PulumiAccount, "env", {"PULUMI_CONFIG_PASSPHRASE": "passphrase"}
@@ -398,7 +405,7 @@ def pulumi_config_no_key(
 
 
 @fixture
-def pulumi_project(pulumi_project_stack_config) -> DSHPulumiProject:
+def pulumi_project(pulumi_project_stack_config: dict[str, str]) -> DSHPulumiProject:
     return DSHPulumiProject(
         stack_config=pulumi_project_stack_config,
     )
@@ -427,7 +434,7 @@ def pulumi_project_sandbox() -> DSHPulumiProject:
 
 
 @fixture
-def pulumi_project_stack_config():
+def pulumi_project_stack_config() -> dict[str, str]:
     return {
         "azure-native:location": "uksouth",
         "azure-native:subscriptionId": "abc",
@@ -484,7 +491,7 @@ def shm_config_file(shm_config_yaml: str, tmp_path: Path) -> Path:
 
 
 @fixture
-def shm_config_yaml(request):
+def shm_config_yaml(request: FixtureRequest) -> str:
     content = (
         """---
     azure:
@@ -506,7 +513,7 @@ def shm_config_yaml(request):
 
 
 @fixture
-def sre_config_file(sre_config_yaml, tmp_path):
+def sre_config_file(sre_config_yaml: str, tmp_path: Path) -> Path:
     config_file_path = tmp_path / "config.yaml"
     with open(config_file_path, "w") as f:
         f.write(sre_config_yaml)
@@ -592,7 +599,7 @@ def sre_config_alternate(
 
 
 @fixture
-def sre_config_yaml(request):
+def sre_config_yaml(request: FixtureRequest) -> str:
     content = """---
     azure:
         location: uksouth
@@ -641,21 +648,21 @@ def sre_config_yaml(request):
 
 
 @fixture
-def sre_config_yaml_missing_field(sre_config_yaml):
+def sre_config_yaml_missing_field(sre_config_yaml: str) -> str:
     content = sre_config_yaml.replace("admin_email_address: admin@example.com", "")
     return yaml.dump(yaml.safe_load(content))
 
 
 @fixture
 def sre_project_manager(
-    context_no_secrets,
-    sre_config,
-    pulumi_config_no_key,
+    context_no_secrets: Context,
+    sre_config: SREConfig,
+    pulumi_config_no_key: DSHPulumiConfig,
     local_project_settings,  # noqa: ARG001
     mock_azuresdk_get_subscription,  # noqa: ARG001
     mock_azuresdk_get_credential,  # noqa: ARG001
     offline_pulumi_account,  # noqa: ARG001
-):
+) -> SREProjectManager:
     return SREProjectManager(
         context=context_no_secrets,
         config=sre_config,
