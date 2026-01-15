@@ -31,6 +31,7 @@ class VMComponentProps:
         admin_username: Input[str] | None = None,
         data_collection_rule_id: Input[str] | None = None,
         data_collection_endpoint_id: Input[str] | None = None,
+        data_disk_size: int = 0,
         ip_address_public: Input[bool] | None = None,
         maintenance_configuration_id: Input[str] | None = None,
     ) -> None:
@@ -41,6 +42,7 @@ class VMComponentProps:
             data_collection_rule_id
         ).apply(lambda rule_id: str(rule_id).split("/")[-1])
         self.data_collection_endpoint_id = data_collection_endpoint_id
+        self.data_disk_size = data_disk_size
         self.image_reference_args = None
         self.ip_address_private = ip_address_private
         self.ip_address_public = ip_address_public
@@ -166,6 +168,17 @@ class VMComponent(ComponentResource):
             tags=child_tags,
         )
 
+        # Define Data Disks
+        data_disks: list[compute.DataDiskArgs] = []
+        if props.data_disk_size > 0:
+            data_disks.append(
+                compute.DataDiskArgs(
+                    lun=0,
+                    create_option=compute.DiskCreateOption.EMPTY,
+                    disk_size_gb=4,
+                )
+            )
+
         # Define virtual machine
         virtual_machine = compute.VirtualMachine(
             name_underscored,
@@ -187,14 +200,7 @@ class VMComponent(ComponentResource):
             os_profile=props.os_profile,
             resource_group_name=props.resource_group_name,
             storage_profile=compute.StorageProfileArgs(
-                # TODO(cgavidia): Only for testing
-                data_disks=[
-                    compute.DataDiskArgs(
-                        lun=0,
-                        create_option=compute.DiskCreateOption.EMPTY,
-                        disk_size_gb=4,
-                    )
-                ],
+                data_disks=data_disks,
                 image_reference=props.image_reference,
                 os_disk=compute.OSDiskArgs(
                     caching=compute.CachingTypes.READ_WRITE,

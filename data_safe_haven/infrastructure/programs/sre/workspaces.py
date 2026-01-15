@@ -36,7 +36,9 @@ class SREWorkspacesProps:
         subnet_workspaces: Input[network.GetSubnetResult],
         subscription_name: Input[str],
         virtual_network: Input[network.VirtualNetwork],
-        vm_details: list[tuple[int, str]],  # this must *not* be passed as an Input[T]
+        vm_details: list[
+            tuple[int, str, int]
+        ],  # this must *not* be passed as an Input[T]
     ) -> None:
         self.admin_password = Output.secret(admin_password)
         self.admin_username = "dshadmin"
@@ -94,6 +96,9 @@ class SREWorkspacesComponent(ComponentResource):
         # Load cloud-init file
         cloudinit = Output.all(
             apt_proxy_server_hostname=props.apt_proxy_server_hostname,
+            data_disk_support=any(
+                data_disk_size > 0 for _, _, data_disk_size in props.vm_details
+            ),
             storage_account_desired_state_name=props.storage_account_desired_state_name,
             storage_account_data_private_user_name=props.storage_account_data_private_user_name,
             storage_account_data_private_sensitive_name=props.storage_account_data_private_sensitive_name,
@@ -109,6 +114,7 @@ class SREWorkspacesComponent(ComponentResource):
                     b64cloudinit=cloudinit.apply(b64encode),
                     data_collection_rule_id=props.data_collection_rule_id,
                     data_collection_endpoint_id=props.data_collection_endpoint_id,
+                    data_disk_size=data_disk_size,
                     ip_address_private=props.vm_ip_addresses[vm_idx],
                     location=props.location,
                     maintenance_configuration_id=props.maintenance_configuration_id,
@@ -124,7 +130,7 @@ class SREWorkspacesComponent(ComponentResource):
                 opts=child_opts,
                 tags=child_tags,
             )
-            for vm_idx, vm_size in props.vm_details
+            for vm_idx, vm_size, data_disk_size in props.vm_details
         ]
 
         # Get details for each deployed VM

@@ -6,7 +6,7 @@
 
 - name: Set permissions of data disk directory
   ansible.builtin.file:
-    path: /datadisk
+    path: /mnt/datadrive
     state: directory
     owner: root
     group: root
