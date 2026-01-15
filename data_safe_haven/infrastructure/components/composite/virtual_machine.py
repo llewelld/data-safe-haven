@@ -175,7 +175,7 @@ class VMComponent(ComponentResource):
                 compute.DataDiskArgs(
                     lun=0,
                     create_option=compute.DiskCreateOption.EMPTY,
-                    disk_size_gb=4,
+                    disk_size_gb=props.data_disk_size,
                 )
             )
 
