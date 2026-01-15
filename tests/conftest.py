@@ -618,6 +618,7 @@ def sre_config_yaml(request):
         storage_quota_gb:
             home: 100
             shared: 100
+            data_disk: 0
         timezone: Europe/London
         workspace_skus: []
     user_services:
