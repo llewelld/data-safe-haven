@@ -193,8 +193,8 @@ def context_yaml() -> str:
 
 @fixture
 def local_project_settings(
-    context_no_secrets: Context, mocker: MockerFixture
-) -> None:  # noqa: ARG001
+    context_no_secrets: Context, mocker: MockerFixture  # noqa: ARG001
+) -> None:
     """Overwrite adjust project settings to work locally, no secrets"""
     mocker.patch.object(
         ProjectManager,
@@ -349,12 +349,12 @@ def mock_key_vault_key(monkeypatch: MonkeyPatch) -> None:
             self.key_vault_name = key_vault_name
             self.id = "mock_key/version"
 
-    def mock_get_keyvault_key(
-        self, key_name, key_vault_name
-    ) -> MockKeyVaultKey:  # noqa: ARG001
-        return MockKeyVaultKey(key_name, key_vault_name)
+        def mock_get_keyvault_key(self, key_name, key_vault_name):
+            return MockKeyVaultKey(key_name, key_vault_name)
 
-    monkeypatch.setattr(AzureSdk, "get_keyvault_key", mock_get_keyvault_key)
+    monkeypatch.setattr(
+        AzureSdk, "get_keyvault_key", MockKeyVaultKey.mock_get_keyvault_key
+    )
 
 
 @fixture
