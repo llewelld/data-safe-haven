@@ -219,7 +219,11 @@ class VMComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    delete_before_replace=True, replace_on_changes=["os_profile"]
+                    delete_before_replace=True,
+                    replace_on_changes=[
+                        "osProfile",
+                        "storageProfile.dataDisks[*].diskSizeGB",
+                    ],  # Pulumi's data disk update is limited by Azure https://github.com/pulumi/pulumi-azure-native/issues/3952
                 ),
             ),
             tags=child_tags,
