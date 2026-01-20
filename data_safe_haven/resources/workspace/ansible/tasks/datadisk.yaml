@@ -1,0 +1,14 @@
+---
+- name: Find data disk on Azure VM
+  ansible.builtin.stat:
+    path: /dev/disk/azure/scsi1/lun0
+  register: datadisk_disk_link
+
+- name: Set permissions of data disk directory
+  ansible.builtin.file:
+    path: /mnt/datadrive
+    state: directory
+    owner: root
+    group: root
+    mode: "0777"
+  when: datadisk_disk_link.stat.exists and datadisk_disk_link.stat.islnk

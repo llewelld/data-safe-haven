@@ -1,4 +1,5 @@
 from .annotated_types import (
+    AzureDataDiskSize,
     AzureLocation,
     AzurePremiumFileShareSize,
     AzureSubscriptionName,
@@ -34,6 +35,7 @@ from .types import PathType
 
 __all__ = [
     "AllowlistRepository",
+    "AzureDataDiskSize",
     "AzureDnsZoneNames",
     "AzureLocation",
     "AzurePremiumFileShareSize",

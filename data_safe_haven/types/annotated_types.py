@@ -1,12 +1,13 @@
 from collections.abc import Hashable
 from typing import Annotated, TypeAlias, TypeVar
 
-from annotated_types import Ge
+from annotated_types import Ge, Le
 from pydantic import Field
 from pydantic.functional_validators import AfterValidator
 
 from data_safe_haven import validators
 
+AzureDataDiskSize = Annotated[int, Le(1023)]
 AzureLocation = Annotated[str, AfterValidator(validators.azure_location)]
 AzurePremiumFileShareSize = Annotated[int, Ge(100)]
 AzureShortName = Annotated[str, Field(min_length=1, max_length=24)]

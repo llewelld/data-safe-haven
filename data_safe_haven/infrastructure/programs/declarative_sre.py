@@ -458,7 +458,10 @@ class DeclarativeSRE:
                 subnet_workspaces=networking.subnet_workspaces,
                 subscription_name=sre_subscription_name,
                 virtual_network=networking.virtual_network,
-                vm_details=list(enumerate(self.config.sre.workspace_skus)),
+                vm_details=[
+                    (vm_index, vm_size, self.config.sre.storage_quota_gb.data_disk)
+                    for vm_index, vm_size in enumerate(self.config.sre.workspace_skus)
+                ],
             ),
             opts=ResourceOptions(depends_on=[desired_state]),
             tags=self.tags,
