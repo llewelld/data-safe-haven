@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, network, storage
+from pulumi_azure_native import containerinstance, network, operationalinsights, storage
 
 from data_safe_haven.external import AzureIPv4Range
 from data_safe_haven.infrastructure.common import (
@@ -340,7 +340,10 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                     log_analytics=containerinstance.LogAnalyticsArgs(
                         workspace_id=props.log_analytics_workspace.workspace_id,
-                        workspace_key=props.log_analytics_workspace.workspace_key,
+                        workspace_key=operationalinsights.get_shared_keys_output(
+                            resource_group_name=props.log_analytics_workspace.resource_group_name,
+                            workspace_name=props.log_analytics_workspace.name,
+                        ).apply(lambda keys: keys.primary_shared_key),
                     ),
                 ),
                 dns_config=containerinstance.DnsConfigurationArgs(
@@ -406,6 +409,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                     ResourceOptions(
                         delete_before_replace=True,
                         replace_on_changes=["containers"],
+                        depends_on=[props.log_analytics_workspace],
                     ),
                 ),
                 tags=child_tags,
