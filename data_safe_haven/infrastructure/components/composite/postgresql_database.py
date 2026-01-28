@@ -70,7 +70,9 @@ class PostgresqlDatabaseComponent(ComponentResource):
             ),
             location=props.location,
             resource_group_name=props.database_resource_group_name,
-            server_name=props.database_server_name,
+            server_name=props.database_server_name[
+                :63
+            ],  # At most, 63 characters allowed.
             sku=dbforpostgresql.SkuArgs(
                 name="Standard_B2s",
                 tier=dbforpostgresql.SkuTier.BURSTABLE,

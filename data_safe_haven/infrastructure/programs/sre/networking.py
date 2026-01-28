@@ -2231,7 +2231,9 @@ class SRENetworkingComponent(ComponentResource):
         return network.NetworkSecurityGroup(
             f"{self._name}_nsg_user_services_software_repositories_support",
             location=props.location,
-            network_security_group_name=f"{stack_name}-nsg-user-services-software-repositories-support",
+            network_security_group_name=f"{stack_name}-nsg-user-services-software-repositories-support"[
+                :80
+            ],  # The name can be up to 80 characters long
             resource_group_name=props.resource_group_name,
             security_rules=[
                 # Inbound
