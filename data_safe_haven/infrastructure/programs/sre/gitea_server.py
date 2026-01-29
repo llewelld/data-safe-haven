@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, storage
+from pulumi_azure_native import containerinstance, operationalinsights, storage
 from pulumi_random import RandomPassword
 
 from data_safe_haven.infrastructure.common import (
@@ -323,7 +323,10 @@ class SREGiteaServerComponent(ComponentResource):
             diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                 log_analytics=containerinstance.LogAnalyticsArgs(
                     workspace_id=props.log_analytics_workspace.workspace_id,
-                    workspace_key=props.log_analytics_workspace.workspace_key,
+                    workspace_key=operationalinsights.get_shared_keys_output(
+                        resource_group_name=props.log_analytics_workspace.resource_group_name,
+                        workspace_name=props.log_analytics_workspace.name,
+                    ).apply(lambda keys: keys.primary_shared_key),
                 ),
             ),
             dns_config=containerinstance.DnsConfigurationArgs(
@@ -390,6 +393,7 @@ class SREGiteaServerComponent(ComponentResource):
                         file_share_gitea_caddy_caddyfile,
                         file_share_gitea_gitea_configure_sh,
                         file_share_gitea_gitea_entrypoint_sh,
+                        props.log_analytics_workspace,
                     ],
                     replace_on_changes=["containers"],
                 ),
