@@ -103,9 +103,9 @@ class TestConfig:
     def test_template_tiers(
         self,
         tier: int,
-        allow_internet: bool,
-        copy: bool,
-        paste: bool,
+        allow_internet: bool,  # noqa: FBT001
+        copy: bool,  # noqa: FBT001
+        paste: bool,  # noqa: FBT001
         packages: SoftwarePackageCategory,
     ) -> None:
         config = SREConfig.template(tier=tier)
