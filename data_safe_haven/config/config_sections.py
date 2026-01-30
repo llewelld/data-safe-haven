@@ -51,6 +51,7 @@ class ConfigSubsectionStorageQuotaGB(BaseModel, validate_assignment=True):
     home: AzurePremiumFileShareSize
     shared: AzurePremiumFileShareSize
     data_disk: AzureDataDiskSize = 0
+    os_disk: AzureDataDiskSize = 64
 
 
 class ConfigSubsectionNexus(BaseModel, validate_assignment=True):

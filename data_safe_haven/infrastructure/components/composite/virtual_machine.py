@@ -31,9 +31,10 @@ class VMComponentProps:
         admin_username: Input[str] | None = None,
         data_collection_rule_id: Input[str] | None = None,
         data_collection_endpoint_id: Input[str] | None = None,
-        data_disk_size: int = 0,
+        data_disk_size: Input[int] = 0,
         ip_address_public: Input[bool] | None = None,
         maintenance_configuration_id: Input[str] | None = None,
+        os_disk_size: Input[int] = 64,
     ) -> None:
         self.admin_password = admin_password
         self.admin_username = admin_username if admin_username else "dshvmadmin"
@@ -48,6 +49,7 @@ class VMComponentProps:
         self.ip_address_public = ip_address_public
         self.location = location
         self.maintenance_configuration_id = maintenance_configuration_id
+        self.os_disk_size = os_disk_size
         self.os_profile_args = None
         self.resource_group_name = resource_group_name
         self.subnet_name = subnet_name
@@ -198,13 +200,14 @@ class VMComponent(ComponentResource):
                 ],
             ),
             os_profile=props.os_profile,
-            resource_group_name=props.resource_group_name,
+        resource_group_name=props.resource_group_name,
             storage_profile=compute.StorageProfileArgs(
                 data_disks=data_disks,
                 image_reference=props.image_reference,
                 os_disk=compute.OSDiskArgs(
                     caching=compute.CachingTypes.READ_WRITE,
                     create_option=compute.DiskCreateOptionTypes.FROM_IMAGE,
+                    disk_size_gb=props.os_disk_size,
                     delete_option=compute.DiskDeleteOptionTypes.DELETE,
                     managed_disk=compute.ManagedDiskParametersArgs(
                         storage_account_type=compute.StorageAccountTypes.PREMIUM_LRS,

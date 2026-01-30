@@ -37,7 +37,7 @@ class SREWorkspacesProps:
         subscription_name: Input[str],
         virtual_network: Input[network.VirtualNetwork],
         vm_details: list[
-            tuple[int, str, int]
+            tuple[int, str, int, int]
         ],  # this must *not* be passed as an Input[T]
     ) -> None:
         self.admin_password = Output.secret(admin_password)
@@ -97,7 +97,7 @@ class SREWorkspacesComponent(ComponentResource):
         cloudinit = Output.all(
             apt_proxy_server_hostname=props.apt_proxy_server_hostname,
             data_disk_support=any(
-                data_disk_size > 0 for _, _, data_disk_size in props.vm_details
+                data_disk_size > 0 for _, _, data_disk_size, _ in props.vm_details
             ),
             storage_account_desired_state_name=props.storage_account_desired_state_name,
             storage_account_data_private_user_name=props.storage_account_data_private_user_name,
@@ -118,6 +118,7 @@ class SREWorkspacesComponent(ComponentResource):
                     ip_address_private=props.vm_ip_addresses[vm_idx],
                     location=props.location,
                     maintenance_configuration_id=props.maintenance_configuration_id,
+                    os_disk_size=os_disk_size,
                     resource_group_name=props.resource_group_name,
                     subnet_name=props.subnet_workspaces_name,
                     virtual_network_name=props.virtual_network_name,
@@ -130,7 +131,7 @@ class SREWorkspacesComponent(ComponentResource):
                 opts=child_opts,
                 tags=child_tags,
             )
-            for vm_idx, vm_size, data_disk_size in props.vm_details
+            for vm_idx, vm_size, data_disk_size, os_disk_size in props.vm_details
         ]
 
         # Get details for each deployed VM
