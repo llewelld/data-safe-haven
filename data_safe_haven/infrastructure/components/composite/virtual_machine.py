@@ -182,6 +182,8 @@ class VMComponent(ComponentResource):
             )
 
         # Define virtual machine
+        # IMPORTANT! Updating the size of either the OS/Data disk is not possible due to Pulumi limitations.
+        # These changes need to happen manually after VM deallocation (see: https://github.com/pulumi/pulumi-azure-native/issues/3952)
         virtual_machine = compute.VirtualMachine(
             name_underscored,
             diagnostics_profile=compute.DiagnosticsProfileArgs(
@@ -200,7 +202,7 @@ class VMComponent(ComponentResource):
                 ],
             ),
             os_profile=props.os_profile,
-        resource_group_name=props.resource_group_name,
+            resource_group_name=props.resource_group_name,
             storage_profile=compute.StorageProfileArgs(
                 data_disks=data_disks,
                 image_reference=props.image_reference,
@@ -225,8 +227,7 @@ class VMComponent(ComponentResource):
                     delete_before_replace=True,
                     replace_on_changes=[
                         "osProfile",
-                        "storageProfile.dataDisks[*].diskSizeGB",
-                    ],  # Pulumi's data disk update is limited by Azure https://github.com/pulumi/pulumi-azure-native/issues/3952
+                    ],
                 ),
             ),
             tags=child_tags,
