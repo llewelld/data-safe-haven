@@ -633,6 +633,7 @@ def sre_config_yaml(request: FixtureRequest) -> str:
             home: 100
             shared: 100
             data_disk: 0
+            os_disk: 64
         timezone: Europe/London
         workspace_skus: []
     user_services:

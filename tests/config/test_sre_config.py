@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+from pytest_mock import MockerFixture
 
 from data_safe_haven.config import Context, SREConfig
 from data_safe_haven.config.config_sections import (
@@ -99,20 +100,31 @@ class TestConfig:
             (4, False, False, False, SoftwarePackageCategory.NONE),
         ],
     )
-    def test_template_tiers(self, tier, allow_internet, copy, paste, packages):
+    def test_template_tiers(
+        self,
+        tier: int,
+        allow_internet: bool,
+        copy: bool,
+        paste: bool,
+        packages: SoftwarePackageCategory,
+    ) -> None:
         config = SREConfig.template(tier=tier)
         assert config.sre.allow_workspace_internet == allow_internet
         assert config.sre.remote_desktop.allow_copy == copy
         assert config.sre.remote_desktop.allow_paste == paste
         assert config.sre.software_packages == packages
 
-    def test_from_yaml(self, sre_config, sre_config_yaml) -> None:
+    def test_from_yaml(self, sre_config: SREConfig, sre_config_yaml: str) -> None:
         config = SREConfig.from_yaml(sre_config_yaml)
         assert config == sre_config
         assert isinstance(config.sre.software_packages, SoftwarePackageCategory)
 
     def test_from_remote(
-        self, mocker, context: Context, sre_config: SREConfig, sre_config_yaml: str
+        self,
+        mocker: MockerFixture,
+        context: Context,
+        sre_config: SREConfig,
+        sre_config_yaml: str,
     ) -> None:
         mock_method = mocker.patch.object(
             AzureSdk, "download_blob", return_value=sre_config_yaml
@@ -130,7 +142,9 @@ class TestConfig:
     def test_to_yaml(self, sre_config: SREConfig, sre_config_yaml: str) -> None:
         assert sre_config.to_yaml() == sre_config_yaml
 
-    def test_upload(self, mocker, context, sre_config) -> None:
+    def test_upload(
+        self, mocker: MockerFixture, context: Context, sre_config: SREConfig
+    ) -> None:
         mock_method = mocker.patch.object(AzureSdk, "upload_blob", return_value=None)
         sre_config.upload(context)
 
