@@ -36,9 +36,9 @@
 # - typer==0.21.1
 # - websocket-client==1.9.0
 # - emoji==2.15.0
-# - myst-parser==4.0.1
+# - myst-parser==5.0.0
 # - pydata-sphinx-theme==0.16.1
-# - sphinx-togglebutton==0.3.2
+# - sphinx-togglebutton==0.4.4
 # - sphinx<10,>=7
 # - sphinxcontrib-typer==0.7.2
 #
@@ -117,7 +117,7 @@ azure-storage-file-datalake==12.23.0
     # via hatch.envs.docs
 azure-storage-file-share==12.24.0
     # via hatch.envs.docs
-babel==2.17.0
+babel==2.18.0
     # via
     #   pydata-sphinx-theme
     #   sphinx
@@ -156,7 +156,7 @@ dill==0.4.1
     # via pulumi
 dnspython==2.7.0
     # via simple-acme-dns
-docutils==0.21.2
+docutils==0.22.4
     # via
     #   myst-parser
     #   pydata-sphinx-theme
@@ -193,7 +193,7 @@ jinja2==3.1.6
     #   sphinx
 josepy==2.2.0
     # via acme
-markdown-it-py==3.0.0
+markdown-it-py==4.0.0
     # via
     #   mdit-py-plugins
     #   myst-parser
@@ -214,7 +214,7 @@ msrest==0.7.1
     # via
     #   azure-mgmt-rdbms
     #   azure-mgmt-storage
-myst-parser==4.0.1
+myst-parser==5.0.0
     # via hatch.envs.docs
 oauthlib==3.3.1
     # via requests-oauthlib
@@ -292,8 +292,6 @@ rich==14.3.1
     #   typer
     #   typer-slim
 roman-numerals==4.1.0
-    # via roman-numerals-py
-roman-numerals-py==4.1.0
     # via sphinx
 semver==3.0.4
     # via
@@ -311,14 +309,14 @@ snowballstemmer==3.0.1
     # via sphinx
 soupsieve==2.8.3
     # via beautifulsoup4
-sphinx==8.2.3
+sphinx==9.1.0
     # via
     #   hatch.envs.docs
     #   myst-parser
     #   pydata-sphinx-theme
     #   sphinx-togglebutton
     #   sphinxcontrib-typer
-sphinx-togglebutton==0.3.2
+sphinx-togglebutton==0.4.4
     # via hatch.envs.docs
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
