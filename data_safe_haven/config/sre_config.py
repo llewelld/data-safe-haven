@@ -123,6 +123,7 @@ class SREConfig(AzureSerialisableModel):
                     home="Total size in GiB across all home directories [minimum: 100].",  # type: ignore
                     shared="Total size in GiB for the shared directories [minimum: 100].",  # type: ignore
                     data_disk="Total size in GiB for the data disk [minimum: 0, maximum: 1023].",  # type: ignore
+                    os_disk="Total size in GiB for the OS disk [minimum: 64, maximum: 1023].",  # type: ignore
                 ),
                 timezone="Timezone in pytz format (eg. Europe/London)",
                 workspace_skus=[

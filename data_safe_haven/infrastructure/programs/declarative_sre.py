@@ -459,7 +459,12 @@ class DeclarativeSRE:
                 subscription_name=sre_subscription_name,
                 virtual_network=networking.virtual_network,
                 vm_details=[
-                    (vm_index, vm_size, self.config.sre.storage_quota_gb.data_disk)
+                    (
+                        vm_index,
+                        vm_size,
+                        self.config.sre.storage_quota_gb.data_disk,
+                        self.config.sre.storage_quota_gb.os_disk,
+                    )
                     for vm_index, vm_size in enumerate(self.config.sre.workspace_skus)
                 ],
             ),
