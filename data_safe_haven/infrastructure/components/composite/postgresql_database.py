@@ -54,19 +54,19 @@ class PostgresqlDatabaseComponent(ComponentResource):
             administrator_login=props.database_username,
             administrator_login_password=props.database_password,
             auth_config=dbforpostgresql.AuthConfigArgs(
-                active_directory_auth=dbforpostgresql.ActiveDirectoryAuthEnum.DISABLED,
-                password_auth=dbforpostgresql.PasswordAuthEnum.ENABLED,
+                active_directory_auth=dbforpostgresql.MicrosoftEntraAuth.DISABLED,
+                password_auth=dbforpostgresql.PasswordBasedAuth.ENABLED,
             ),
             backup=dbforpostgresql.BackupArgs(
                 backup_retention_days=7,
-                geo_redundant_backup=dbforpostgresql.GeoRedundantBackupEnum.DISABLED,
+                geo_redundant_backup=dbforpostgresql.GeographicallyRedundantBackup.DISABLED,
             ),
             create_mode=dbforpostgresql.CreateMode.DEFAULT,
             data_encryption=dbforpostgresql.DataEncryptionArgs(
-                type=dbforpostgresql.ArmServerKeyType.SYSTEM_MANAGED,
+                type="SystemManaged",
             ),
             high_availability=dbforpostgresql.HighAvailabilityArgs(
-                mode=dbforpostgresql.HighAvailabilityMode.DISABLED,
+                mode=dbforpostgresql.PostgreSqlFlexibleServerHighAvailabilityMode.DISABLED,
             ),
             location=props.location,
             resource_group_name=props.database_resource_group_name,
@@ -80,7 +80,7 @@ class PostgresqlDatabaseComponent(ComponentResource):
             storage=dbforpostgresql.StorageArgs(
                 storage_size_gb=32,
             ),
-            version=dbforpostgresql.ServerVersion.SERVER_VERSION_14,
+            version=dbforpostgresql.PostgresMajorVersion.POSTGRES_MAJOR_VERSION_14,
             opts=child_opts,
             tags=child_tags,
         )
