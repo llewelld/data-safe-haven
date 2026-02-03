@@ -32,7 +32,7 @@ class SREMonitoringNetworkingProps:
         self.timezone = timezone
 
 
-class SREMonitoringNetworkingComponent(ComponentResource):
+class SREMonitoringComponent(ComponentResource):
     """Deploy SRE monitoring with Pulumi"""
 
     def __init__(
