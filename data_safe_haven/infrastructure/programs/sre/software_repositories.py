@@ -71,9 +71,7 @@ class SRESoftwareRepositoriesProps:
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
         self.subnet_software_repositories_id = subnet_software_repositories_id
-        self.subnet_software_repositories_support_id = Output.from_input(
-            subnet_software_repositories_support
-        ).apply(get_id_from_subnet)
+        self.subnet_software_repositories_support = subnet_software_repositories_support
         self.subnet_software_repositories_support_ip_addresses = Output.from_input(
             subnet_software_repositories_support
         ).apply(
@@ -208,7 +206,9 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         database_password=props.database_password,
                         database_resource_group_name=props.resource_group_name,
                         database_server_name=f"{stack_name}-db-server-software-repositories",
-                        database_subnet_id=props.subnet_software_repositories_support_id,
+                        database_subnet_id= Output.from_input(
+                            props.subnet_software_repositories_support
+                        ).apply(get_id_from_subnet),
                         database_username=props.database_username,
                         disable_secure_transport=False,
                         location=props.location,
@@ -409,7 +409,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                     ResourceOptions(
                         delete_before_replace=True,
                         replace_on_changes=["containers"],
-                        depends_on=[props.log_analytics_workspace],
+                        depends_on=[props.log_analytics_workspace, db_server_software_repositories],
                     ),
                 ),
                 tags=child_tags,
