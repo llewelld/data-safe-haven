@@ -65,7 +65,7 @@ class SREMonitoringElementsComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    aliases=["urn:pulumi:shm-cvdnetdev-sre-arg::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:maintenance:MaintenanceConfiguration::sre_monitoring_maintenance_configuration"],
+                    aliases=[f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:maintenance:MaintenanceConfiguration::sre_monitoring_maintenance_configuration"],
                     # Ignore start_date_time or this will be changed on each redeploy
                     ignore_changes=["start_date_time"],
                 ),
@@ -86,7 +86,7 @@ class SREMonitoringElementsComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(aliases=[
-                    "urn:pulumi:shm-cvdnetdev-sre-arg::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:operationalinsights:Workspace::sre_monitoring_log_analytics"
+                    f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:operationalinsights:Workspace::sre_monitoring_log_analytics"
                 ]),
             ),
             tags=child_tags,
@@ -104,7 +104,7 @@ class SREMonitoringElementsComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(parent=self.log_analytics,
-                                aliases=["urn:pulumi:shm-cvdnetdev-sre-arg::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:operationalinsights:Workspace$azure-native:monitor:DataCollectionEndpoint::sre_monitoring_data_collection_endpoint"]),
+                                aliases=[f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:operationalinsights:Workspace$azure-native:monitor:DataCollectionEndpoint::sre_monitoring_data_collection_endpoint"]),
             ),
             tags=child_tags,
         )
@@ -199,7 +199,7 @@ class SREMonitoringElementsComponent(ComponentResource):
             resource_group_name=props.resource_group_name,
             opts=ResourceOptions.merge(
                 child_opts,
-                ResourceOptions(parent=self.log_analytics, aliases=["urn:pulumi:shm-cvdnetdev-sre-arg::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:operationalinsights:Workspace$azure-native:monitor:DataCollectionRule::sre_monitoring_data_collection_rule_vms"]),
+                ResourceOptions(parent=self.log_analytics, aliases=[f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:operationalinsights:Workspace$azure-native:monitor:DataCollectionRule::sre_monitoring_data_collection_rule_vms"]),
             ),
             tags=child_tags,
         )
