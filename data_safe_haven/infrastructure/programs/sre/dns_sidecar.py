@@ -158,7 +158,9 @@ class DnsSidecarComponent(ComponentResource):
                     ResourceOptions(
                         depends_on=[container_instance.local_dns.public_dns_record_set],
                         delete_before_replace=True,
-                        aliases=[f"urn:pulumi:{stack_name}::data-safe-haven::azure-native:authorization:RoleDefinition::{self._name}_{container_instance.dns_record_name}_dns_updater_role"]
+                        aliases=[
+                            f"urn:pulumi:{stack_name}::data-safe-haven::azure-native:authorization:RoleDefinition::{self._name}_{container_instance.dns_record_name}_dns_updater_role"
+                        ],
                     ),
                 ),
             )
@@ -179,7 +181,9 @@ class DnsSidecarComponent(ComponentResource):
                     ResourceOptions(
                         depends_on=[dns_zone_role_definition],
                         delete_before_replace=True,
-                        aliases=[f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:DnsSidecarComponent$azure-native:authorization:RoleAssignment::{self._name}_{container_instance.dns_record_name}_dnssidecar_dns_updater_job_role_assignment"]
+                        aliases=[
+                            f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:DnsSidecarComponent$azure-native:authorization:RoleAssignment::{self._name}_{container_instance.dns_record_name}_dnssidecar_dns_updater_job_role_assignment"
+                        ],
                     ),
                 ),
             )
@@ -204,7 +208,9 @@ class DnsSidecarComponent(ComponentResource):
                     ResourceOptions(
                         depends_on=[container_instance.container_group],
                         delete_before_replace=True,
-                        aliases=[f"urn:pulumi:{stack_name}::data-safe-haven::azure-native:authorization:RoleDefinition::{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_role"]
+                        aliases=[
+                            f"urn:pulumi:{stack_name}::data-safe-haven::azure-native:authorization:RoleDefinition::{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_role"
+                        ],
                     ),
                 ),
             )
@@ -225,8 +231,9 @@ class DnsSidecarComponent(ComponentResource):
                     ResourceOptions(
                         depends_on=[container_group_role_definition],
                         delete_before_replace=True,
-                        aliases=[f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:DnsSidecarComponent$azure-native:authorization:RoleAssignment::{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_job_role_assignment"]
-
+                        aliases=[
+                            f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:DnsSidecarComponent$azure-native:authorization:RoleAssignment::{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_job_role_assignment"
+                        ],
                     ),
                 ),
             )
