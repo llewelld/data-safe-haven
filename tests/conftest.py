@@ -509,9 +509,7 @@ def shm_config_yaml(request: FixtureRequest) -> str:
         admin_group_id: guid_admin
         entra_tenant_id: guid_entra
         fqdn: shm.acme.com
-    """.replace(
-            "guid_admin", request.config.guid_admin
-        )
+    """.replace("guid_admin", request.config.guid_admin)
         .replace("guid_entra", request.config.guid_entra)
         .replace("guid_subscription", request.config.guid_subscription)
         .replace("guid_tenant", request.config.guid_tenant)
@@ -647,9 +645,7 @@ def sre_config_yaml(request: FixtureRequest) -> str:
             workload_minimum_count: 1
         gitea_mirror:
             repositories: []
-    """.replace(
-        "guid_subscription", request.config.guid_subscription
-    ).replace(
+    """.replace("guid_subscription", request.config.guid_subscription).replace(
         "guid_tenant", request.config.guid_tenant
     )
     return yaml.dump(yaml.safe_load(content))

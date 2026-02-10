@@ -106,7 +106,7 @@ class SREConfig(AzureSerialisableModel):
                 admin_email_address="Email address shared by all administrators",
                 admin_ip_addresses=["List of IP addresses belonging to administrators"],
                 allow_workspace_internet=allow_workspace_internet,
-                databases=["List of database systems to deploy"],  # type:ignore
+                databases=["List of database systems to deploy"],  # type: ignore
                 data_provider_ip_addresses=[
                     "List of IP addresses belonging to data providers"
                 ],
