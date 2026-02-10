@@ -141,7 +141,7 @@ dnspython==2.7.0
     # via simple-acme-dns
 fqdn==1.5.1
     # via hatch.envs.default
-grpcio==1.76.0
+grpcio==1.78.0
     # via pulumi
 idna==3.11
     # via requests
@@ -183,7 +183,7 @@ parver==0.5
     #   pulumi-azure-native
     #   pulumi-azuread
     #   pulumi-random
-protobuf==5.29.5
+protobuf==5.29.6
     # via pulumi
 psycopg==3.1.19
     # via hatch.envs.default
