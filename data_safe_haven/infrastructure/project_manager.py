@@ -357,7 +357,7 @@ class ProjectManager:
             msg = "Pulumi preview failed.."
             raise DataSafeHavenPulumiError(msg) from exc
 
-    def refresh(self, run_program: bool) -> None:  # noqa: FBT001
+    def refresh(self, run_program: bool = False) -> None:  # noqa: FBT001, FBT002
         """Refresh the Pulumi stack."""
         try:
             self.logger.info(f"Refreshing stack [green]{self.stack.name}[/].")

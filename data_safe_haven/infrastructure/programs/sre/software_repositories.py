@@ -72,6 +72,7 @@ class SRESoftwareRepositoriesProps:
         self.subnet_software_repositories_id = subnet_software_repositories_id
         self.subnet_software_repositories_support = subnet_software_repositories_support
 
+
 def obtain_first_ip_address(address_prefix: str) -> str | None:
     if address_prefix:
         return next(
@@ -187,7 +188,6 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
 
         self.container_group: containerinstance.ContainerGroup | None = None
         self.exports: dict[str, Any] | None = None
-
 
         if (
             props.nexus_packages
@@ -408,9 +408,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                     ),
                     opts=ResourceOptions.merge(
                         child_opts,
-                        ResourceOptions(
-                            replace_with=[self.container_group]
-                        ),
+                        ResourceOptions(replace_with=[self.container_group]),
                     ),
                     tags=child_tags,
                 )

@@ -1955,9 +1955,7 @@ class SRENetworkingComponent(ComponentResource):
                 virtual_network_name=sre_virtual_network.name,
             )
 
-            self.subnet_user_services_software_repositories_support: (
-                Output[network.Subnet] | None
-            ) = sre_virtual_network.subnets.apply(
+            self.subnet_user_services_software_repositories_support = sre_virtual_network.subnets.apply(
                 lambda subnets: next(
                     filter(
                         lambda subnet: subnet.name
