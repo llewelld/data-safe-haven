@@ -9,7 +9,6 @@ from pulumi_azure_native import containerinstance, network, operationalinsights,
 from data_safe_haven.external import AzureIPv4Range
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
-    get_id_from_subnet,
     get_ip_address_from_container_group,
 )
 from data_safe_haven.infrastructure.components import (
@@ -48,7 +47,7 @@ class SRESoftwareRepositoriesProps:
         storage_account_key: Input[str],
         storage_account_name: Input[str],
         subnet_software_repositories_id: Input[str],
-        subnet_software_repositories_support: Input[network.GetSubnetResult],
+        subnet_software_repositories_support: Input[network.Subnet] | None,
         database_username: Input[str] | None = "postgresadmin",
     ) -> None:
         self.database_password = database_password
@@ -72,18 +71,14 @@ class SRESoftwareRepositoriesProps:
         self.storage_account_name = storage_account_name
         self.subnet_software_repositories_id = subnet_software_repositories_id
         self.subnet_software_repositories_support = subnet_software_repositories_support
-        self.subnet_software_repositories_support_ip_addresses = Output.from_input(
-            subnet_software_repositories_support
-        ).apply(
-            lambda s: (
-                [
-                    str(ip)
-                    for ip in AzureIPv4Range.from_cidr(s.address_prefix).available()
-                ]
-                if s.address_prefix
-                else []
-            )
+
+def obtain_first_ip_address(address_prefix: str) -> str | None:
+    if address_prefix:
+        return next(
+            str(ip) for ip in AzureIPv4Range.from_cidr(address_prefix).available()
         )
+
+    return None
 
 
 class SRESoftwareRepositoriesComponent(ComponentResource):
@@ -193,30 +188,13 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
         self.container_group: containerinstance.ContainerGroup | None = None
         self.exports: dict[str, Any] | None = None
 
-        if props.nexus_packages:
 
-            # Define a PostgreSQL server for Nexus
-            db_software_repository_name: str = "nexus"
-            db_server_software_repositories: PostgresqlDatabaseComponent = (
-                PostgresqlDatabaseComponent(
-                    f"{self._name}_db_nexus",
-                    PostgresqlDatabaseProps(
-                        azure_extensions=PostgreSqlExtension.PG_TRGM,  # Extension required by Nexus.
-                        database_names=[db_software_repository_name],
-                        database_password=props.database_password,
-                        database_resource_group_name=props.resource_group_name,
-                        database_server_name=f"{stack_name}-db-server-software-repositories",
-                        database_subnet_id=Output.from_input(
-                            props.subnet_software_repositories_support
-                        ).apply(get_id_from_subnet),
-                        database_username=props.database_username,
-                        disable_secure_transport=False,
-                        location=props.location,
-                    ),
-                    opts=child_opts,
-                    tags=child_tags,
-                )
-            )
+        if (
+            props.nexus_packages
+            and props.subnet_software_repositories_support is not None
+            and hasattr(props.subnet_software_repositories_support, "id")
+            and hasattr(props.subnet_software_repositories_support, "address_prefix")
+        ):
 
             # Define the container group with nexus and caddy
             self.dns_record_name = "nexus"
@@ -251,18 +229,13 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ],
                     ),
                     containerinstance.ContainerArgs(
-                        image="sonatype/nexus3:3.88.0",
+                        image="sonatype/nexus3:3.87.1",  # Version 3.38.0 currently fails deployment. Keeping previous version.
                         name="nexus"[:63],
                         environment_variables=[
                             containerinstance.EnvironmentVariableArgs(
                                 name="NEXUS_DATASTORE_NEXUS_JDBCURL",
-                                value=Output.concat(
-                                    "jdbc:postgresql://",
-                                    props.subnet_software_repositories_support_ip_addresses[
-                                        0
-                                    ],
-                                    ":5432/nexus?",
-                                    "gssEncMode=disable&tcpKeepAlive=true&loginTimeout=5&connectionTimeout=5&socketTimeout=30&cancelSignalTimeout=5&targetServerType=primary",
+                                value=props.subnet_software_repositories_support.address_prefix.apply(
+                                    lambda address_prefix: f"jdbc:postgresql://{obtain_first_ip_address(address_prefix)}:5432/nexus?gssEncMode=disable&tcpKeepAlive=true&loginTimeout=5&connectionTimeout=5&socketTimeout=30&cancelSignalTimeout=5&targetServerType=primary",
                                 ),
                             ),
                             containerinstance.EnvironmentVariableArgs(
@@ -411,11 +384,36 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         replace_on_changes=["containers"],
                         depends_on=[
                             props.log_analytics_workspace,
-                            db_server_software_repositories,
                         ],
                     ),
                 ),
                 tags=child_tags,
+            )
+
+            # Define a PostgreSQL server for Nexus
+            db_software_repository_name: str = "nexus"
+            db_server_software_repositories: PostgresqlDatabaseComponent = (
+                PostgresqlDatabaseComponent(
+                    f"{self._name}_db_nexus",
+                    PostgresqlDatabaseProps(
+                        azure_extensions=PostgreSqlExtension.PG_TRGM,  # Extension required by Nexus.
+                        database_names=[db_software_repository_name],
+                        database_password=props.database_password,
+                        database_resource_group_name=props.resource_group_name,
+                        database_server_name=f"{stack_name}-db-server-software-repositories",
+                        database_subnet_id=props.subnet_software_repositories_support.id,
+                        database_username=props.database_username,
+                        disable_secure_transport=False,
+                        location=props.location,
+                    ),
+                    opts=ResourceOptions.merge(
+                        child_opts,
+                        ResourceOptions(
+                            replace_with=[self.container_group]
+                        ),
+                    ),
+                    tags=child_tags,
+                )
             )
 
             # Register the container group in the SRE DNS zone

@@ -1941,7 +1941,7 @@ class SRENetworkingComponent(ComponentResource):
             Output[network.GetSubnetResult] | None
         ) = None
         self.subnet_user_services_software_repositories_support: (
-            Output[network.GetSubnetResult] | None
+            Output[network.Subnet] | None
         ) = None
 
         self.subnet_user_services_gitea_mirror: (
@@ -1955,10 +1955,17 @@ class SRENetworkingComponent(ComponentResource):
                 virtual_network_name=sre_virtual_network.name,
             )
 
-            self.subnet_user_services_software_repositories_support = network.get_subnet_output(
-                subnet_name=self.subnet_user_services_software_repositories_support_name,
-                resource_group_name=props.resource_group_name,
-                virtual_network_name=sre_virtual_network.name,
+            self.subnet_user_services_software_repositories_support: (
+                Output[network.Subnet] | None
+            ) = sre_virtual_network.subnets.apply(
+                lambda subnets: next(
+                    filter(
+                        lambda subnet: subnet.name
+                        == self.subnet_user_services_software_repositories_support_name,
+                        subnets,
+                    ),
+                    None,
+                )
             )
 
         if props.use_gitea_mirror:

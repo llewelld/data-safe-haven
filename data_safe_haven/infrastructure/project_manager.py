@@ -242,13 +242,13 @@ class ProjectManager:
             msg = "Pulumi destroy failed."
             raise DataSafeHavenPulumiError(msg) from exc
 
-    def deploy(self, *, force: bool = False) -> None:
+    def deploy(self, *, force: bool = False, run_program: bool = False) -> None:
         """Deploy the infrastructure with Pulumi."""
         try:
             self.apply_config_options()
             if force:
                 self.cancel()
-            self.refresh()
+            self.refresh(run_program)
             self.preview()
             self.update()
         except Exception as exc:
@@ -357,12 +357,15 @@ class ProjectManager:
             msg = "Pulumi preview failed.."
             raise DataSafeHavenPulumiError(msg) from exc
 
-    def refresh(self) -> None:
+    def refresh(self, run_program: bool) -> None:  # noqa: FBT001
         """Refresh the Pulumi stack."""
         try:
             self.logger.info(f"Refreshing stack [green]{self.stack.name}[/].")
             # Note that we disable parallelisation which can cause deadlock
-            self.stack.refresh(parallel=1, **self.pulumi_extra_args)
+            self.stack.refresh(
+                parallel=1, run_program=run_program, **self.pulumi_extra_args
+            )
+
         except automation.CommandError as exc:
             self.log_exception(exc)
             msg = "Pulumi refresh failed."
