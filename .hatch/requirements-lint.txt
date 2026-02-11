@@ -67,7 +67,7 @@ black==26.1.0
     #   ansible-lint
 bracex==2.6
     # via wcmatch
-cachetools==7.0.0
+cachetools==7.0.1
     # via tox
 cffi==2.0.0
     # via
@@ -86,7 +86,7 @@ click-help-colors==0.9.4
     # via molecule
 colorama==0.4.6
     # via tox
-cryptography==46.0.4
+cryptography==46.0.5
     # via
     #   ansible-core
     #   ansible-lint
