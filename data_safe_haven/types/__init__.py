@@ -1,4 +1,5 @@
 from .annotated_types import (
+    AzureDataDiskSize,
     AzureLocation,
     AzurePremiumFileShareSize,
     AzureSubscriptionName,
@@ -27,12 +28,14 @@ from .enums import (
     NetworkingPriorities,
     PermittedDomains,
     Ports,
+    PostgreSqlExtension,
     SoftwarePackageCategory,
 )
 from .types import PathType
 
 __all__ = [
     "AllowlistRepository",
+    "AzureDataDiskSize",
     "AzureDnsZoneNames",
     "AzureLocation",
     "AzurePremiumFileShareSize",
@@ -55,6 +58,7 @@ __all__ = [
     "PathType",
     "PermittedDomains",
     "Ports",
+    "PostgreSqlExtension",
     "SafeSreName",
     "SafeString",
     "SoftwarePackageCategory",

@@ -31,8 +31,10 @@ class VMComponentProps:
         admin_username: Input[str] | None = None,
         data_collection_rule_id: Input[str] | None = None,
         data_collection_endpoint_id: Input[str] | None = None,
+        data_disk_size: Input[int] = 0,
         ip_address_public: Input[bool] | None = None,
         maintenance_configuration_id: Input[str] | None = None,
+        os_disk_size: Input[int] = 64,
     ) -> None:
         self.admin_password = admin_password
         self.admin_username = admin_username if admin_username else "dshvmadmin"
@@ -41,11 +43,13 @@ class VMComponentProps:
             data_collection_rule_id
         ).apply(lambda rule_id: str(rule_id).split("/")[-1])
         self.data_collection_endpoint_id = data_collection_endpoint_id
+        self.data_disk_size = data_disk_size
         self.image_reference_args = None
         self.ip_address_private = ip_address_private
         self.ip_address_public = ip_address_public
         self.location = location
         self.maintenance_configuration_id = maintenance_configuration_id
+        self.os_disk_size = os_disk_size
         self.os_profile_args = None
         self.resource_group_name = resource_group_name
         self.subnet_name = subnet_name
@@ -166,7 +170,20 @@ class VMComponent(ComponentResource):
             tags=child_tags,
         )
 
+        # Define Data Disks
+        data_disks: list[compute.DataDiskArgs] = []
+        if props.data_disk_size > 0:
+            data_disks.append(
+                compute.DataDiskArgs(
+                    lun=0,
+                    create_option=compute.DiskCreateOption.EMPTY,
+                    disk_size_gb=props.data_disk_size,
+                )
+            )
+
         # Define virtual machine
+        # IMPORTANT! Updating the size of either the OS/Data disk is not possible due to Pulumi limitations.
+        # These changes need to happen manually after VM deallocation (see: https://github.com/pulumi/pulumi-azure-native/issues/3952)
         virtual_machine = compute.VirtualMachine(
             name_underscored,
             diagnostics_profile=compute.DiagnosticsProfileArgs(
@@ -187,10 +204,12 @@ class VMComponent(ComponentResource):
             os_profile=props.os_profile,
             resource_group_name=props.resource_group_name,
             storage_profile=compute.StorageProfileArgs(
+                data_disks=data_disks,
                 image_reference=props.image_reference,
                 os_disk=compute.OSDiskArgs(
                     caching=compute.CachingTypes.READ_WRITE,
                     create_option=compute.DiskCreateOptionTypes.FROM_IMAGE,
+                    disk_size_gb=props.os_disk_size,
                     delete_option=compute.DiskDeleteOptionTypes.DELETE,
                     managed_disk=compute.ManagedDiskParametersArgs(
                         storage_account_type=compute.StorageAccountTypes.PREMIUM_LRS,
@@ -205,7 +224,10 @@ class VMComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    delete_before_replace=True, replace_on_changes=["os_profile"]
+                    delete_before_replace=True,
+                    replace_on_changes=[
+                        "osProfile",
+                    ],
                 ),
             ),
             tags=child_tags,

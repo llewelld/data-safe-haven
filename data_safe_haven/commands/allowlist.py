@@ -9,6 +9,7 @@ from data_safe_haven import console
 from data_safe_haven.allowlist import Allowlist
 from data_safe_haven.config import ContextManager, DSHPulumiConfig, SREConfig
 from data_safe_haven.exceptions import DataSafeHavenConfigError, DataSafeHavenError
+from data_safe_haven.external import AzureSdk
 from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.logging import get_logger
 from data_safe_haven.types import AllowlistRepository, SoftwarePackageCategory
@@ -82,6 +83,11 @@ def show(
         context=context,
         config=sre_config,
         pulumi_config=pulumi_config,
+    )
+
+    azure_sdk = AzureSdk(subscription_name=context.subscription_name)
+    context.subscription_name = azure_sdk.get_subscription_name(
+        sre_config.azure.subscription_id
     )
 
     try:
@@ -182,6 +188,11 @@ def upload(
 
     local_allowlist = Allowlist(
         repository=repository, sre_stack=sre_stack, allowlist=allowlist
+    )
+
+    azure_sdk = AzureSdk(subscription_name=context.subscription_name)
+    context.subscription_name = azure_sdk.get_subscription_name(
+        sre_config.azure.subscription_id
     )
 
     if not force and Allowlist.remote_exists(

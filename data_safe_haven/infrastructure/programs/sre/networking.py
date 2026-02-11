@@ -1317,9 +1317,22 @@ class SRENetworkingComponent(ComponentResource):
             network.NetworkSecurityGroup | None
         ) = None
 
+        self.nsg_user_services_software_repositories_support: (
+            network.NetworkSecurityGroup | None
+        ) = None
+
         if props.use_software_repositories:
             self.nsg_user_services_software_repositories = (
                 self.get_nsg_user_services_software_repositories(
+                    stack_name,
+                    props,
+                    child_opts,
+                    child_tags,
+                )
+            )
+
+            self.nsg_user_services_software_repositories_support = (
+                self.get_nsg_user_services_software_repositories_support(
                     stack_name,
                     props,
                     child_opts,
@@ -1658,6 +1671,9 @@ class SRENetworkingComponent(ComponentResource):
         self.subnet_user_services_software_repositories_name = (
             "UserServicesSoftwareRepositoriesSubnet"
         )
+        self.subnet_user_services_software_repositories_support_name = (
+            "UserServicesSoftwareRepositoriesSupportSubnet"
+        )
         self.subnet_workspaces_name = "WorkspacesSubnet"
         self.subnet_dns_sidecar_name = "DnsSidecarSubnet"
         sre_virtual_network = network.VirtualNetwork(
@@ -1793,7 +1809,7 @@ class SRENetworkingComponent(ComponentResource):
 
         # Link SRE private DNS zone to DNS virtual network
         privatedns.VirtualNetworkLink(
-            f"{self._name}_private_zone_internal_vnet_link",
+            resource_name=f"{self._name}_private_zone_internal_vnet_link",
             location="Global",
             private_zone_name=sre_private_dns_zone.name,
             registration_enabled=False,
@@ -1814,7 +1830,7 @@ class SRENetworkingComponent(ComponentResource):
         # need to be able to resolve the "Storage Account" private DNS zones.
         for dns_zone_name, private_dns_zone in props.dns_private_zones.items():
             privatedns.VirtualNetworkLink(
-                replace_separators(
+                resource_name=replace_separators(
                     f"{self._name}_private_zone_{dns_zone_name}_vnet_link", "_"
                 ),
                 location="Global",
@@ -1924,6 +1940,9 @@ class SRENetworkingComponent(ComponentResource):
         self.subnet_user_services_software_repositories: (
             Output[network.GetSubnetResult] | None
         ) = None
+        self.subnet_user_services_software_repositories_support: (
+            Output[network.GetSubnetResult] | None
+        ) = None
 
         self.subnet_user_services_gitea_mirror: (
             Output[network.GetSubnetResult] | None
@@ -1932,6 +1951,12 @@ class SRENetworkingComponent(ComponentResource):
         if props.use_software_repositories:
             self.subnet_user_services_software_repositories = network.get_subnet_output(
                 subnet_name=self.subnet_user_services_software_repositories_name,
+                resource_group_name=props.resource_group_name,
+                virtual_network_name=sre_virtual_network.name,
+            )
+
+            self.subnet_user_services_software_repositories_support = network.get_subnet_output(
+                subnet_name=self.subnet_user_services_software_repositories_support_name,
                 resource_group_name=props.resource_group_name,
                 virtual_network_name=sre_virtual_network.name,
             )
@@ -2155,6 +2180,20 @@ class SRENetworkingComponent(ComponentResource):
                 ),
                 network.SecurityRuleArgs(
                     access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow outbound connections to Software Repositores support services.",
+                    destination_address_prefix=SREIpRanges.user_services_software_repositories_support.prefix,
+                    destination_port_ranges=[
+                        Ports.POSTGRESQL
+                    ],  # The only support service at the moment is a PostgreSQL database.
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="AllowSoftwareRepositoriesSupportOutbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES_SUPPORT,
+                    protocol=network.SecurityRuleProtocol.TCP,
+                    source_address_prefix=SREIpRanges.user_services_software_repositories.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
                     description="Allow outbound connections to external repositories over the internet.",
                     destination_address_prefix="Internet",
                     destination_port_ranges=[Ports.HTTP, Ports.HTTPS],
@@ -2163,6 +2202,76 @@ class SRENetworkingComponent(ComponentResource):
                     priority=NetworkingPriorities.EXTERNAL_INTERNET,
                     protocol=network.SecurityRuleProtocol.TCP,
                     source_address_prefix=SREIpRanges.user_services_software_repositories.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.DENY,
+                    description="Deny all other outbound traffic.",
+                    destination_address_prefix="*",
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="DenyAllOtherOutbound",
+                    priority=NetworkingPriorities.ALL_OTHER,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix="*",
+                    source_port_range="*",
+                ),
+            ],
+            opts=child_opts,
+            tags=child_tags,
+        )
+
+    def get_nsg_user_services_software_repositories_support(
+        self,
+        stack_name: str,
+        props: SRENetworkingProps,
+        child_opts: ResourceOptions | None,
+        child_tags: Input[Mapping[str, Input[str]]] | None,
+    ) -> network.NetworkSecurityGroup:
+        return network.NetworkSecurityGroup(
+            f"{self._name}_nsg_user_services_software_repositories_support",
+            location=props.location,
+            network_security_group_name=f"{stack_name}-nsg-user-services-software-repositories-support"[
+                :80
+            ],  # The name can be up to 80 characters long
+            resource_group_name=props.resource_group_name,
+            security_rules=[
+                # Inbound
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.ALLOW,
+                    description="Allow inbound connections from Software repositories containers.",
+                    destination_address_prefix=SREIpRanges.user_services_software_repositories_support.prefix,
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="AllowSoftwareRepositoriesContainersInbound",
+                    priority=NetworkingPriorities.INTERNAL_SRE_USER_SERVICES_SOFTWARE_REPOSITORIES,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix=SREIpRanges.user_services_software_repositories.prefix,
+                    source_port_range="*",
+                ),
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.DENY,
+                    description="Deny all other inbound traffic.",
+                    destination_address_prefix="*",
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.INBOUND,
+                    name="DenyAllOtherInbound",
+                    priority=NetworkingPriorities.ALL_OTHER,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix="*",
+                    source_port_range="*",
+                ),
+                # Outbound
+                network.SecurityRuleArgs(
+                    access=network.SecurityRuleAccess.DENY,
+                    description="Deny outbound connections to Azure Platform DNS endpoints (including 168.63.129.16), which are not included in the 'Internet' service tag.",
+                    destination_address_prefix="AzurePlatformDNS",
+                    destination_port_range="*",
+                    direction=network.SecurityRuleDirection.OUTBOUND,
+                    name="DenyAzurePlatformDnsOutbound",
+                    priority=NetworkingPriorities.AZURE_PLATFORM_DNS,
+                    protocol=network.SecurityRuleProtocol.ASTERISK,
+                    source_address_prefix="*",
                     source_port_range="*",
                 ),
                 network.SecurityRuleArgs(
@@ -2374,7 +2483,8 @@ class SRENetworkingComponent(ComponentResource):
         # User services software repositories
         if (
             props.use_software_repositories
-            and self.nsg_user_services_software_repositories is not None
+            and self.nsg_user_services_software_repositories
+            and self.nsg_user_services_software_repositories_support
         ):
             subnets.append(
                 network.SubnetArgs(
@@ -2390,6 +2500,19 @@ class SRENetworkingComponent(ComponentResource):
                     network_security_group=network.NetworkSecurityGroupArgs(
                         id=self.nsg_user_services_software_repositories.id
                     ),
+                    route_table=network.RouteTableArgs(id=self.route_table.id),
+                )
+            )
+
+            # Software repositories support
+            subnets.append(
+                network.SubnetArgs(
+                    address_prefix=SREIpRanges.user_services_software_repositories_support.prefix,
+                    name=self.subnet_user_services_software_repositories_support_name,
+                    network_security_group=network.NetworkSecurityGroupArgs(
+                        id=self.nsg_user_services_software_repositories_support.id
+                    ),
+                    private_endpoint_network_policies=network.VirtualNetworkPrivateEndpointNetworkPolicies.ENABLED,
                     route_table=network.RouteTableArgs(id=self.route_table.id),
                 )
             )

@@ -1,7 +1,12 @@
 from typing import Protocol
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import authorization, containerinstance, storage
+from pulumi_azure_native import (
+    authorization,
+    containerinstance,
+    operationalinsights,
+    storage,
+)
 from pulumi_azure_native.app import (
     AccessMode,
     AppLogsConfigurationArgs,
@@ -148,6 +153,13 @@ class DnsSidecarComponent(ComponentResource):
                     )
                 ],
                 assignable_scopes=[container_instance.local_dns.private_record_set_id],
+                opts=ResourceOptions.merge(
+                    child_opts,
+                    ResourceOptions(
+                        depends_on=[container_instance.local_dns.public_dns_record_set],
+                        parent=user_assigned_identity,
+                    ),
+                ),
             )
 
             self.dns_zone_role_assignment = authorization.RoleAssignment(
@@ -161,7 +173,13 @@ class DnsSidecarComponent(ComponentResource):
                 ),
                 role_definition_id=dns_zone_role_definition.id,
                 scope=container_instance.local_dns.private_record_set_id,
-                opts=child_opts,
+                opts=ResourceOptions.merge(
+                    child_opts,
+                    ResourceOptions(
+                        depends_on=[dns_zone_role_definition],
+                        parent=user_assigned_identity,
+                    ),
+                ),
             )
 
             # Allow the managed identity to retrieve the container group IP
@@ -179,6 +197,13 @@ class DnsSidecarComponent(ComponentResource):
                     )
                 ],
                 assignable_scopes=[container_instance.container_group.id],
+                opts=ResourceOptions.merge(
+                    child_opts,
+                    ResourceOptions(
+                        depends_on=[container_instance.container_group],
+                        parent=user_assigned_identity,
+                    ),
+                ),
             )
 
             self.container_group_role_assignment = authorization.RoleAssignment(
@@ -192,7 +217,13 @@ class DnsSidecarComponent(ComponentResource):
                 ),
                 role_definition_id=container_group_role_definition.id,
                 scope=container_instance.container_group.id,
-                opts=child_opts,
+                opts=ResourceOptions.merge(
+                    child_opts,
+                    ResourceOptions(
+                        depends_on=[container_group_role_definition],
+                        parent=user_assigned_identity,
+                    ),
+                ),
             )
 
         workload_profile_name: str = "dnssidecarprof"
@@ -202,7 +233,10 @@ class DnsSidecarComponent(ComponentResource):
                 destination="log-analytics",
                 log_analytics_configuration=LogAnalyticsConfigurationArgs(
                     customer_id=props.log_analytics_workspace.workspace_id,
-                    shared_key=props.log_analytics_workspace.workspace_key,
+                    shared_key=operationalinsights.get_shared_keys_output(
+                        resource_group_name=props.log_analytics_workspace.resource_group_name,
+                        workspace_name=props.log_analytics_workspace.name,
+                    ).apply(lambda keys: keys.primary_shared_key),
                 ),
             ),
             resource_group_name=props.resource_group_name,
@@ -219,7 +253,12 @@ class DnsSidecarComponent(ComponentResource):
                     workload_profile_type="D4",
                 )
             ],
-            opts=child_opts,
+            opts=ResourceOptions.merge(
+                child_opts,
+                ResourceOptions(
+                    depends_on=[props.log_analytics_workspace],
+                ),
+            ),
         )
 
         managed_environment_storage = ManagedEnvironmentsStorage(
@@ -256,7 +295,7 @@ class DnsSidecarComponent(ComponentResource):
             template=JobTemplateArgs(
                 containers=[
                     ContainerArgs(
-                        image="mcr.microsoft.com/azure-cli:2.81.0",
+                        image="mcr.microsoft.com/azure-cli:2.82.0",
                         name="dnssidecar",
                         command=("/bin/sh", "/mnt/init/init.sh"),
                         resources=ContainerResourcesArgs(

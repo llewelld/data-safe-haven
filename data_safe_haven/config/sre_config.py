@@ -106,7 +106,7 @@ class SREConfig(AzureSerialisableModel):
                 admin_email_address="Email address shared by all administrators",
                 admin_ip_addresses=["List of IP addresses belonging to administrators"],
                 allow_workspace_internet=allow_workspace_internet,
-                databases=["List of database systems to deploy"],  # type:ignore
+                databases=["List of database systems to deploy"],  # type: ignore
                 data_provider_ip_addresses=[
                     "List of IP addresses belonging to data providers"
                 ],
@@ -122,6 +122,8 @@ class SREConfig(AzureSerialisableModel):
                 storage_quota_gb=ConfigSubsectionStorageQuotaGB.model_construct(
                     home="Total size in GiB across all home directories [minimum: 100].",  # type: ignore
                     shared="Total size in GiB for the shared directories [minimum: 100].",  # type: ignore
+                    data_disk="Total size in GiB for the data disk [minimum: 0, maximum: 1023].",  # type: ignore
+                    os_disk="Total size in GiB for the OS disk [minimum: 64, maximum: 1023].",  # type: ignore
                 ),
                 timezone="Timezone in pytz format (eg. Europe/London)",
                 workspace_skus=[

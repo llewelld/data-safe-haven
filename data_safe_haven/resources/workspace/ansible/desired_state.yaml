@@ -45,11 +45,15 @@
     - name: Configure package proxies
       ansible.builtin.import_tasks: tasks/package_proxy.yaml
       tags: package_proxies
-      when: use_software_repositories| bool
+      when: use_software_repositories | bool
 
     - name: Configure scratchpad
       ansible.builtin.import_tasks: tasks/scratchpad.yaml
       tags: scratchpad
+
+    - name: Configure data disk
+      ansible.builtin.import_tasks: tasks/datadisk.yaml
+      tags: datadisk
 
     - name: Provision smoke tests
       ansible.builtin.import_tasks: tasks/smoke_tests.yaml

@@ -11,8 +11,8 @@ If you have never used a Linux computer before, you may find some of the followi
 ::::{admonition} Using the Linux desktop
 :class: dropdown note
 
-- The official guide to [Xubuntu (Ubuntu + Xfce)](https://docs.xubuntu.org/user/C/index.html).
-- Ubuntu guide for [Windows users](https://web.archive.org/web/20250513123801/https://help.ubuntu.com/community/SwitchingToUbuntu/FromWindows).
+- The official guide to [Xubuntu (Ubuntu + Xfce)](https://xubuntu.github.io/xubuntu-docs/user/C/index.html).
+- Ubuntu guide for [Windows users](https://help.ubuntu.com/community/SwitchingToUbuntu/FromWindows).
 - The official guide to the [Xfce desktop environment](https://docs.xfce.org/xfce/).
 
 ::::
@@ -22,7 +22,7 @@ If you have never used a Linux computer before, you may find some of the followi
 
 - Learn the command-line basics [through a game](https://gitlab.com/slackermedia/bashcrawl).
 - Carpentries lesson on [The Unix Shell](https://swcarpentry.github.io/shell-novice/).
-- How to use the command line [article](https://www.taniarascia.com/how-to-use-the-command-line-for-apple-macos-and-linux/).
+- How to use the command line [article](https://www.theapplegeek.co.uk/blog/basicterminal).
 - An [introduction to the Bash command line](https://programminghistorian.org/en/lessons/intro-to-bash).
 - Ubuntu guide to the [Linux command line for beginners](https://ubuntu.com/tutorials/command-line-for-beginners).
 

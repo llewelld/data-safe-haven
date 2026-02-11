@@ -4,6 +4,7 @@ from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import dbforpostgresql, network
 
 from data_safe_haven.infrastructure.common import get_ip_addresses_from_private_endpoint
+from data_safe_haven.types import PostgreSqlExtension
 
 
 class PostgresqlDatabaseProps:
@@ -20,7 +21,9 @@ class PostgresqlDatabaseProps:
         database_username: Input[str],
         disable_secure_transport: bool,
         location: Input[str],
+        azure_extensions: Input[PostgreSqlExtension] | None = None,
     ) -> None:
+        self.azure_extensions = azure_extensions
         self.database_names = Output.from_input(database_names)
         self.database_password = Output.secret(database_password)
         self.database_resource_group_name = database_resource_group_name
@@ -67,7 +70,9 @@ class PostgresqlDatabaseComponent(ComponentResource):
             ),
             location=props.location,
             resource_group_name=props.database_resource_group_name,
-            server_name=props.database_server_name,
+            server_name=props.database_server_name[
+                :63
+            ],  # At most, 63 characters allowed.
             sku=dbforpostgresql.SkuArgs(
                 name="Standard_B2s",
                 tier=dbforpostgresql.SkuTier.BURSTABLE,
@@ -96,6 +101,25 @@ class PostgresqlDatabaseComponent(ComponentResource):
                     ResourceOptions(parent=db_server, retain_on_delete=True),
                 ),
             )
+
+        # Specify allowed extensions
+        if props.azure_extensions:
+            dbforpostgresql.Configuration(
+                f"{self._name}_azure_extensions",
+                configuration_name="azure.extensions",
+                resource_group_name=props.database_resource_group_name,
+                server_name=db_server.name,
+                source="user-override",
+                value=props.azure_extensions,
+                opts=ResourceOptions.merge(
+                    child_opts,
+                    # Pulumi workaround for being unable to delete Configuration
+                    # resource
+                    # https://github.com/pulumi/pulumi-azure-native/issues/3072
+                    ResourceOptions(parent=db_server, retain_on_delete=True),
+                ),
+            )
+
         # Add any databases that are requested
         props.database_names.apply(
             lambda db_names: [

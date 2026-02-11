@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+from pytest_mock import MockerFixture
 
 from data_safe_haven.config import Context, SHMConfig
 from data_safe_haven.config.config_sections import (
@@ -53,7 +54,11 @@ class TestConfig:
         assert isinstance(config.shm.fqdn, str)
 
     def test_from_remote(
-        self, mocker, context, shm_config: SHMConfig, shm_config_yaml
+        self,
+        mocker: MockerFixture,
+        context: Context,
+        shm_config: SHMConfig,
+        shm_config_yaml: str,
     ) -> None:
         mock_method = mocker.patch.object(
             AzureSdk, "download_blob", return_value=shm_config_yaml
@@ -68,10 +73,12 @@ class TestConfig:
             context.storage_container_name,
         )
 
-    def test_to_yaml(self, shm_config: SHMConfig, shm_config_yaml) -> None:
+    def test_to_yaml(self, shm_config: SHMConfig, shm_config_yaml: str) -> None:
         assert shm_config.to_yaml() == shm_config_yaml
 
-    def test_upload(self, mocker, context: Context, shm_config: SHMConfig) -> None:
+    def test_upload(
+        self, mocker: MockerFixture, context: Context, shm_config: SHMConfig
+    ) -> None:
         mock_method = mocker.patch.object(AzureSdk, "upload_blob", return_value=None)
         shm_config.upload(context)
 

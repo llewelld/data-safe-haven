@@ -35,10 +35,25 @@ write_files:
       pushd /var/local/ansible
       ansible-playbook desired_state.yaml
       popd
+{{#data_disk_support}}
+disk_setup:
+  /dev/disk/azure/scsi1/lun0:
+    table_type: gpt
+    layout: true
+    overwrite: true
 
+fs_setup:
+  - device: /dev/disk/azure/scsi1/lun0
+    partition: "auto"
+    filesystem: ext4
+{{/data_disk_support}}
 mounts:
   # Mount ephemeral storage at resource instead of default /mnt
   - [ephemeral0, /mnt/scratch]
+  {{#data_disk_support}}
+  # Mounting data disk
+  - ["/dev/disk/azure/scsi1/lun0-part1", "/mnt/datadrive", auto, "defaults,noexec,nofail"]
+  {{/data_disk_support}}
   # Desired state configuration is in a blob container mounted as NFSv3
   - ["{{storage_account_desired_state_name}}.blob.core.windows.net:/{{storage_account_desired_state_name}}/desiredstate", /var/local/ansible, nfs, "ro,_netdev,sec=sys,vers=3,nolock,proto=tcp"]
   # Secure data is in a blob container mounted as NFSv3
