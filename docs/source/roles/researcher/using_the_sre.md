@@ -11,7 +11,7 @@ If you have never used a Linux computer before, you may find some of the followi
 ::::{admonition} Using the Linux desktop
 :class: dropdown note
 
-- The official guide to [Xubuntu (Ubuntu + Xfce)](https://docs.xubuntu.org/current/user/C/index.html).
+- The official guide to [Xubuntu (Ubuntu + Xfce)](https://docs.xubuntu.org/user/C/index.html).
 - Ubuntu guide for [Windows users](https://web.archive.org/web/20250513123801/https://help.ubuntu.com/community/SwitchingToUbuntu/FromWindows).
 - The official guide to the [Xfce desktop environment](https://docs.xfce.org/xfce/).
 
