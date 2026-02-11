@@ -26,6 +26,12 @@ jobs:
       - name: Build documentation
         run: hatch run docs:build
 
+      - name: Upload html output as artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: docs-html-${{ github.run_id }}
+          path: ./docs/build/html/
+
   check_links:
     name: Check links
     runs-on: ubuntu-latest
@@ -33,20 +39,33 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
         with:
-          python-version: 3.12
+          sparse-checkout: |
+            .lychee.toml
+          sparse-checkout-cone-mode: false
 
-      - name: Install hatch
-        run: pip install hatch
+      - name: Ensure destination folder exists
+        run: |
+          mkdir -p ./docs/build/html
 
-      - name: Build documentation
-        run: hatch run docs:build
+      - name: Download book html files from artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: docs-html-${{ github.run_id }}
+          path: ./docs/build/html/
+
+      - name: Print config
+        run: |
+          cat .lychee.toml
+
+      - name: List docs files
+        run: |
+          ls -l ./docs/build/html/**/*.html
 
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2.7.0
         with:
-          args: --config='./.lychee.toml' --no-progress './docs/build/html/**/*.html'
+          # args: --config '.lychee.toml' --verbose --no-progress './docs/build/html/**/*.html'
+          # args: --config '.lychee.toml' --verbose --no-progress --extensions html './docs/build/html/'
+          args: --verbose --no-progress './docs/build/html/'
           fail: true  # fail on broken links

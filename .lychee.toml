@@ -34,6 +34,12 @@ max_retries = 2
 # Maximum number of concurrent link checks.
 max_concurrency = 14
 
+# extension applied to files without extension
+default_extension = "html"
+
+# Resolve directories to index files
+index_files = ["index.html"]
+
 #############################  Requests  ############################
 
 # User agent to send with each request.
@@ -62,10 +68,14 @@ require_https = true
 method = "get"
 
 # Custom request headers
-headers = []
+# headers = {}
 
 # Remap URI matching pattern to different URI.
 # remap = [ "https://example.com http://example.invalid" ]
+
+# Fallback extensions to apply when a URL does not specify one.
+# This is common in documentation tools that cross-reference files without extensions.
+fallback_extensions = ["md", "html"]
 
 # Base URL or website root directory to check relative URLs.
 # base = "https://example.com"
@@ -109,6 +119,9 @@ exclude_path = [
   'docs/build/html/contributing/index.html'
 ]
 
+# Check the specified file extensions
+extensions = ["md", "html"]
+
 # URLs to check (supports regex). Has preference over all excludes.
 # include = [ 'gist\.github\.com.*' ]
 
@@ -126,5 +139,5 @@ exclude_link_local = false
 # Exclude loopback IP address range and localhost from checking.
 exclude_loopback = false
 
-# Exclude all mail addresses from checking.
-exclude_mail = false
+# Check mail addresses
+include_mail = true
