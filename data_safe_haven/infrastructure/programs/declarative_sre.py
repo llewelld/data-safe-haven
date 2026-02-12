@@ -29,7 +29,7 @@ from .sre.entra import SREEntraComponent, SREEntraProps
 from .sre.firewall import SREFirewallComponent, SREFirewallProps
 from .sre.identity import SREIdentityComponent, SREIdentityProps
 from .sre.monitoring import (
-    SREMonitoringNetworkingComponent,
+    SREMonitoringComponent,
     SREMonitoringNetworkingProps,
 )
 from .sre.monitoring_elements import (
@@ -201,7 +201,7 @@ class DeclarativeSRE:
         )
 
         # Deploy monitoring networking
-        SREMonitoringNetworkingComponent(
+        SREMonitoringComponent(
             "sre_monitoring",
             self.stack_name,
             SREMonitoringNetworkingProps(

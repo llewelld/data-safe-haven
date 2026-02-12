@@ -139,8 +139,8 @@ class DnsSidecarComponent(ComponentResource):
 
             # Allowing the managed identity to update DNS Records
             dns_zone_role_definition = authorization.RoleDefinition(
-                f"{self._name}_{container_instance.dns_record_name}_dns_updater_role",
-                role_name=f"DNS Zone updater for {container_instance.dns_record_name} ({stack_name})",
+                f"{stack_name}_{container_instance.dns_record_name}_dns_updater_role",
+                role_name=f"DNS Zone updater: {container_instance.dns_record_name} ({stack_name})",
                 scope=container_instance.local_dns.private_record_set_id,
                 description=f"Role for updating {container_instance.dns_record_name}'s DNS records",
                 permissions=[
@@ -157,13 +157,16 @@ class DnsSidecarComponent(ComponentResource):
                     child_opts,
                     ResourceOptions(
                         depends_on=[container_instance.local_dns.public_dns_record_set],
-                        parent=user_assigned_identity,
+                        delete_before_replace=True,
+                        aliases=[
+                            f"urn:pulumi:{stack_name}::data-safe-haven::azure-native:authorization:RoleDefinition::{self._name}_{container_instance.dns_record_name}_dns_updater_role"
+                        ],
                     ),
                 ),
             )
 
             self.dns_zone_role_assignment = authorization.RoleAssignment(
-                f"{self._name}_{container_instance.dns_record_name}_dnssidecar_dns_updater_job_role_assignment",
+                f"{stack_name}_{container_instance.dns_record_name}_dnssidecar_dns_updater_job_role_assignment",
                 principal_id=user_assigned_identity.principal_id,
                 principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
                 role_assignment_name=str(
@@ -177,15 +180,18 @@ class DnsSidecarComponent(ComponentResource):
                     child_opts,
                     ResourceOptions(
                         depends_on=[dns_zone_role_definition],
-                        parent=user_assigned_identity,
+                        delete_before_replace=True,
+                        aliases=[
+                            f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:DnsSidecarComponent$azure-native:authorization:RoleAssignment::{self._name}_{container_instance.dns_record_name}_dnssidecar_dns_updater_job_role_assignment"
+                        ],
                     ),
                 ),
             )
 
             # Allow the managed identity to retrieve the container group IP
             container_group_role_definition = authorization.RoleDefinition(
-                f"{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_role",
-                role_name=f"Container group reader for {container_instance.dns_record_name} ({stack_name})",
+                f"{stack_name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_role",
+                role_name=f"Container group reader: {container_instance.dns_record_name} ({stack_name})",
                 scope=container_instance.container_group.id,
                 description=f"Role for reading {container_instance.dns_record_name}'s container group",
                 permissions=[
@@ -201,13 +207,16 @@ class DnsSidecarComponent(ComponentResource):
                     child_opts,
                     ResourceOptions(
                         depends_on=[container_instance.container_group],
-                        parent=user_assigned_identity,
+                        delete_before_replace=True,
+                        aliases=[
+                            f"urn:pulumi:{stack_name}::data-safe-haven::azure-native:authorization:RoleDefinition::{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_role"
+                        ],
                     ),
                 ),
             )
 
             self.container_group_role_assignment = authorization.RoleAssignment(
-                f"{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_job_role_assignment",
+                f"{stack_name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_job_role_assignment",
                 principal_id=user_assigned_identity.principal_id,
                 principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
                 role_assignment_name=str(
@@ -221,7 +230,10 @@ class DnsSidecarComponent(ComponentResource):
                     child_opts,
                     ResourceOptions(
                         depends_on=[container_group_role_definition],
-                        parent=user_assigned_identity,
+                        delete_before_replace=True,
+                        aliases=[
+                            f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:DnsSidecarComponent$azure-native:authorization:RoleAssignment::{self._name}_{container_instance.dns_record_name}_dnssidecar_ip_reader_job_role_assignment"
+                        ],
                     ),
                 ),
             )
