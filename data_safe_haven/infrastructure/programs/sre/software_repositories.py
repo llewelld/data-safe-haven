@@ -73,15 +73,6 @@ class SRESoftwareRepositoriesProps:
         self.subnet_software_repositories_support = subnet_software_repositories_support
 
 
-def obtain_first_ip_address(address_prefix: str) -> str | None:
-    if address_prefix:
-        return next(
-            str(ip) for ip in AzureIPv4Range.from_cidr(address_prefix).available()
-        )
-
-    return None
-
-
 class SRESoftwareRepositoriesComponent(ComponentResource):
     """Deploy SRE update servers with Pulumi"""
 
@@ -192,8 +183,6 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
         if (
             props.nexus_packages
             and props.subnet_software_repositories_support is not None
-            and hasattr(props.subnet_software_repositories_support, "id")
-            and hasattr(props.subnet_software_repositories_support, "address_prefix")
         ):
 
             # Define the container group with nexus and caddy
@@ -235,7 +224,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                             containerinstance.EnvironmentVariableArgs(
                                 name="NEXUS_DATASTORE_NEXUS_JDBCURL",
                                 value=props.subnet_software_repositories_support.address_prefix.apply(
-                                    lambda address_prefix: f"jdbc:postgresql://{obtain_first_ip_address(address_prefix)}:5432/nexus?gssEncMode=disable&tcpKeepAlive=true&loginTimeout=5&connectionTimeout=5&socketTimeout=30&cancelSignalTimeout=5&targetServerType=primary",
+                                    lambda address_prefix: f"jdbc:postgresql://{self.obtain_first_ip_address(address_prefix)}:5432/nexus?gssEncMode=disable&tcpKeepAlive=true&loginTimeout=5&connectionTimeout=5&socketTimeout=30&cancelSignalTimeout=5&targetServerType=primary",
                                 ),
                             ),
                             containerinstance.EnvironmentVariableArgs(
@@ -447,3 +436,12 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
             "cran": cran_allowlist.destination_path,
             "pypi": pypi_allowlist.destination_path,
         }
+
+    @staticmethod
+    def obtain_first_ip_address(address_prefix: str | None) -> str | None:
+        if address_prefix:
+            return next(
+                str(ip) for ip in AzureIPv4Range.from_cidr(address_prefix).available()
+            )
+
+        return None

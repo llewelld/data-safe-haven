@@ -1,6 +1,6 @@
 """Pulumi component for SRE networking"""
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from pulumi import ComponentResource, Input, InvokeOptions, Output, ResourceOptions
 from pulumi_azure_native import dns, network, privatedns, provider
@@ -1955,14 +1955,12 @@ class SRENetworkingComponent(ComponentResource):
                 virtual_network_name=sre_virtual_network.name,
             )
 
-            self.subnet_user_services_software_repositories_support = sre_virtual_network.subnets.apply(
-                lambda subnets: next(
-                    filter(
-                        lambda subnet: subnet.name
-                        == self.subnet_user_services_software_repositories_support_name,
+            self.subnet_user_services_software_repositories_support = (
+                sre_virtual_network.subnets.apply(
+                    lambda subnets: self.get_subnet_by_name(
+                        self.subnet_user_services_software_repositories_support_name,
                         subnets,
-                    ),
-                    None,
+                    )
                 )
             )
 
@@ -1979,6 +1977,19 @@ class SRENetworkingComponent(ComponentResource):
             virtual_network_name=sre_virtual_network.name,
         )
         self.virtual_network = sre_virtual_network
+
+    @staticmethod
+    def get_subnet_by_name(
+        subnet_name: str,
+        subnets: Output[Sequence[network.Subnet]],
+    ) -> Output[network.Subnet]:
+        return next(
+            filter(
+                lambda subnet: subnet.name == subnet_name,
+                subnets,
+            ),
+            None,
+        )
 
     def get_nsg_user_services_gitea_mirror(
         self,
