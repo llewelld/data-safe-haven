@@ -1,5 +1,11 @@
 ---
 
+- name: Remove Microsoft sources
+  tags: apt
+  ansible.builtin.file:
+    state: absent
+    path: /etc/apt/sources.list.d/microsoft.general.list
+
 - name: Apt packages
   tags: apt
   block:
