@@ -1,0 +1,10 @@
+---
+
+- name: Create home directory
+  ansible.builtin.file:
+    path: /home/dshadmin
+    state: directory
+    owner: dshadmin
+    group: dshadmin
+    mode: '0700'
+    recurse: false
