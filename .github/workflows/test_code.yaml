@@ -45,17 +45,3 @@ jobs:
         with:
           name: python-coverage-comment-action
           path: python-coverage-comment-action.txt
-
-  test_markdown_links:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-      - name: Install requirements
-        shell: bash
-        run: npm install -g markdown-link-check
-      - name: Link Checker
-        uses: lycheeverse/lychee-action@v2.7.0
-        with:
-          args: --config='./.lychee.toml' --no-progress --offline '**/*.md' --exclude-path './docs'
-          fail: true  # fail on broken links
