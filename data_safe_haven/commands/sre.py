@@ -177,7 +177,9 @@ def deploy(
 
         # Deploy Azure infrastructure with Pulumi
         try:
-            stack.deploy(force=force, run_program=run_program, disable_diff=disable_diff)
+            stack.deploy(
+                force=force, run_program=run_program, disable_diff=disable_diff
+            )
         finally:
             # Upload Pulumi config to blob storage
             pulumi_config.upload(context)
