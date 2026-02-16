@@ -3,16 +3,17 @@
 - name: Microsoft packages repo
   tags: apt
   block:
+    - name: Import Microsoft package signing key
+      ansible.builtin.apt_key:
+        keyserver: keyserver.ubuntu.com
+        id: BC528686B50D79E339D3721CEB3E94ADBE1229CF
+
     - name: Add Microsoft packages source
       ansible.builtin.apt_repository:
         repo: "deb https://packages.microsoft.com/ubuntu/{{ ansible_facts.distribution_version }}/prod {{ ansible_facts.distribution_release }} main"
         state: present
         filename: microsoft-general
-
-    - name: Import key
-      ansible.builtin.apt_key:
-        keyserver: keyserver.ubuntu.com
-        id: BC528686B50D79E339D3721CEB3E94ADBE1229CF
+        update_cache: false
 
 - name: Apt packages
   tags: apt
