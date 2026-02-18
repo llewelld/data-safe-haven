@@ -64,8 +64,7 @@ azure:
   tenant_id: # Home tenant for the Azure account used to deploy infrastructure: `az account show`
 description: # Human-friendly name for this SRE deployment
 dockerhub:
-  access_token: # A DockerHub personal access token (PAT) with ''Public Read-Only''
-    permissions. See instructions here: https://docs.docker.com/security/for-developers/access-tokens/'
+  access_token: # A DockerHub personal access token (PAT) with ''Public Read-Only'' permissions. See instructions here: https://docs.docker.com/security/for-developers/access-tokens/'
   username: # Your DockerHub username
 name: # A name for this config which consists only of letters, numbers and underscores
 sre:
