@@ -15,6 +15,15 @@
         filename: microsoft-general
         update_cache: false
 
+- name: Set apt priorities
+  tags: apt
+  block:
+    - name: Set Microsoft repo priority
+      ansible.builtin.template:
+        src: etc/apt/preferences.d/microsoft-general.j2
+        dest: /etc/apt/preferences.d/microsoft-general
+        mode: 644
+
 - name: Apt packages
   tags: apt
   block:
