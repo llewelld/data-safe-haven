@@ -255,7 +255,11 @@ The following disks can be available to a workspace within the SRE:
 - The *data disk*, at `/mnt/datadrive`, is available to all researchers and it is meant to store data with good read/write performance.
   If present (if not, talk to your {ref}`system manager <role_system_manager>`) each data disk **is attached to one workstation only** and can only be accessed from it.
   If you want to share information between workspaces, please check the {ref}`the section on sharing files <role_researcher_shared_storage>`.
-- The *temporary disk* is not available to every workspace. When present, researchers can write and read to `/mnt/scratch`. Write and read performance to the temporary disk is very good, however, it is only meant for short-term storage. Data can be lost during a maintenance event, like a redeploy. As with a data disk, temporary disks are attached to a specific workspace and can only be accessed from it.
+- The *temporary disk* is not available to every workspace.
+  When present, researchers can write and read to `/mnt/scratch`.
+  Write and read performance to the temporary disk is very good, however, it is only meant for short-term storage.
+  Data can be lost during a maintenance event, like a redeploy.
+  As with a data disk, temporary disks are attached to a specific workspace and can only be accessed from it.
 
 ## {{open_file_folder}} Sharing files inside the SRE
 
