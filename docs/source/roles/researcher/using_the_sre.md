@@ -74,6 +74,7 @@ While working on the project:
 - store anything that might form an output from the project (_e.g._ images, documents or output datasets) in the **/mnt/output/** folder.
 
 See {ref}`the section on sharing files <role_researcher_shared_storage>` to find out more about where to store your files.
+Also, see {ref}`the section in high-performance storage <role_researcher_high_performance_storage>` if you will be performing resource-intensive tasks, like programming or data analysis.
 
 ## {{package}} Pre-installed applications
 
@@ -246,6 +247,8 @@ to install packages into? (yes/No/cancel)
 Type `yes` to install the packages.
 
 (role_researcher_shared_storage)=
+
+(role_researcher_high_performance_storage)=
 
 ## {{computer_disk}} High performance storage
 

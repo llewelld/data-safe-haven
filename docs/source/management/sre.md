@@ -86,3 +86,9 @@ Therefore, after an SRE has been deployed, some changes can only be made from IP
 
 As a consequence, if you want to update the list of administrator IP addresses, for example to add a new administrator, you must do so from an IP address that is already allowed.
 ::::
+
+::::{admonition} Changing disk sizes
+:class: warning
+Updating the size of either the OS disk or the data disk is not possible via DSH [due to Pulumi limitations](https://github.com/pulumi/pulumi-azure-native/issues/3952).
+These changes need to happen manually after VM deallocation.
+::::
