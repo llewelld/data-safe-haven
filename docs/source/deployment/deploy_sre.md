@@ -90,7 +90,7 @@ sre:
   workspace_skus: # List of Azure VM SKUs that will be used for data analysis.
 user_services:
   dns_sidecar:
-    cron_expression: # Cron-formatted repeating schedule ('* * * * *') for DNS update
+    cron_expression: # Cron-formatted repeating schedule for DNS update
     replica_timeout: # Maximum number of seconds a DNS sidecar job is allowed to run
     retry_limit: # Maximum number of retries before failing the DNS sidecar job
     workload_maximum_count: # Maximum capacity of the workload profile for the managed environment.
