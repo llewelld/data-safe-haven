@@ -28,7 +28,7 @@
       ansible.builtin.template:
         src: etc/apt/preferences.d/microsoft-general.j2
         dest: /etc/apt/preferences.d/microsoft-general
-        mode: 644
+        mode: "0644"
 
 - name: Apt packages
   tags: apt
