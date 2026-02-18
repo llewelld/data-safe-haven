@@ -242,14 +242,20 @@ class ProjectManager:
             msg = "Pulumi destroy failed."
             raise DataSafeHavenPulumiError(msg) from exc
 
-    def deploy(self, *, force: bool = False) -> None:
+    def deploy(
+        self,
+        *,
+        force: bool = False,
+        run_program: bool = False,
+        disable_diff: bool = False,
+    ) -> None:
         """Deploy the infrastructure with Pulumi."""
         try:
             self.apply_config_options()
             if force:
                 self.cancel()
-            self.refresh()
-            self.preview()
+            self.refresh(run_program)
+            self.preview(disable_diff)
             self.update()
         except Exception as exc:
             msg = "Pulumi deployment failed."
@@ -340,7 +346,7 @@ class ProjectManager:
             self._stack_outputs = self.stack.outputs()
         return self._stack_outputs[name].value
 
-    def preview(self) -> None:
+    def preview(self, disable_diff: bool = False) -> None:  # noqa: FBT001, FBT002
         """Preview the Pulumi stack."""
         try:
             self.logger.info(
@@ -349,7 +355,7 @@ class ProjectManager:
             with suppress(automation.CommandError):
                 # Note that we disable parallelisation which can cause deadlock
                 self.stack.preview(
-                    diff=True,
+                    diff=not disable_diff,
                     parallel=1,
                     **self.pulumi_extra_args,
                 )
@@ -357,12 +363,17 @@ class ProjectManager:
             msg = "Pulumi preview failed.."
             raise DataSafeHavenPulumiError(msg) from exc
 
-    def refresh(self) -> None:
+    def refresh(self, run_program: bool = False) -> None:  # noqa: FBT001, FBT002
         """Refresh the Pulumi stack."""
         try:
-            self.logger.info(f"Refreshing stack [green]{self.stack.name}[/].")
+            self.logger.info(
+                f"Refreshing stack [green]{self.stack.name}[/] with --run-program={run_program}"
+            )
             # Note that we disable parallelisation which can cause deadlock
-            self.stack.refresh(parallel=1, **self.pulumi_extra_args)
+            self.stack.refresh(
+                parallel=1, run_program=run_program, **self.pulumi_extra_args
+            )
+
         except automation.CommandError as exc:
             self.log_exception(exc)
             msg = "Pulumi refresh failed."

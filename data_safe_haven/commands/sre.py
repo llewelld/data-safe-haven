@@ -27,6 +27,22 @@ def deploy(
             help="Force this operation, cancelling any others that are in progress.",
         ),
     ] = False,
+    run_program: Annotated[  # noqa: FBT002
+        bool,
+        typer.Option(
+            "--run-program",
+            "-r",
+            help="Run the program during refresh to determine up-to-date state.",
+        ),
+    ] = False,
+    disable_diff: Annotated[  # noqa: FBT002
+        bool,
+        typer.Option(
+            "--disable-diff",
+            "-d",
+            help="Remove the rich diff of the overall change during preview.",
+        ),
+    ] = False,
 ) -> None:
     """Deploy a Secure Research Environment"""
     logger = get_logger()
@@ -161,7 +177,9 @@ def deploy(
 
         # Deploy Azure infrastructure with Pulumi
         try:
-            stack.deploy(force=force)
+            stack.deploy(
+                force=force, run_program=run_program, disable_diff=disable_diff
+            )
         finally:
             # Upload Pulumi config to blob storage
             pulumi_config.upload(context)
