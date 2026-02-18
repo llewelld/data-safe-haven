@@ -247,7 +247,7 @@ Type `yes` to install the packages.
 
 (role_researcher_shared_storage)=
 
-## {{computer_disk}} Working with disks
+## {{computer_disk}} High performance storage
 
 The following disks can be available to a workspace within the SRE:
 
