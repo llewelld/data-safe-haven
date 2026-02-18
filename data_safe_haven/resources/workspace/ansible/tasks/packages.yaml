@@ -19,7 +19,7 @@
         repo: "deb https://packages.microsoft.com/ubuntu/{{ ansible_facts.distribution_version }}/prod {{ ansible_facts.distribution_release }} main"
         state: present
         filename: microsoft-general
-        update_cache: false
+        update_cache: true
 
 - name: Set apt priorities
   tags: apt
