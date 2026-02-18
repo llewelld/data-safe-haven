@@ -96,8 +96,7 @@ user_services:
     workload_minimum_count: # Minimum capacity of the workload profile for the managed environment
   gitea_mirror:
     repositories:
-    - repository_auth_token: # A read-only GitHub personal access token, with access
-        to the repository to mirror
+    - repository_auth_token: # A read-only GitHub personal access token, with access to the repository to mirror
       repository_name: # An identifier for the GitHub repository to mirror
       repository_url: # The URL of the GitHub repository to mirror
   nexus:
