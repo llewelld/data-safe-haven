@@ -60,13 +60,14 @@ $ dsh config template --file PATH_YOU_WANT_TO_SAVE_YOUR_YAML_FILE_TO \
 :::{code} yaml
 azure:
   location: # Azure location where SRE resources will be deployed
-  subscription_id: # ID of the Azure subscription that the TRE will be deployed to
+  subscription_id: # ID of the Azure subscription that the SRE will be deployed to
   tenant_id: # Home tenant for the Azure account used to deploy infrastructure: `az account show`
-description: # A free-text description of your SRE deployment
+description: # Human-friendly name for this SRE deployment
 dockerhub:
-  access_token: # The password or personal access token for your Docker Hub account. We strongly recommend using a Personal Access Token with permissions set to Public Repo Read-only
-  username: # Your Docker Hub account name
-name: # A name for your SRE deployment containing only letters, numbers, hyphens and underscores
+  access_token: # A DockerHub personal access token (PAT) with ''Public Read-Only''
+    permissions. See instructions here: https://docs.docker.com/security/for-developers/access-tokens/'
+  username: # Your DockerHub username
+name: # A name for this config which consists only of letters, numbers and underscores
 sre:
   admin_email_address: # Email address shared by all administrators
   admin_ip_addresses: # List of IP addresses belonging to administrators
@@ -81,10 +82,28 @@ sre:
     - # You can also use the tag 'Internet' instead of a list
   software_packages: # Which Python/R packages to allow users to install: [any/pre-approved/none]
   storage_quota_gb:
-    home: # Total size in GiB across all home directories
-    shared: #Total size in GiB for the shared directories
+    data_disk: # Total size in GiB for the data disk [minimum: 0, maximum: 1023]
+    home: # Total size in GiB across all home directories [minimum: 100]
+    os_disk: # Total size in GiB for the OS disk [minimum: 64, maximum: 1023]
+    shared: #Total size in GiB for the shared directories [minimum: 100]
   timezone: # Timezone in pytz format (eg. Europe/London)
   workspace_skus: # List of Azure VM SKUs that will be used for data analysis.
+user_services:
+  dns_sidecar:
+    cron_expression: # Cron-formatted repeating schedule ('* * * * *') for DNS update
+    replica_timeout: # Maximum number of seconds a DNS sidecar job is allowed to run
+    retry_limit: # Maximum number of retries before failing the DNS sidecar job
+    workload_maximum_count: # Maximum capacity of the workload profile for the managed environment.
+    workload_minimum_count: # Minimum capacity of the workload profile for the managed
+      environment
+  gitea_mirror:
+    repositories:
+    - repository_auth_token: # A read-only GitHub personal access token, with access
+        to the repository to mirror
+      repository_name: # An identifier for the GitHub repository to mirror
+      repository_url: # The URL of the GitHub repository to mirror
+  nexus:
+    persistent_quota_gb: # Total size in GiB for Nexus persistent directory
 :::
 
 ::::
