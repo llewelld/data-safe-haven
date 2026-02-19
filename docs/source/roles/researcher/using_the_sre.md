@@ -246,8 +246,6 @@ to install packages into? (yes/No/cancel)
 
 Type `yes` to install the packages.
 
-(role_researcher_shared_storage)=
-
 (role_researcher_high_performance_storage)=
 
 ## {{computer_disk}} High performance storage
@@ -264,6 +262,8 @@ However, these directories are **local to each workspace** so any files will not
   Write and read performance to the temporary disk is very good, however, it is only meant for short-term storage.
   Data can be lost during a maintenance event, like a redeploy.
   As with a data disk, temporary disks are attached to a specific workspace and can only be accessed from it.
+
+(role_researcher_shared_storage)=
 
 ## {{open_file_folder}} Sharing files inside the SRE
 
