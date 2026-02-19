@@ -250,6 +250,22 @@ Type `yes` to install the packages.
 
 ## {{file_cabinet}} Storage in the SRE
 
+A number storage options are available in an SRE.
+Some storage is shared between all workspaces, others restricted to a particular workspace.
+The performance and permissions vary across the available storage.
+This section describes each type of storage.
+
+A summary of the storage and its recommended use is presented here
+
+| Storage      | Path             | Recommended use                                                                             |
+|--------------|------------------|---------------------------------------------------------------------------------------------|
+| Data disk    | `/mnt/datadrive` | Data intensive work                                                                         |
+| Scratch disk | `/mnt/scratch`   | Data intensive work, volatile storage                                                       |
+| Home         | `/home/$USER`    | Personal configuration                                                                      |
+| Input        | `/mnt/input`     | Depositing read-only copy of input data                                                     |
+| Shared       | `/mnt/shared`    | Sharing data between workspaces<br />Low intensity collaborative work (for example writing) |
+| Output       | `/mnt/output`    | Depositing proposed outputs to be reviewed for release                                      |
+
 (role_researcher_high_performance_storage)=
 
 ### {{computer_disk}} High performance storage
