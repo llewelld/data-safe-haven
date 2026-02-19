@@ -256,7 +256,6 @@ Fast storage may be available to a workspace within the SRE.
 This storage has good performance for work reading, writing or manipulating files.
 However, these directories are **local to each workspace** so any files will not be visible on another workspace.
 
-- The *operating system disk*, available at `/`, contains the operating system. As a researcher, **you have very limited write access to this disk**. If by any chance you require access, for example you might need to install software as root, please get in touch with your {ref}`system manager <role_system_manager>`.
 - The *data disk*, at `/mnt/datadrive`, is available to all researchers and it is meant to store data with good read/write performance.
   If present (if not, talk to your {ref}`system manager <role_system_manager>`) each data disk **is attached to one workstation only** and can only be accessed from it.
   If you want to share information between workspaces, please check the {ref}`the section on sharing files <role_researcher_shared_storage>`.
