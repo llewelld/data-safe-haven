@@ -279,7 +279,7 @@ However, these directories are **local to each workspace** so any files will not
 #### Data disk
 
 The data disk, at **/mnt/datadrive**, is available to all researchers and it is meant to store data with good read/write performance.
-If present (if not, talk to your {ref}`system manager <role_system_manager>`) each data disk **is attached to one worksspace only** and can only be accessed from it.
+If present (if not, talk to your {ref}`system manager <role_system_manager>`) each data disk **is attached to one workspace only** and can only be accessed from it.
   If you want to share information between workspaces, you can use one of the {ref}`shared directories <role_researcher_shared_storage>`.
 
 (role_researcher_scratch_disk)=
