@@ -257,14 +257,14 @@ This section describes each type of storage.
 
 A summary of the storage and its recommended use is presented here
 
-| Storage      | Path             | Recommended use                                                                             |
-|--------------|------------------|---------------------------------------------------------------------------------------------|
-| Data disk    | `/mnt/datadrive` | Data intensive work                                                                         |
-| Scratch disk | `/mnt/scratch`   | Data intensive work, volatile storage                                                       |
-| Home         | `/home/$USER`    | Personal configuration                                                                      |
-| Input        | `/mnt/input`     | Depositing read-only copy of input data                                                     |
-| Shared       | `/mnt/shared`    | Sharing data between workspaces<br />Low intensity collaborative work (for example writing) |
-| Output       | `/mnt/output`    | Depositing proposed outputs to be reviewed for release                                      |
+| Storage                                                | Path               | Recommended use                                                                               |
+| ------------------------------------------------------ | ------------------ | --------------------------------------------------------------------------------------------- |
+| {ref}`Data disk <role_researcher_data_disk>`           | `/mnt/datadrive`   | Data intensive work                                                                           |
+| {ref}`Scratch disk <role_researcher_shared_storage>`   | `/mnt/scratch`     | Data intensive work, volatile storage                                                         |
+| Home                                                   | `/home/$USER`      | Personal configuration                                                                        |
+| {ref}`Input <role_researcher_input>`                   | `/mnt/input`       | Depositing read-only copy of input data                                                       |
+| {ref}`Shared <role_researcher_shared>`                 | `/mnt/shared`      | Sharing data between workspaces<br />Low intensity collaborative work (for example writing)   |
+| {ref}`Output <role_researcher_output>`                 | `/mnt/output`      | Depositing proposed outputs to be reviewed for release                                        |
 
 (role_researcher_high_performance_storage)=
 
@@ -281,6 +281,8 @@ However, these directories are **local to each workspace** so any files will not
 The data disk, at **/mnt/datadrive**, is available to all researchers and it is meant to store data with good read/write performance.
 If present (if not, talk to your {ref}`system manager <role_system_manager>`) each data disk **is attached to one worksspace only** and can only be accessed from it.
   If you want to share information between workspaces, you can use one of the {ref}`shared directories <role_researcher_shared_storage>`.
+
+(role_researcher_scratch_disk)=
 
 #### Scratch disk
 
@@ -300,6 +302,8 @@ There are several shared folder on each workspace that all collaborators within 
 - [shared space](#shared-space): in the **/mnt/shared/** folder
 - [output resources](#output-resources): in the **/mnt/output/** folder
 
+(role_researcher_input)=
+
 #### Input data
 
 Data that has been approved and brought into the secure research environment can be found in the **/mnt/input/** folder.
@@ -315,6 +319,8 @@ You will not be able to change any of the files in **/mnt/input/**.
 If you want to make derived datasets, for example cleaned and reformatted data, please add those to the **/mnt/shared/** or **/mnt/output/** folders.
 :::
 
+(role_researcher_shared)=
+
 #### Shared space
 
 The **/mnt/shared/** folder should be used for any work that you want to share with your group.
@@ -322,6 +328,8 @@ The **/mnt/shared/** folder should be used for any work that you want to share w
 - The contents of **/mnt/shared/** will be identical on all workspaces in your SRE.
 - Everyone working on your project will be able to access it
 - Everyone has **read-and-write access** to the files stored here.
+
+(role_researcher_output)=
 
 #### Output resources
 
