@@ -246,26 +246,37 @@ to install packages into? (yes/No/cancel)
 
 Type `yes` to install the packages.
 
+(role_researcher_storage)=
+
+## {{file_cabinet}} Storage in the SRE
+
 (role_researcher_high_performance_storage)=
 
-## {{computer_disk}} High performance storage
+### {{computer_disk}} High performance storage
 
 Fast storage may be available to a workspace within the SRE.
 This storage has good performance for work reading, writing or manipulating files.
 However, these directories are **local to each workspace** so any files will not be visible on another workspace.
 
-- The *data disk*, at `/mnt/datadrive`, is available to all researchers and it is meant to store data with good read/write performance.
-  If present (if not, talk to your {ref}`system manager <role_system_manager>`) each data disk **is attached to one workstation only** and can only be accessed from it.
-  If you want to share information between workspaces, please check the {ref}`the section on sharing files <role_researcher_shared_storage>`.
-- The *temporary disk* is not available to every workspace.
-  When present, researchers can write and read to `/mnt/scratch`.
-  Write and read performance to the temporary disk is very good, however, it is only meant for short-term storage.
-  Data can be lost during a maintenance event, like a redeploy.
-  As with a data disk, temporary disks are attached to a specific workspace and can only be accessed from it.
+(role_researcher_data_disk)=
+
+#### Data disk
+
+The data disk, at **/mnt/datadrive**, is available to all researchers and it is meant to store data with good read/write performance.
+If present (if not, talk to your {ref}`system manager <role_system_manager>`) each data disk **is attached to one worksspace only** and can only be accessed from it.
+  If you want to share information between workspaces, you can use one of the {ref}`shared directories <role_researcher_shared_storage>`.
+
+#### Scratch disk
+
+The scratch disk is not available to every workspace.
+When present, researchers can write and read to **/mnt/scratch**.
+Write and read performance is very good, however, it is only meant for short-term storage.
+Data can be lost during a maintenance event, like a redeploy.
+As with the {ref}`role_researcher_data_disk`, scratch disks are attached to a specific workspace and can only be accessed from it.
 
 (role_researcher_shared_storage)=
 
-## {{open_file_folder}} Sharing files inside the SRE
+### {{open_file_folder}} Sharing files inside the SRE
 
 There are several shared folder on each workspace that all collaborators within a research project team can see and access:
 
@@ -273,7 +284,7 @@ There are several shared folder on each workspace that all collaborators within 
 - [shared space](#shared-space): in the **/mnt/shared/** folder
 - [output resources](#output-resources): in the **/mnt/output/** folder
 
-### Input data
+#### Input data
 
 Data that has been approved and brought into the secure research environment can be found in the **/mnt/input/** folder.
 
@@ -288,7 +299,7 @@ You will not be able to change any of the files in **/mnt/input/**.
 If you want to make derived datasets, for example cleaned and reformatted data, please add those to the **/mnt/shared/** or **/mnt/output/** folders.
 :::
 
-### Shared space
+#### Shared space
 
 The **/mnt/shared/** folder should be used for any work that you want to share with your group.
 
@@ -296,7 +307,7 @@ The **/mnt/shared/** folder should be used for any work that you want to share w
 - Everyone working on your project will be able to access it
 - Everyone has **read-and-write access** to the files stored here.
 
-### Output resources
+#### Output resources
 
 Any outputs that you want to extract from the secure environment should be placed in the **/mnt/output/** folder on the workspace.
 
