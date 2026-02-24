@@ -26,6 +26,10 @@
       ansible.builtin.import_tasks: tasks/clamav.yaml
       tags: clamav
 
+    - name: Configure admin account
+      ansible.builtin.import_tasks: tasks/admin_config.yaml
+      tags: admin_conf
+
     - name: Globally configure default user settings
       ansible.builtin.import_tasks: tasks/user_config.yaml
       tags: user_conf
