@@ -30,11 +30,11 @@ from data_safe_haven.infrastructure.common import (
     get_name_from_rg,
 )
 from data_safe_haven.infrastructure.components import (
+    LogAnalyticsWorkspace,
     NFSV3BlobContainerComponent,
     NFSV3BlobContainerProps,
     NFSV3StorageAccountComponent,
     NFSV3StorageAccountProps,
-    WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.types import AzureDnsZoneNames
@@ -59,7 +59,7 @@ class SREDesiredStateProps:
         ldap_user_filter: Input[str],
         ldap_user_search_base: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[LogAnalyticsWorkspace],
         resource_group: Input[resources.ResourceGroup],
         software_repository_hostname: Input[str],
         subscription_name: Input[str],

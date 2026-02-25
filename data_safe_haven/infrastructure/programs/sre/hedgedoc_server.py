@@ -13,9 +13,9 @@ from data_safe_haven.infrastructure.components import (
     FileShareFileProps,
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
+    LogAnalyticsWorkspace,
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
-    WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.types import Ports
@@ -38,7 +38,7 @@ class SREHedgeDocServerProps:
         ldap_user_search_base: Input[str],
         ldap_username_attribute: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[LogAnalyticsWorkspace],
         resource_group_name: Input[str],
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
@@ -263,10 +263,7 @@ class SREHedgeDocServerComponent(ComponentResource):
             diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                 log_analytics=containerinstance.LogAnalyticsArgs(
                     workspace_id=props.log_analytics_workspace.workspace_id,
-                    workspace_key=operationalinsights.get_shared_keys_output(
-                        resource_group_name=props.log_analytics_workspace.resource_group_name,
-                        workspace_name=props.log_analytics_workspace.name,
-                    ).apply(lambda keys: keys.primary_shared_key),
+                    workspace_key=props.log_analytics_workspace.workspace_key,
                 ),
             ),
             dns_config=containerinstance.DnsConfigurationArgs(
@@ -323,7 +320,7 @@ class SREHedgeDocServerComponent(ComponentResource):
                     delete_before_replace=True,
                     depends_on=[
                         file_share_hedgedoc_caddy_caddyfile,
-                        props.log_analytics_workspace,
+                        props.log_analytics_workspace.workspace,
                     ],
                     replace_on_changes=["containers"],
                 ),

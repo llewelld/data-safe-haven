@@ -5,7 +5,7 @@ from pulumi_azure_native import monitor, storage
 
 from data_safe_haven.external import AzureIPv4Range
 from data_safe_haven.infrastructure.components.wrapped import (
-    WrappedLogAnalyticsWorkspace,
+    LogAnalyticsWorkspace,
 )
 
 
@@ -15,7 +15,7 @@ class NFSV3StorageAccountProps:
         account_name: Input[str],
         allowed_ip_addresses: Input[Sequence[str]] | None,
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[LogAnalyticsWorkspace],
         resource_group_name: Input[str],
         subnet_id: Input[str],
     ):
@@ -130,7 +130,7 @@ class NFSV3StorageAccountComponent(ComponentResource):
                 lambda resource_id: resource_id
                 + "/blobServices/default"
             ),
-            workspace_id=props.log_analytics_workspace.id,
+            workspace_id=props.log_analytics_workspace.workspace.id,
         )
 
         self.register_outputs({})

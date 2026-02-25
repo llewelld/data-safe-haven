@@ -32,13 +32,13 @@ from data_safe_haven.infrastructure.common import (
     get_name_from_rg,
 )
 from data_safe_haven.infrastructure.components import (
+    LogAnalyticsWorkspace,
     NFSV3BlobContainerComponent,
     NFSV3BlobContainerProps,
     NFSV3StorageAccountComponent,
     NFSV3StorageAccountProps,
     SSLCertificate,
     SSLCertificateProps,
-    WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.types import AzureDnsZoneNames
 
@@ -56,7 +56,7 @@ class SREDataProps:
         dns_record: Input[dns.RecordSet],
         dns_server_admin_password: Input[pulumi_random.RandomPassword],
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[LogAnalyticsWorkspace],
         resource_group: Input[resources.ResourceGroup],
         sre_fqdn: Input[str],
         storage_quota_gb_home: Input[int],
@@ -506,7 +506,7 @@ class SREDataComponent(ComponentResource):
             resource_uri=Output.concat(
                 storage_account_data_configuration.id, "/fileServices/default"
             ),
-            workspace_id=props.log_analytics_workspace.id,
+            workspace_id=props.log_analytics_workspace.workspace.id,
         )
         # Set up a private endpoint for the configuration data storage account
         storage_account_data_configuration_private_endpoint = network.PrivateEndpoint(
@@ -744,7 +744,7 @@ class SREDataComponent(ComponentResource):
             resource_uri=Output.concat(
                 storage_account_data_private_user.id, "/fileServices/default"
             ),
-            workspace_id=props.log_analytics_workspace.id,
+            workspace_id=props.log_analytics_workspace.workspace.id,
         )
         storage.FileShare(
             f"{storage_account_data_private_user._name}_files_home",

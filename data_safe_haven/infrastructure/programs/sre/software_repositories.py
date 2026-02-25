@@ -16,9 +16,9 @@ from data_safe_haven.infrastructure.components import (
     FileShareFileProps,
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
+    LogAnalyticsWorkspace,
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
-    WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.types import (
@@ -38,7 +38,7 @@ class SRESoftwareRepositoriesProps:
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[LogAnalyticsWorkspace],
         nexus_admin_password: Input[str],
         resource_group_name: Input[str],
         software_packages: SoftwarePackageCategory,
@@ -302,10 +302,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                     log_analytics=containerinstance.LogAnalyticsArgs(
                         workspace_id=props.log_analytics_workspace.workspace_id,
-                        workspace_key=operationalinsights.get_shared_keys_output(
-                            resource_group_name=props.log_analytics_workspace.resource_group_name,
-                            workspace_name=props.log_analytics_workspace.name,
-                        ).apply(lambda keys: keys.primary_shared_key),
+                        workspace_key=props.log_analytics_workspace.workspace_key,
                     ),
                 ),
                 dns_config=containerinstance.DnsConfigurationArgs(
@@ -372,7 +369,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         delete_before_replace=True,
                         replace_on_changes=["containers"],
                         depends_on=[
-                            props.log_analytics_workspace,
+                            props.log_analytics_workspace.workspace,
                         ],
                     ),
                 ),

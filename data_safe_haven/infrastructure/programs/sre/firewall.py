@@ -9,7 +9,7 @@ from data_safe_haven.infrastructure.common import (
     get_address_prefixes_from_subnet,
     get_id_from_subnet,
 )
-from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
+from data_safe_haven.infrastructure.components import LogAnalyticsWorkspace
 from data_safe_haven.types import (
     AzureServiceTag,
     FirewallPriorities,
@@ -27,7 +27,7 @@ class SREFirewallProps:
         *,
         allow_workspace_internet: bool,
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[LogAnalyticsWorkspace],
         resource_group_name: Input[str],
         route_table_name: Input[str],
         subnet_apt_proxy_server: Input[network.GetSubnetResult],
@@ -520,7 +520,7 @@ class SREFirewallComponent(ComponentResource):
                 }
             ],
             resource_uri=self.firewall.id,
-            workspace_id=props.log_analytics_workspace.id,
+            workspace_id=props.log_analytics_workspace.workspace.id,
         )
 
         # Retrieve the private IP address for the firewall

@@ -12,7 +12,7 @@ from data_safe_haven.infrastructure.components import (
     FileShareFileProps,
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
-    WrappedLogAnalyticsWorkspace,
+    LogAnalyticsWorkspace,
 )
 from data_safe_haven.types import PermittedDomains
 
@@ -25,7 +25,7 @@ class SREAptProxyServerProps:
         containers_subnet: Input[network.GetSubnetResult],
         dns_server_ip: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[LogAnalyticsWorkspace],
         resource_group_name: Input[str],
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
@@ -129,10 +129,7 @@ class SREAptProxyServerComponent(ComponentResource):
             diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                 log_analytics=containerinstance.LogAnalyticsArgs(
                     workspace_id=props.log_analytics_workspace.workspace_id,
-                    workspace_key=operationalinsights.get_shared_keys_output(
-                        resource_group_name=props.log_analytics_workspace.resource_group_name,
-                        workspace_name=props.log_analytics_workspace.name,
-                    ).apply(lambda keys: keys.primary_shared_key),
+                    workspace_key=props.log_analytics_workspace.workspace_key,
                 ),
             ),
             dns_config=containerinstance.DnsConfigurationArgs(
@@ -178,7 +175,7 @@ class SREAptProxyServerComponent(ComponentResource):
                     depends_on=[
                         file_share_apt_proxy_server,
                         file_share_apt_proxy_server_repositories,
-                        props.log_analytics_workspace,
+                        props.log_analytics_workspace.workspace,
                     ],
                     replace_on_changes=["containers"],
                 ),

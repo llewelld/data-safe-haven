@@ -1,0 +1,88 @@
+from collections.abc import Mapping
+
+import pulumi
+from pulumi import ComponentResource, Input, Output, ResourceOptions
+from pulumi_azure_native import operationalinsights
+
+
+class LogAnalyticsWorkspaceProps:
+    """Properties for the WrappedLogAnalyticsWorkspace"""
+
+    def __init__(
+        self,
+        location: Input[str],
+        resource_group_name: Input[str],
+        retention_in_days: Input[int],
+        sku: Input[operationalinsights.WorkspaceSkuArgs],
+        workspace_name: Input[str],
+    ) -> None:
+        self.location = location
+        self.resource_group_name = resource_group_name
+        self.retention_in_days = retention_in_days
+        self.sku = sku
+        self.workspace_name = workspace_name
+
+
+class LogAnalyticsWorkspace(ComponentResource):
+    def __init__(
+        self,
+        name: str,
+        props: LogAnalyticsWorkspaceProps,
+        opts: pulumi.ResourceOptions | None = None,
+        tags: Input[Mapping[str, Input[str]]] | None = None,
+    ) -> None:
+        super().__init__("dsh:common:Workspace", name, {}, opts)
+        child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
+        child_tags = tags if tags else {}
+
+        self.workspace = operationalinsights.Workspace(
+            resource_name=self._name,
+            location=props.location,
+            resource_group_name=props.resource_group_name,
+            retention_in_days=props.retention_in_days,
+            sku=props.sku,
+            workspace_name=props.workspace_name,
+            opts=ResourceOptions.merge(
+                child_opts,
+                ResourceOptions(
+                    parent=self,
+                    delete_before_replace=True,
+                ),
+            ),
+            tags=child_tags,
+        )
+
+        self.resource_group_name: Output[str] = Output.from_input(
+            props.resource_group_name
+        )
+        self.workspace_id: Output[str] = self.workspace.customer_id
+
+        # shared_keys: Output[operationalinsights.GetSharedKeysResult] = (
+        #     pulumi.Output.all(
+        #         resource_group_name=self.workspace.resource_group_name,
+        #         workspace_name=self.workspace.name,
+        #     ).apply(lambda kwargs: operationalinsights.get_shared_keys_output(**kwargs))
+        # )
+
+        shared_keys: Output[operationalinsights.GetSharedKeysResult] = (
+            pulumi.Output.all(
+                resource_group_name=self.resource_group_name,
+                workspace_name=self.workspace.name,
+            ).apply(lambda kwargs: get_shared_keys(**kwargs))
+        )
+
+        self.workspace_key: Output[str] = Output.secret(
+            shared_keys.apply(
+                lambda keys: (
+                    keys.primary_shared_key if keys.primary_shared_key else "UNKNOWN"
+                )
+            )
+        )
+
+        self.register_outputs({})
+
+
+def get_shared_keys(resource_group_name, workspace_name):
+    return operationalinsights.get_shared_keys_output(
+        resource_group_name=resource_group_name, workspace_name=workspace_name
+    )

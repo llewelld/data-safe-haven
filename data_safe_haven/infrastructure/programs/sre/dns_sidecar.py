@@ -38,7 +38,7 @@ from data_safe_haven.infrastructure.components import (
     FileShareFile,
     FileShareFileProps,
     LocalDnsRecordComponent,
-    WrappedLogAnalyticsWorkspace,
+    LogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
@@ -60,7 +60,7 @@ class DnsSidecarProps:
         cron_expression: str,
         subnet_id: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[LogAnalyticsWorkspace],
         resource_group_name: Input[str],
         replica_timeout: int,
         retry_limit: int,
@@ -245,10 +245,7 @@ class DnsSidecarComponent(ComponentResource):
                 destination="log-analytics",
                 log_analytics_configuration=LogAnalyticsConfigurationArgs(
                     customer_id=props.log_analytics_workspace.workspace_id,
-                    shared_key=operationalinsights.get_shared_keys_output(
-                        resource_group_name=props.log_analytics_workspace.resource_group_name,
-                        workspace_name=props.log_analytics_workspace.name,
-                    ).apply(lambda keys: keys.primary_shared_key),
+                    shared_key=props.log_analytics_workspace.workspace_key,
                 ),
             ),
             resource_group_name=props.resource_group_name,

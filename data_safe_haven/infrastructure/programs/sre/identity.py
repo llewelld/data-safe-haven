@@ -13,7 +13,7 @@ from data_safe_haven.infrastructure.common import (
 from data_safe_haven.infrastructure.components import (
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
-    WrappedLogAnalyticsWorkspace,
+    LogAnalyticsWorkspace,
 )
 
 
@@ -28,7 +28,7 @@ class SREIdentityProps:
         entra_application_secret: Input[str],
         entra_tenant_id: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[LogAnalyticsWorkspace],
         resource_group_name: Input[str],
         shm_fqdn: Input[str],
         sre_fqdn: Input[str],
@@ -174,10 +174,7 @@ class SREIdentityComponent(ComponentResource):
             diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                 log_analytics=containerinstance.LogAnalyticsArgs(
                     workspace_id=props.log_analytics_workspace.workspace_id,
-                    workspace_key=operationalinsights.get_shared_keys_output(
-                        resource_group_name=props.log_analytics_workspace.resource_group_name,
-                        workspace_name=props.log_analytics_workspace.name,
-                    ).apply(lambda keys: keys.primary_shared_key),
+                    workspace_key=props.log_analytics_workspace.workspace_key,
                 ),
             ),
             dns_config=containerinstance.DnsConfigurationArgs(
@@ -229,7 +226,7 @@ class SREIdentityComponent(ComponentResource):
                 ResourceOptions(
                     delete_before_replace=True,
                     replace_on_changes=["containers"],
-                    depends_on=[props.log_analytics_workspace],
+                    depends_on=[props.log_analytics_workspace.workspace],
                 ),
             ),
             tags=child_tags,

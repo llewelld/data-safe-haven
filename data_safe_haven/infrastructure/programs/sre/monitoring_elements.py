@@ -3,8 +3,11 @@ from collections.abc import Mapping
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import maintenance, monitor, operationalinsights
 
-from data_safe_haven.functions import next_occurrence
-from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
+from data_safe_haven.functions import next_occurrence, replace_separators
+from data_safe_haven.infrastructure.components import (
+    LogAnalyticsWorkspace,
+    LogAnalyticsWorkspaceProps,
+)
 
 
 class SREMonitoringElementsProps:
@@ -76,30 +79,27 @@ class SREMonitoringElementsComponent(ComponentResource):
         )
 
         # Deploy log analytics workspace and get workspace keys
-        self.log_analytics = WrappedLogAnalyticsWorkspace(
+        self.workspace_analytics = LogAnalyticsWorkspace(
             f"{self._name}_log_analytics",
-            location=props.location,
-            resource_group_name=props.resource_group_name,
-            retention_in_days=30,
-            sku=operationalinsights.WorkspaceSkuArgs(
-                name=operationalinsights.WorkspaceSkuNameEnum.PER_GB2018,
-            ),
-            workspace_name=f"{stack_name}-log",
-            opts=ResourceOptions.merge(
-                child_opts,
-                ResourceOptions(
-                    aliases=[
-                        f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:operationalinsights:Workspace::sre_monitoring_log_analytics"
-                    ]
+            props=LogAnalyticsWorkspaceProps(
+                location=props.location,
+                resource_group_name=props.resource_group_name,
+                retention_in_days=30,
+                sku=operationalinsights.WorkspaceSkuArgs(
+                    name=operationalinsights.WorkspaceSkuNameEnum.PER_GB2018,
                 ),
+                workspace_name=f"{stack_name}-log-analytics",
             ),
+            opts=child_opts,
             tags=child_tags,
         )
 
         # Create a data collection endpoint
         self.data_collection_endpoint = monitor.DataCollectionEndpoint(
             f"{self._name}_data_collection_endpoint",
-            data_collection_endpoint_name=f"{stack_name}-dce",
+            data_collection_endpoint_name=replace_separators(
+                f"{stack_name}-{self._name}-dce", "-"
+            )[:44],
             location=props.location,
             network_acls=monitor.DataCollectionEndpointNetworkAclsArgs(
                 public_network_access=monitor.KnownPublicNetworkAccessOptions.DISABLED,
@@ -108,7 +108,8 @@ class SREMonitoringElementsComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    parent=self.log_analytics,
+                    parent=self.workspace_analytics,
+                    delete_before_replace=True,
                     aliases=[
                         f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:operationalinsights:Workspace$azure-native:monitor:DataCollectionEndpoint::sre_monitoring_data_collection_endpoint"
                     ],
@@ -120,19 +121,19 @@ class SREMonitoringElementsComponent(ComponentResource):
         # Create a data collection rule for VM logs
         self.data_collection_rule_vms = monitor.DataCollectionRule(
             f"{self._name}_data_collection_rule_vms",
-            data_collection_rule_name=f"{stack_name}-dcr-vms",
+            data_collection_rule_name=f"{stack_name}-{self._name}-dcr-vms",
             data_collection_endpoint_id=self.data_collection_endpoint.id,  # used by Logs Ingestion API
             destinations=monitor.DataCollectionRuleDestinationsArgs(
                 log_analytics=[
                     monitor.LogAnalyticsDestinationArgs(
-                        name=self.log_analytics.name,
-                        workspace_resource_id=self.log_analytics.id,
+                        name=self.workspace_analytics.workspace.name,
+                        workspace_resource_id=self.workspace_analytics.workspace.id,
                     )
                 ],
             ),
             data_flows=[
                 monitor.DataFlowArgs(
-                    destinations=[self.log_analytics.name],
+                    destinations=[self.workspace_analytics.workspace.name],
                     streams=[
                         monitor.KnownDataFlowStreams.MICROSOFT_PERF,
                     ],
@@ -140,7 +141,7 @@ class SREMonitoringElementsComponent(ComponentResource):
                     output_stream=monitor.KnownDataFlowStreams.MICROSOFT_PERF,
                 ),
                 monitor.DataFlowArgs(
-                    destinations=[self.log_analytics.name],
+                    destinations=[self.workspace_analytics.workspace.name],
                     streams=[
                         monitor.KnownDataFlowStreams.MICROSOFT_SYSLOG,
                     ],
@@ -208,7 +209,8 @@ class SREMonitoringElementsComponent(ComponentResource):
             opts=ResourceOptions.merge(
                 child_opts,
                 ResourceOptions(
-                    parent=self.log_analytics,
+                    parent=self.workspace_analytics,
+                    delete_before_replace=True,
                     aliases=[
                         f"urn:pulumi:{stack_name}::data-safe-haven::dsh:sre:MonitoringComponent$azure-native:operationalinsights:Workspace$azure-native:monitor:DataCollectionRule::sre_monitoring_data_collection_rule_vms"
                     ],

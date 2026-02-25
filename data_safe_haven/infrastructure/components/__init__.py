@@ -24,6 +24,8 @@ from .dynamic import (
     SSLCertificateProps,
 )
 from .wrapped import (
+    LogAnalyticsWorkspace,
+    LogAnalyticsWorkspaceProps,
     WrappedLogAnalyticsWorkspace,
 )
 
@@ -38,6 +40,8 @@ __all__ = [
     "LinuxVMComponentProps",
     "LocalDnsRecordComponent",
     "LocalDnsRecordProps",
+    "LogAnalyticsWorkspace",
+    "LogAnalyticsWorkspaceProps",
     "MicrosoftSQLDatabaseComponent",
     "MicrosoftSQLDatabaseProps",
     "NFSV3BlobContainerComponent",
