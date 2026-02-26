@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, network, operationalinsights, storage
+from pulumi_azure_native import containerinstance, network, storage
 
 from data_safe_haven.infrastructure.common import (
     DockerHubCredentials,
@@ -11,7 +11,7 @@ from data_safe_haven.infrastructure.common import (
 from data_safe_haven.infrastructure.components import (
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
-   LogAnalyticsWorkspace,
+    LogAnalyticsWorkspace,
 )
 
 

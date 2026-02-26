@@ -57,18 +57,11 @@ class LogAnalyticsWorkspace(ComponentResource):
         )
         self.workspace_id: Output[str] = self.workspace.customer_id
 
-        # shared_keys: Output[operationalinsights.GetSharedKeysResult] = (
-        #     pulumi.Output.all(
-        #         resource_group_name=self.workspace.resource_group_name,
-        #         workspace_name=self.workspace.name,
-        #     ).apply(lambda kwargs: operationalinsights.get_shared_keys_output(**kwargs))
-        # )
-
         shared_keys: Output[operationalinsights.GetSharedKeysResult] = (
             pulumi.Output.all(
                 resource_group_name=self.resource_group_name,
                 workspace_name=self.workspace.name,
-            ).apply(lambda kwargs: get_shared_keys(**kwargs))
+            ).apply(lambda kwargs: operationalinsights.get_shared_keys_output(**kwargs))
         )
 
         self.workspace_key: Output[str] = Output.secret(
@@ -80,9 +73,3 @@ class LogAnalyticsWorkspace(ComponentResource):
         )
 
         self.register_outputs({})
-
-
-def get_shared_keys(resource_group_name, workspace_name):
-    return operationalinsights.get_shared_keys_output(
-        resource_group_name=resource_group_name, workspace_name=workspace_name
-    )

@@ -223,7 +223,7 @@ class DeclarativeSRE:
             SREFirewallProps(
                 allow_workspace_internet=self.config.sre.allow_workspace_internet,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring_elements.workspace_analytics,
+                log_analytics_workspace=monitoring_elements.workspace_analytics.workspace,
                 resource_group_name=resource_group.name,
                 route_table_name=networking.route_table_name,
                 subnet_apt_proxy_server=networking.subnet_apt_proxy_server,
@@ -253,7 +253,7 @@ class DeclarativeSRE:
                 dns_record=networking.shm_ns_record,
                 dns_server_admin_password=dns.password_admin,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring_elements.workspace_analytics,
+                log_analytics_workspace=monitoring_elements.workspace_analytics.workspace,
                 resource_group=resource_group,
                 sre_fqdn=networking.sre_fqdn,
                 storage_quota_gb_home=self.config.sre.storage_quota_gb.home,

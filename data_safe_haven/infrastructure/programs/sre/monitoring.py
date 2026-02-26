@@ -104,7 +104,7 @@ class SREMonitoringComponent(ComponentResource):
                     ignore_changes=["custom_dns_configs"],
                     parent=props.log_analytics,
                     delete_before_replace=True,
-                    replace_on_changes=["privateLinkServiceConnections"]
+                    replace_on_changes=["privateLinkServiceConnections"],
                 ),
             ),
             tags=child_tags,

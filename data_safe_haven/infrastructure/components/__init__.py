@@ -26,7 +26,6 @@ from .dynamic import (
 from .wrapped import (
     LogAnalyticsWorkspace,
     LogAnalyticsWorkspaceProps,
-    WrappedLogAnalyticsWorkspace,
 )
 
 __all__ = [
@@ -53,5 +52,4 @@ __all__ = [
     "SSLCertificate",
     "SSLCertificateProps",
     "VMComponent",
-    "WrappedLogAnalyticsWorkspace",
 ]
