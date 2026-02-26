@@ -427,7 +427,7 @@ class DeclarativeSRE:
                 ldap_user_filter=ldap_user_filter,
                 ldap_user_search_base=ldap_user_search_base,
                 location=self.config.azure.location,
-                log_analytics_workspace=monitoring_elements.workspace_analytics,
+                log_analytics_workspace=monitoring_elements.workspace_analytics.workspace,
                 resource_group=resource_group,
                 software_repository_hostname=(
                     user_services.software_repositories.hostname

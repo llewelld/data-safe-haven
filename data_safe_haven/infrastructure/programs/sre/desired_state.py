@@ -13,6 +13,7 @@ from pulumi import (
 )
 from pulumi_azure_native import (
     network,
+    operationalinsights,
     privatedns,
     resources,
     storage,
@@ -30,7 +31,6 @@ from data_safe_haven.infrastructure.common import (
     get_name_from_rg,
 )
 from data_safe_haven.infrastructure.components import (
-    LogAnalyticsWorkspace,
     NFSV3BlobContainerComponent,
     NFSV3BlobContainerProps,
     NFSV3StorageAccountComponent,
@@ -59,7 +59,7 @@ class SREDesiredStateProps:
         ldap_user_filter: Input[str],
         ldap_user_search_base: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[LogAnalyticsWorkspace],
+        log_analytics_workspace: Input[operationalinsights.Workspace],
         resource_group: Input[resources.ResourceGroup],
         software_repository_hostname: Input[str],
         subscription_name: Input[str],
@@ -117,7 +117,7 @@ class SREDesiredStateComponent(ComponentResource):
                 )[:24],
                 allowed_ip_addresses=props.admin_ip_addresses,
                 location=props.location,
-                log_analytics_workspace=props.log_analytics_workspace.workspace,
+                log_analytics_workspace=props.log_analytics_workspace,
                 resource_group_name=props.resource_group_name,
                 subnet_id=props.subnet_desired_state_id,
             ),
