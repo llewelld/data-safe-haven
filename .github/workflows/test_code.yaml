@@ -27,7 +27,7 @@ jobs:
           python-version: 3.12
       - name: Install hatch
         run: pip install virtualenv==20.39.0 hatch==1.16.3 
-        # Only for testing
+        # Temporary workaround. virtualenv==21.0.0 breaks the GH Action.
       - name: Test Python
         run: hatch run test:test-coverage
       # For security reasons, PRs created from forks cannot generate PR comments directly
