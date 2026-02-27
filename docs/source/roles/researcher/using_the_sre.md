@@ -74,6 +74,7 @@ While working on the project:
 - store anything that might form an output from the project (_e.g._ images, documents or output datasets) in the **/mnt/output/** folder.
 
 See {ref}`the section on sharing files <role_researcher_shared_storage>` to find out more about where to store your files.
+Also, see {ref}`the section in high-performance storage <role_researcher_high_performance_storage>` if you will be performing resource-intensive tasks, like programming or data analysis.
 
 ## {{package}} Pre-installed applications
 
@@ -245,9 +246,55 @@ to install packages into? (yes/No/cancel)
 
 Type `yes` to install the packages.
 
+(role_researcher_storage)=
+
+## {{file_cabinet}} Storage in the SRE
+
+A number storage options are available in an SRE.
+Some storage is shared between all workspaces, others restricted to a particular workspace.
+The performance and permissions vary across the available storage.
+This section describes each type of storage.
+
+A summary of the storage and its recommended use is presented here
+
+| Storage                                                | Path               | Recommended use                                                                               |
+| ------------------------------------------------------ | ------------------ | --------------------------------------------------------------------------------------------- |
+| {ref}`Data disk <role_researcher_data_disk>`           | `/mnt/datadrive`   | Data intensive work                                                                           |
+| {ref}`Scratch disk <role_researcher_shared_storage>`   | `/mnt/scratch`     | Data intensive work, volatile storage                                                         |
+| Home                                                   | `/home/$USER`      | Personal configuration                                                                        |
+| {ref}`Input <role_researcher_input>`                   | `/mnt/input`       | Depositing read-only copy of input data                                                       |
+| {ref}`Shared <role_researcher_shared>`                 | `/mnt/shared`      | Sharing data between workspaces<br />Low intensity collaborative work (for example writing)   |
+| {ref}`Output <role_researcher_output>`                 | `/mnt/output`      | Depositing proposed outputs to be reviewed for release                                        |
+
+(role_researcher_high_performance_storage)=
+
+### {{computer_disk}} High performance storage
+
+Fast storage may be available to a workspace within the SRE.
+This storage has good performance for work reading, writing or manipulating files.
+However, these directories are **local to each workspace** so any files will not be visible on another workspace.
+
+(role_researcher_data_disk)=
+
+#### Data disk
+
+The data disk, at **/mnt/datadrive**, is available to all researchers and it is meant to store data with good read/write performance.
+If present (if not, talk to your {ref}`system manager <role_system_manager>`) each data disk **is attached to one workspace only** and can only be accessed from it.
+  If you want to share information between workspaces, you can use one of the {ref}`shared directories <role_researcher_shared_storage>`.
+
+(role_researcher_scratch_disk)=
+
+#### Scratch disk
+
+The scratch disk is not available to every workspace.
+When present, researchers can write and read to **/mnt/scratch**.
+Write and read performance is very good, however, it is only meant for short-term storage.
+Data can be lost during a maintenance event, like a redeploy.
+As with the {ref}`role_researcher_data_disk`, scratch disks are attached to a specific workspace and can only be accessed from it.
+
 (role_researcher_shared_storage)=
 
-## {{open_file_folder}} Sharing files inside the SRE
+### {{open_file_folder}} Sharing files inside the SRE
 
 There are several shared folder on each workspace that all collaborators within a research project team can see and access:
 
@@ -255,7 +302,9 @@ There are several shared folder on each workspace that all collaborators within 
 - [shared space](#shared-space): in the **/mnt/shared/** folder
 - [output resources](#output-resources): in the **/mnt/output/** folder
 
-### Input data
+(role_researcher_input)=
+
+#### Input data
 
 Data that has been approved and brought into the secure research environment can be found in the **/mnt/input/** folder.
 
@@ -270,7 +319,9 @@ You will not be able to change any of the files in **/mnt/input/**.
 If you want to make derived datasets, for example cleaned and reformatted data, please add those to the **/mnt/shared/** or **/mnt/output/** folders.
 :::
 
-### Shared space
+(role_researcher_shared)=
+
+#### Shared space
 
 The **/mnt/shared/** folder should be used for any work that you want to share with your group.
 
@@ -278,7 +329,9 @@ The **/mnt/shared/** folder should be used for any work that you want to share w
 - Everyone working on your project will be able to access it
 - Everyone has **read-and-write access** to the files stored here.
 
-### Output resources
+(role_researcher_output)=
+
+#### Output resources
 
 Any outputs that you want to extract from the secure environment should be placed in the **/mnt/output/** folder on the workspace.
 
