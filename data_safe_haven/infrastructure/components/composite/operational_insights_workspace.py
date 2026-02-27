@@ -5,8 +5,8 @@ from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_azure_native import operationalinsights
 
 
-class LogAnalyticsWorkspaceProps:
-    """Properties for the WrappedLogAnalyticsWorkspace"""
+class OperationalInsightsWorkspaceProps:
+    """Properties for the OperationalInsightsWorkspace"""
 
     def __init__(
         self,
@@ -23,11 +23,11 @@ class LogAnalyticsWorkspaceProps:
         self.workspace_name = workspace_name
 
 
-class LogAnalyticsWorkspace(ComponentResource):
+class OperationalInsightsWorkspace(ComponentResource):
     def __init__(
         self,
         name: str,
-        props: LogAnalyticsWorkspaceProps,
+        props: OperationalInsightsWorkspaceProps,
         opts: pulumi.ResourceOptions | None = None,
         tags: Input[Mapping[str, Input[str]]] | None = None,
     ) -> None:

@@ -13,7 +13,7 @@ from data_safe_haven.infrastructure.common import (
 from data_safe_haven.infrastructure.components import (
     FileShareFile,
     FileShareFileProps,
-    LogAnalyticsWorkspace,
+    OperationalInsightsWorkspace,
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
 )
@@ -41,7 +41,7 @@ class SRERemoteDesktopProps:
         ldap_user_filter: Input[str],
         ldap_user_search_base: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[LogAnalyticsWorkspace],
+        log_analytics_workspace: Input[OperationalInsightsWorkspace],
         resource_group_name: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],

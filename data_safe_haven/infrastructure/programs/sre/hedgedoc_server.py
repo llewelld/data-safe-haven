@@ -13,7 +13,7 @@ from data_safe_haven.infrastructure.components import (
     FileShareFileProps,
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
-    LogAnalyticsWorkspace,
+    OperationalInsightsWorkspace,
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
 )
@@ -38,7 +38,7 @@ class SREHedgeDocServerProps:
         ldap_user_search_base: Input[str],
         ldap_username_attribute: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[LogAnalyticsWorkspace],
+        log_analytics_workspace: Input[OperationalInsightsWorkspace],
         resource_group_name: Input[str],
         sre_fqdn: Input[str],
         storage_account_key: Input[str],

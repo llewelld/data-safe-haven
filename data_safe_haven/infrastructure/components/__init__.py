@@ -11,6 +11,8 @@ from .composite import (
     NFSV3BlobContainerProps,
     NFSV3StorageAccountComponent,
     NFSV3StorageAccountProps,
+    OperationalInsightsWorkspace,
+    OperationalInsightsWorkspaceProps,
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
     VMComponent,
@@ -22,10 +24,6 @@ from .dynamic import (
     FileShareFileProps,
     SSLCertificate,
     SSLCertificateProps,
-)
-from .wrapped import (
-    LogAnalyticsWorkspace,
-    LogAnalyticsWorkspaceProps,
 )
 
 __all__ = [
@@ -39,14 +37,14 @@ __all__ = [
     "LinuxVMComponentProps",
     "LocalDnsRecordComponent",
     "LocalDnsRecordProps",
-    "LogAnalyticsWorkspace",
-    "LogAnalyticsWorkspaceProps",
     "MicrosoftSQLDatabaseComponent",
     "MicrosoftSQLDatabaseProps",
     "NFSV3BlobContainerComponent",
     "NFSV3BlobContainerProps",
     "NFSV3StorageAccountComponent",
     "NFSV3StorageAccountProps",
+    "OperationalInsightsWorkspace",
+    "OperationalInsightsWorkspaceProps",
     "PostgresqlDatabaseComponent",
     "PostgresqlDatabaseProps",
     "SSLCertificate",

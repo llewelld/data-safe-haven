@@ -37,7 +37,7 @@ from data_safe_haven.infrastructure.components import (
     FileShareFile,
     FileShareFileProps,
     LocalDnsRecordComponent,
-    LogAnalyticsWorkspace,
+    OperationalInsightsWorkspace,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
@@ -59,7 +59,7 @@ class DnsSidecarProps:
         cron_expression: str,
         subnet_id: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[LogAnalyticsWorkspace],
+        log_analytics_workspace: Input[OperationalInsightsWorkspace],
         resource_group_name: Input[str],
         replica_timeout: int,
         retry_limit: int,

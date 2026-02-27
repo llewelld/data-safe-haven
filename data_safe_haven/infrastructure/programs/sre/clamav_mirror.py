@@ -11,7 +11,7 @@ from data_safe_haven.infrastructure.common import (
 from data_safe_haven.infrastructure.components import (
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
-    LogAnalyticsWorkspace,
+    OperationalInsightsWorkspace,
 )
 
 
@@ -23,7 +23,7 @@ class SREClamAVMirrorProps:
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         location: Input[str],
-        log_analytics_workspace: Input[LogAnalyticsWorkspace],
+        log_analytics_workspace: Input[OperationalInsightsWorkspace],
         resource_group_name: Input[str],
         sre_fqdn: Input[str],
         storage_account_key: Input[str],

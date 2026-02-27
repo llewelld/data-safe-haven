@@ -5,8 +5,8 @@ from pulumi_azure_native import maintenance, monitor, operationalinsights
 
 from data_safe_haven.functions import next_occurrence, replace_separators
 from data_safe_haven.infrastructure.components import (
-    LogAnalyticsWorkspace,
-    LogAnalyticsWorkspaceProps,
+    OperationalInsightsWorkspace,
+    OperationalInsightsWorkspaceProps,
 )
 
 
@@ -79,9 +79,9 @@ class SREMonitoringElementsComponent(ComponentResource):
         )
 
         # Deploy log analytics workspace and get workspace keys
-        self.workspace_analytics = LogAnalyticsWorkspace(
+        self.workspace_analytics = OperationalInsightsWorkspace(
             f"{self._name}_log_analytics",
-            props=LogAnalyticsWorkspaceProps(
+            props=OperationalInsightsWorkspaceProps(
                 location=props.location,
                 resource_group_name=props.resource_group_name,
                 retention_in_days=30,

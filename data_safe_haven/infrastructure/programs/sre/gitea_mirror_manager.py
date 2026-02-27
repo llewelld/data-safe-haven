@@ -15,7 +15,7 @@ from data_safe_haven.infrastructure.components import (
     FileShareFileProps,
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
-    LogAnalyticsWorkspace,
+    OperationalInsightsWorkspace,
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
 )
@@ -34,7 +34,7 @@ class SREGiteaMirrorManagerProps:
         dockerhub_credentials: DockerHubCredentials,
         gitea_workspace_dns_record: str,
         location: Input[str],
-        log_analytics_workspace: Input[LogAnalyticsWorkspace],
+        log_analytics_workspace: Input[OperationalInsightsWorkspace],
         mirror_manager_subnet_id: Input[str],
         repository_data: ConfigSubsectionGiteaMirror,
         resource_group_name: Input[str],

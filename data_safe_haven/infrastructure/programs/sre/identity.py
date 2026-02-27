@@ -13,7 +13,7 @@ from data_safe_haven.infrastructure.common import (
 from data_safe_haven.infrastructure.components import (
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
-    LogAnalyticsWorkspace,
+    OperationalInsightsWorkspace,
 )
 
 
@@ -28,7 +28,7 @@ class SREIdentityProps:
         entra_application_secret: Input[str],
         entra_tenant_id: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[LogAnalyticsWorkspace],
+        log_analytics_workspace: Input[OperationalInsightsWorkspace],
         resource_group_name: Input[str],
         shm_fqdn: Input[str],
         sre_fqdn: Input[str],
