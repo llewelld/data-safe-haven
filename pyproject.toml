@@ -25,8 +25,8 @@ classifiers = [
 license = { text = "BSD-3-Clause" }
 dependencies = [
   "appdirs==1.4.4",
-  "azure-core==1.38.0",
-  "azure-identity==1.25.1",
+  "azure-core==1.38.2",
+  "azure-identity==1.25.2",
   "azure-keyvault-certificates==4.10.0",
   "azure-keyvault-keys==4.11.0",
   "azure-keyvault-secrets==4.10.0",
@@ -36,7 +36,7 @@ dependencies = [
   "azure-mgmt-keyvault==13.0.0",
   "azure-mgmt-msi==7.1.0",
   "azure-mgmt-rdbms==10.1.1",
-  "azure-mgmt-resource==24.0.0",
+  "azure-mgmt-resource==25.0.0",
   "azure-mgmt-storage==24.0.0",
   "azure-storage-blob==12.28.0",
   "azure-storage-file-datalake==12.23.0",
@@ -46,17 +46,17 @@ dependencies = [
   "cryptography==46.0.5",
   "fqdn==1.5.1",
   "psycopg[binary]==3.1.19", # needed for installation on older MacOS versions
-  "pulumi-azure-native==3.13.0",
-  "pulumi-azuread==6.8.0",
+  "pulumi-azure-native==3.14.0",
+  "pulumi-azuread==6.8.1",
   "pulumi-random==4.19.1",
-  "pulumi==3.218.0",
+  "pulumi==3.224.0",
   "pydantic==2.12.5",
   "pyjwt[crypto]==2.11.0",
   "pytz==2025.2",
   "pyyaml==6.0.3",
-  "rich==14.3.1",
+  "rich==14.3.3",
   "simple-acme-dns==4.0.0",
-  "typer==0.21.1",
+  "typer==0.24.1",
   "websocket-client==1.9.0",
 ]
 
