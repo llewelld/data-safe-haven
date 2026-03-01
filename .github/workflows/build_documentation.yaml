@@ -27,7 +27,7 @@ jobs:
         run: hatch run docs:build
 
       - name: Upload html output as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: docs-html-${{ github.run_id }}
           path: ./docs/build/html/
