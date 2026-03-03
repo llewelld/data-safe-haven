@@ -49,7 +49,7 @@ jobs:
           mkdir -p ./docs/build/html
 
       - name: Download book html files from artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: docs-html-${{ github.run_id }}
           path: ./docs/build/html/
