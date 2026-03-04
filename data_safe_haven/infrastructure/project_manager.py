@@ -76,6 +76,7 @@ class ProjectManager:
             extra_args["debug"] = None
             extra_args["log_to_std_err"] = None
             extra_args["log_verbosity"] = None
+            extra_args["log_flow"] = True
 
         extra_args["color"] = "always"
         extra_args["log_flow"] = True

@@ -52,7 +52,7 @@ def firewall_props_internet_enabled(
     return SREFirewallProps(
         allow_workspace_internet=True,
         location=location,
-        log_analytics_workspace=sre_monitoring_elements_component.log_analytics,
+        log_analytics_workspace=sre_monitoring_elements_component.workspace_analytics,
         resource_group_name=resource_group_name,
         route_table_name=f"{stack_name}-route-table",
         subnet_apt_proxy_server=subnet_apt_proxy_server,
@@ -88,7 +88,7 @@ def firewall_props_internet_disabled(
     return SREFirewallProps(
         allow_workspace_internet=False,
         location=location,
-        log_analytics_workspace=sre_monitoring_elements_component.log_analytics,
+        log_analytics_workspace=sre_monitoring_elements_component.workspace_analytics,
         resource_group_name=resource_group_name,
         route_table_name=f"{stack_name}-route-table",
         subnet_apt_proxy_server=subnet_apt_proxy_server,

@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, network, operationalinsights, storage
+from pulumi_azure_native import containerinstance, network, storage
 
 from data_safe_haven.external import AzureIPv4Range
 from data_safe_haven.infrastructure.common import (
@@ -13,9 +13,9 @@ from data_safe_haven.infrastructure.common import (
 from data_safe_haven.infrastructure.components import (
     FileShareFile,
     FileShareFileProps,
+    OperationalInsightsWorkspace,
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
-    WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
@@ -41,7 +41,7 @@ class SRERemoteDesktopProps:
         ldap_user_filter: Input[str],
         ldap_user_search_base: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[OperationalInsightsWorkspace],
         resource_group_name: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
@@ -357,10 +357,7 @@ class SRERemoteDesktopComponent(ComponentResource):
             diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                 log_analytics=containerinstance.LogAnalyticsArgs(
                     workspace_id=props.log_analytics_workspace.workspace_id,
-                    workspace_key=operationalinsights.get_shared_keys_output(
-                        resource_group_name=props.log_analytics_workspace.resource_group_name,
-                        workspace_name=props.log_analytics_workspace.name,
-                    ).apply(lambda keys: keys.primary_shared_key),
+                    workspace_key=props.log_analytics_workspace.workspace_key,
                 ),
             ),
             dns_config=containerinstance.DnsConfigurationArgs(
@@ -408,7 +405,7 @@ class SRERemoteDesktopComponent(ComponentResource):
                 ResourceOptions(
                     delete_before_replace=True,
                     replace_on_changes=["containers"],
-                    depends_on=[props.log_analytics_workspace],
+                    depends_on=[props.log_analytics_workspace.workspace],
                 ),
             ),
             tags=child_tags,

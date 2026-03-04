@@ -12,6 +12,7 @@ from pulumi_azure_native import (
     managedidentity,
     monitor,
     network,
+    operationalinsights,
     privatedns,
     resources,
     storage,
@@ -38,7 +39,6 @@ from data_safe_haven.infrastructure.components import (
     NFSV3StorageAccountProps,
     SSLCertificate,
     SSLCertificateProps,
-    WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.types import AzureDnsZoneNames
 
@@ -56,7 +56,7 @@ class SREDataProps:
         dns_record: Input[dns.RecordSet],
         dns_server_admin_password: Input[pulumi_random.RandomPassword],
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[operationalinsights.Workspace],
         resource_group: Input[resources.ResourceGroup],
         sre_fqdn: Input[str],
         storage_quota_gb_home: Input[int],

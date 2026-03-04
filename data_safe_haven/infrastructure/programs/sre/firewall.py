@@ -3,13 +3,12 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import monitor, network
+from pulumi_azure_native import monitor, network, operationalinsights
 
 from data_safe_haven.infrastructure.common import (
     get_address_prefixes_from_subnet,
     get_id_from_subnet,
 )
-from data_safe_haven.infrastructure.components import WrappedLogAnalyticsWorkspace
 from data_safe_haven.types import (
     AzureServiceTag,
     FirewallPriorities,
@@ -27,7 +26,7 @@ class SREFirewallProps:
         *,
         allow_workspace_internet: bool,
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[operationalinsights.Workspace],
         resource_group_name: Input[str],
         route_table_name: Input[str],
         subnet_apt_proxy_server: Input[network.GetSubnetResult],

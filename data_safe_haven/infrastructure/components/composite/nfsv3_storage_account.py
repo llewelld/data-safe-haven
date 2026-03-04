@@ -1,12 +1,9 @@
 from collections.abc import Mapping, Sequence
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import monitor, storage
+from pulumi_azure_native import monitor, operationalinsights, storage
 
 from data_safe_haven.external import AzureIPv4Range
-from data_safe_haven.infrastructure.components.wrapped import (
-    WrappedLogAnalyticsWorkspace,
-)
 
 
 class NFSV3StorageAccountProps:
@@ -15,7 +12,7 @@ class NFSV3StorageAccountProps:
         account_name: Input[str],
         allowed_ip_addresses: Input[Sequence[str]] | None,
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[operationalinsights.Workspace],
         resource_group_name: Input[str],
         subnet_id: Input[str],
     ):
