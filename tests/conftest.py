@@ -4,7 +4,7 @@ from subprocess import run
 
 import yaml
 from azure.core.credentials import AccessToken, TokenCredential
-from azure.mgmt.resource.subscriptions.models import Subscription
+from azure.mgmt.subscription.models import Subscription
 from pulumi.automation import ProjectSettings
 from pytest import FixtureRequest, MonkeyPatch, fixture
 from pytest_mock import MockerFixture, MockType
