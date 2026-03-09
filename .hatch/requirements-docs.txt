@@ -15,6 +15,7 @@
 # - azure-mgmt-rdbms==10.1.1
 # - azure-mgmt-resource==25.0.0
 # - azure-mgmt-storage==24.0.0
+# - azure-mgmt-subscription==3.1.1
 # - azure-storage-blob==12.28.0
 # - azure-storage-file-datalake==12.23.0
 # - azure-storage-file-share==12.24.0
@@ -64,6 +65,7 @@ azure-common==1.1.28
     #   azure-mgmt-containerinstance
     #   azure-mgmt-dns
     #   azure-mgmt-msi
+    #   azure-mgmt-subscription
 azure-core==1.38.2
     # via
     #   hatch.envs.docs
@@ -98,6 +100,7 @@ azure-mgmt-core==1.6.0
     #   azure-mgmt-rdbms
     #   azure-mgmt-resource
     #   azure-mgmt-storage
+    #   azure-mgmt-subscription
 azure-mgmt-dns==9.0.0
     # via hatch.envs.docs
 azure-mgmt-keyvault==13.0.0
@@ -109,6 +112,8 @@ azure-mgmt-rdbms==10.1.1
 azure-mgmt-resource==25.0.0
     # via hatch.envs.docs
 azure-mgmt-storage==24.0.0
+    # via hatch.envs.docs
+azure-mgmt-subscription==3.1.1
     # via hatch.envs.docs
 azure-storage-blob==12.28.0
     # via
@@ -130,7 +135,7 @@ certifi==2026.2.25
     #   requests
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.4
+charset-normalizer==3.4.5
     # via requests
 chevron==0.14.0
     # via hatch.envs.docs
@@ -170,7 +175,7 @@ grpcio==1.78.0
     # via pulumi
 idna==3.11
     # via requests
-imagesize==1.4.1
+imagesize==2.0.0
     # via sphinx
 isodate==0.7.2
     # via
@@ -204,7 +209,7 @@ mdit-py-plugins==0.5.0
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-msal==1.35.0
+msal==1.35.1
     # via
     #   azure-identity
     #   msal-extensions
@@ -214,6 +219,7 @@ msrest==0.7.1
     # via
     #   azure-mgmt-rdbms
     #   azure-mgmt-storage
+    #   azure-mgmt-subscription
 myst-parser==5.0.0
     # via hatch.envs.docs
 oauthlib==3.3.1

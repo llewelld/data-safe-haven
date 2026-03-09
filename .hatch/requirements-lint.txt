@@ -37,13 +37,13 @@ ansible-core==2.20.3
     #   ansible-lint
     #   molecule
     #   pytest-ansible
-ansible-creator==26.2.0
+ansible-creator==26.3.0
     # via ansible-dev-tools
 ansible-dev-environment==26.2.0
     # via ansible-dev-tools
 ansible-dev-tools==26.1.0
     # via hatch.envs.lint
-ansible-lint==26.2.0
+ansible-lint==26.3.0
     # via
     #   ansible-dev-tools
     #   ansible-navigator
@@ -67,7 +67,7 @@ black==26.1.0
     #   ansible-lint
 bracex==2.6
     # via wcmatch
-cachetools==7.0.1
+cachetools==7.0.4
     # via tox
 cffi==2.0.0
     # via
@@ -75,8 +75,6 @@ cffi==2.0.0
     #   cryptography
     #   onigurumacffi
     #   pytest-ansible
-chardet==5.2.0
-    # via tox-ansible
 click==8.3.1
     # via
     #   black
@@ -99,7 +97,7 @@ enrich==1.2.7
     # via molecule
 execnet==2.1.2
     # via pytest-xdist
-filelock==3.24.3
+filelock==3.25.0
     # via
     #   ansible-lint
     #   python-discovery
@@ -132,7 +130,7 @@ markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-molecule==26.2.0
+molecule==26.3.0
     # via ansible-dev-tools
 mypy==1.19.1
     # via hatch.envs.lint
@@ -140,7 +138,7 @@ mypy-extensions==1.1.0
     # via
     #   black
     #   mypy
-numpy==2.4.2
+numpy==2.4.3
     # via pandas-stubs
 onigurumacffi==1.5.0
     # via ansible-navigator
@@ -172,7 +170,7 @@ pbr==7.0.3
     # via bindep
 pexpect==4.9.0
     # via ansible-runner
-platformdirs==4.9.2
+platformdirs==4.9.4
     # via
     #   black
     #   python-discovery
@@ -212,7 +210,7 @@ pytest-xdist==3.8.0
     #   tox-ansible
 python-daemon==3.1.2
     # via ansible-runner
-python-discovery==1.1.0
+python-discovery==1.1.1
     # via virtualenv
 python-gnupg==0.5.6
     # via ansible-sign
@@ -257,9 +255,11 @@ subprocess-tee==0.4.2
     #   ansible-compat
     #   ansible-dev-environment
     #   ansible-lint
-tox==4.46.3
+tomli-w==1.2.0
+    # via tox
+tox==4.49.0
     # via tox-ansible
-tox-ansible==26.2.1
+tox-ansible==26.3.0
     # via ansible-dev-tools
 types-appdirs==1.4.3.5
     # via hatch.envs.lint
