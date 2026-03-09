@@ -2,7 +2,7 @@ import json
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, operationalinsights, storage
+from pulumi_azure_native import containerinstance, storage
 from pulumi_random import RandomPassword
 
 from data_safe_haven.config.config_sections import ConfigSubsectionGiteaMirror
@@ -15,9 +15,9 @@ from data_safe_haven.infrastructure.components import (
     FileShareFileProps,
     LocalDnsRecordComponent,
     LocalDnsRecordProps,
+    OperationalInsightsWorkspace,
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
-    WrappedLogAnalyticsWorkspace,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
@@ -34,7 +34,7 @@ class SREGiteaMirrorManagerProps:
         dockerhub_credentials: DockerHubCredentials,
         gitea_workspace_dns_record: str,
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[OperationalInsightsWorkspace],
         mirror_manager_subnet_id: Input[str],
         repository_data: ConfigSubsectionGiteaMirror,
         resource_group_name: Input[str],
@@ -320,10 +320,7 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
             diagnostics=containerinstance.ContainerGroupDiagnosticsArgs(
                 log_analytics=containerinstance.LogAnalyticsArgs(
                     workspace_id=props.log_analytics_workspace.workspace_id,
-                    workspace_key=operationalinsights.get_shared_keys_output(
-                        resource_group_name=props.log_analytics_workspace.resource_group_name,
-                        workspace_name=props.log_analytics_workspace.name,
-                    ).apply(lambda keys: keys.primary_shared_key),
+                    workspace_key=props.log_analytics_workspace.workspace_key,
                 ),
             ),
             dns_config=containerinstance.DnsConfigurationArgs(
@@ -381,7 +378,7 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                     depends_on=[
                         file_share_gitea_gitea_entrypoint_sh,
                         file_share_gitea_gitea_configure_sh,
-                        props.log_analytics_workspace,
+                        props.log_analytics_workspace.workspace,
                     ],
                     replace_on_changes=["containers"],
                 ),

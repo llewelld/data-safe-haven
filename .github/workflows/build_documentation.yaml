@@ -27,7 +27,7 @@ jobs:
         run: hatch run docs:build
 
       - name: Upload html output as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: docs-html-${{ github.run_id }}
           path: ./docs/build/html/
@@ -49,7 +49,7 @@ jobs:
           mkdir -p ./docs/build/html
 
       - name: Download book html files from artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: docs-html-${{ github.run_id }}
           path: ./docs/build/html/
@@ -63,7 +63,7 @@ jobs:
           ls -l ./docs/build/html/**/*.html
 
       - name: Link Checker
-        uses: lycheeverse/lychee-action@v2.7.0
+        uses: lycheeverse/lychee-action@v2.8.0
         with:
           lycheeVersion: v0.22.0 # To avoid a bug in 0.21 where no file are found, should be revised as the action is updated
           args: --verbose --no-progress --extensions 'html' './docs/build/html/'

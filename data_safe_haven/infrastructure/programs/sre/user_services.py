@@ -9,7 +9,7 @@ from data_safe_haven.infrastructure.common import (
     get_id_from_subnet,
 )
 from data_safe_haven.infrastructure.components import (
-    WrappedLogAnalyticsWorkspace,
+    OperationalInsightsWorkspace,
 )
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 
@@ -44,7 +44,7 @@ class SREUserServicesProps:
         ldap_user_filter: Input[str],
         ldap_user_search_base: Input[str],
         location: Input[str],
-        log_analytics_workspace: Input[WrappedLogAnalyticsWorkspace],
+        log_analytics_workspace: Input[OperationalInsightsWorkspace],
         nexus_admin_password: Input[str],
         resource_group_name: Input[str],
         software_packages: SoftwarePackageCategory,

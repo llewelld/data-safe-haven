@@ -13,6 +13,10 @@ from .nfsv3_storage_account import (
     NFSV3StorageAccountComponent,
     NFSV3StorageAccountProps,
 )
+from .operational_insights_workspace import (
+    OperationalInsightsWorkspace,
+    OperationalInsightsWorkspaceProps,
+)
 from .postgresql_database import PostgresqlDatabaseComponent, PostgresqlDatabaseProps
 from .virtual_machine import LinuxVMComponentProps, VMComponent
 
@@ -29,6 +33,8 @@ __all__ = [
     "NFSV3BlobContainerProps",
     "NFSV3StorageAccountComponent",
     "NFSV3StorageAccountProps",
+    "OperationalInsightsWorkspace",
+    "OperationalInsightsWorkspaceProps",
     "PostgresqlDatabaseComponent",
     "PostgresqlDatabaseProps",
     "VMComponent",
