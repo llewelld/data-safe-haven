@@ -39,8 +39,6 @@ from azure.mgmt.msi import ManagedServiceIdentityClient
 from azure.mgmt.msi.models import Identity
 from azure.mgmt.resource.resources import ResourceManagementClient
 from azure.mgmt.resource.resources.models import ResourceGroup
-from azure.mgmt.resource.subscriptions import SubscriptionClient
-from azure.mgmt.resource.subscriptions.models import Subscription
 from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.storage.models import (
     BlobContainer,
@@ -53,6 +51,8 @@ from azure.mgmt.storage.models import (
     StorageAccountKey,
     StorageAccountListKeysResult,
 )
+from azure.mgmt.subscription import SubscriptionClient
+from azure.mgmt.subscription.models import Subscription
 from azure.storage.blob import BlobClient, BlobServiceClient
 from azure.storage.filedatalake import DataLakeServiceClient
 from azure.storage.fileshare import ShareClient, ShareServiceClient
