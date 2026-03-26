@@ -58,7 +58,7 @@ appdirs==1.4.4
     # via hatch.envs.docs
 arpeggio==2.0.3
     # via parver
-attrs==25.4.0
+attrs==26.1.0
     # via parver
 azure-common==1.1.28
     # via
@@ -135,7 +135,7 @@ certifi==2026.2.25
     #   requests
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.5
+charset-normalizer==3.4.6
     # via requests
 chevron==0.14.0
     # via hatch.envs.docs
@@ -234,7 +234,7 @@ parver==0.5
     #   pulumi-azure-native
     #   pulumi-azuread
     #   pulumi-random
-protobuf==6.33.5
+protobuf==6.33.6
     # via pulumi
 psycopg==3.1.19
     # via hatch.envs.docs
@@ -270,7 +270,7 @@ pyjwt==2.11.0
     # via
     #   hatch.envs.docs
     #   msal
-pyopenssl==25.3.0
+pyopenssl==26.0.0
     # via acme
 pyrfc3339==2.1.0
     # via acme
@@ -283,7 +283,7 @@ pyyaml==6.0.3
     #   hatch.envs.docs
     #   myst-parser
     #   pulumi
-requests==2.32.5
+requests==2.33.0
     # via
     #   acme
     #   azure-core
