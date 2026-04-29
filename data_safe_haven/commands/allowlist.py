@@ -12,7 +12,9 @@ from data_safe_haven.exceptions import DataSafeHavenConfigError, DataSafeHavenEr
 from data_safe_haven.external import AzureSdk
 from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.logging import get_logger
+from data_safe_haven.resources import resources_path
 from data_safe_haven.types import AllowlistRepository, SoftwarePackageCategory
+from data_safe_haven.utility import FileReader
 
 allowlist_command_group = typer.Typer()
 
@@ -120,14 +122,13 @@ def template(
 ) -> None:
     """Print a template for the package allowlist"""
 
-    template_path = Path(
-        "data_safe_haven/resources",
-        "software_repositories",
-        "allowlists",
-        f"{repository.value}.allowlist",
+    template_reader = FileReader(
+        resources_path
+        / "software_repositories"
+        / "allowlists"
+        / f"{repository.value}.allowlist"
     )
-    with open(template_path) as f:
-        example_allowlist = f.read()
+    example_allowlist = template_reader.file_contents()
     if file:
         with open(file, "w") as f:
             f.write(example_allowlist)
