@@ -1,3 +1,6 @@
+from os import chdir
+from pathlib import Path
+
 from pytest import fixture, mark
 
 from data_safe_haven.allowlist import Allowlist
@@ -118,6 +121,25 @@ class TestTemplateAllowlist:
             assert "DBI\nMASS" in result.output
         elif repository == "pypi":
             assert "numpy\npackaging" in result.output
+
+    @mark.parametrize(
+        "repository",
+        [
+            "cran",
+            "pypi",
+        ],
+    )
+    def test_template_other_dir(self, runner, repository) -> None:
+        # Change to a different directory
+        cwd = Path.cwd()
+        chdir(Path(__file__).parent)
+        try:
+            self.test_template(runner, repository)
+        except Exception as err:
+            raise err
+        finally:
+            # Always restore the original working directory
+            chdir(cwd)
 
 
 class TestUploadAllowlist:
