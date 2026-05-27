@@ -9,6 +9,7 @@ from typing import ClassVar
 
 from pydantic import Field, model_validator
 
+import data_safe_haven
 from data_safe_haven.directories import config_dir
 from data_safe_haven.exceptions import DataSafeHavenConfigError, DataSafeHavenValueError
 from data_safe_haven.logging import get_logger
@@ -59,6 +60,12 @@ class ContextManager(YAMLSerialisableModel):
     @selected.setter
     def selected(self, name: str | None) -> None:
         if name in self.available or name is None:
+            if name != self.selected:
+                # Clear the cached account confirmation details so that
+                # the user is asked to confirm their account details again
+                localconfig = data_safe_haven.config.LocalConfigManager.getinstance()
+                localconfig.accountconfirm.clear_confirm_all()
+                localconfig.write()
             self.selected_ = name
             self.logger.info(f"Switched context to '{name}'.")
         else:

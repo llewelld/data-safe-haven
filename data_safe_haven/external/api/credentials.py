@@ -89,8 +89,8 @@ class DeferredCredential(TokenCredential):
         if (user_id, tenant_id) in DeferredCredential.cache_:
             return True
 
-        localconfig = data_safe_haven.config.LocalConfig.getinstance()
-        skip = localconfig.skip_confirmation(self.name)
+        localconfig = data_safe_haven.config.LocalConfigManager.getinstance()
+        skip = localconfig.accountconfirm.skip_confirmation(self.name)
 
         DeferredCredential.cache_.add((user_id, tenant_id))
         self.logger.info(f"You are logged into the [blue]{self.name}[/] as:")
@@ -101,7 +101,7 @@ class DeferredCredential(TokenCredential):
             "Are these details correct?", default_to_yes=True
         )
         if not confirm:
-            localconfig.clear_confirm(self.name)
+            localconfig.accountconfirm.clear_confirm(self.name)
         localconfig.write()
         return confirm
 

@@ -141,10 +141,3 @@ class ConfigSectionSRE(BaseModel, validate_assignment=True):
             msg = "When `allow_workspace_internet` is `true`, `software_packages` must be `any`"
             raise ValueError(msg)
         return self
-
-
-class ConfigSectionAccountConfirm(BaseModel, validate_assignment=True):
-    cache: bool = True
-    confirmed: dict[str, int] = {}
-    # Default to 8 hours timeout on credential reconfirmation
-    timeout: int = 8 * 60 * 60
