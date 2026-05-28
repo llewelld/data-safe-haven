@@ -35,7 +35,7 @@ class ConfigAccountConfirm(BaseModel, validate_assignment=True):
     # Default to 8 hours timeout on credential reconfirmation
     timeout_in_milliseconds: int = 8 * 60 * 60
 
-    def skip_confirmation(self, key: str) -> bool:
+    def confirmation_still_active(self, key: str) -> bool:
         """Check whether account confirmation should used the previous cached result"""
         now = int(time())
         skip = (
