@@ -22,12 +22,17 @@ class YAMLSerialisableModel(BaseModel, validate_assignment=True):
     config_type: ClassVar[str] = "YAMLSerialisableModel"
 
     @classmethod
+    def from_filepath_raw(cls: type[T], config_file_path: PathType) -> T:
+        """Construct a YAMLSerialisableModel from a YAML file"""
+        with open(Path(config_file_path), encoding="utf-8") as f_yaml:
+            settings_yaml = f_yaml.read()
+        return cls.from_yaml(settings_yaml)
+
+    @classmethod
     def from_filepath(cls: type[T], config_file_path: PathType) -> T:
         """Construct a YAMLSerialisableModel from a YAML file"""
         try:
-            with open(Path(config_file_path), encoding="utf-8") as f_yaml:
-                settings_yaml = f_yaml.read()
-            return cls.from_yaml(settings_yaml)
+            return cls.from_filepath_raw(config_file_path)
         except FileNotFoundError as exc:
             msg = f"Could not find file {config_file_path}."
             raise DataSafeHavenConfigError(msg) from exc

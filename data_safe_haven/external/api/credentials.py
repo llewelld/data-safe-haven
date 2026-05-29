@@ -16,6 +16,8 @@ from azure.identity import (
     TokenCachePersistenceOptions,
 )
 
+# Import full config module to accommodate a circular reference
+import data_safe_haven.config
 from data_safe_haven import console
 from data_safe_haven.directories import config_dir
 from data_safe_haven.exceptions import (
@@ -87,12 +89,23 @@ class DeferredCredential(TokenCredential):
         if (user_id, tenant_id) in DeferredCredential.cache_:
             return True
 
+        localconfig = data_safe_haven.config.LocalConfigManager.getinstance()
+        confirmation_still_active = (
+            localconfig.accountconfirm.confirmation_still_active(self.name)
+        )
+
         DeferredCredential.cache_.add((user_id, tenant_id))
         self.logger.info(f"You are logged into the [blue]{self.name}[/] as:")
         self.logger.info(f"\tuser: [green]{user_name}[/] ({user_id})")
         self.logger.info(f"\ttenant: [green]{tenant_name}[/] ({tenant_id})")
 
-        return console.confirm("Are these details correct?", default_to_yes=True)
+        confirm = confirmation_still_active or console.confirm(
+            "Are these details correct?", default_to_yes=True
+        )
+        if not confirm:
+            localconfig.accountconfirm.clear_confirm(self.name)
+        localconfig.write()
+        return confirm
 
     def get_token(
         self,

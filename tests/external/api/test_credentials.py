@@ -3,7 +3,10 @@ from azure.identity import (
     AzureCliCredential,
     DeviceCodeCredential,
 )
+from freezegun import freeze_time
+from pytest_mock import MockerFixture
 
+from data_safe_haven.config import LocalConfigManager
 from data_safe_haven.directories import config_dir
 from data_safe_haven.exceptions import (
     DataSafeHavenAzureError,
@@ -14,6 +17,47 @@ from data_safe_haven.external.api.credentials import (
     DeferredCredential,
     GraphApiCredential,
 )
+
+
+@pytest.fixture
+def example_config_nocache_yaml():
+    return "\n".join(
+        [
+            "accountconfirm:",
+            "  cache: false",
+            "  confirmed:",
+            "    Test: 0",
+            "  timeout_in_milliseconds: 7200",
+        ]
+    )
+
+
+@pytest.fixture
+def example_config_cache_yaml():
+    return "\n".join(
+        [
+            "accountconfirm:",
+            "  cache: true",
+            "  confirmed:",
+            "    Test: 0",
+            "  timeout_in_milliseconds: 7200",
+        ]
+    )
+
+
+@pytest.fixture
+def mock_local_config_path(mocker: MockerFixture, tmp_path) -> None:
+    mocker.patch.object(
+        LocalConfigManager,
+        "default_config_file_path",
+        return_value=tmp_path / "local.yaml",
+    )
+
+
+def clear_local_config(mock_confirm_yes):
+    LocalConfigManager._instance = None
+    mock_confirm_yes.reset_mock()
+    DeferredCredential.cache_ = set()
 
 
 class TestAzureSdkCredential:
@@ -34,11 +78,19 @@ class TestAzureSdkCredential:
 
     def test_confirm_credentials_interactive_fail(
         self,
+        tmp_path,
+        example_config_nocache_yaml,
         mock_confirm_no,  # noqa: ARG002
         mock_azureclicredential_get_token,  # noqa: ARG002
         capsys,
+        mock_local_config_path,  # noqa: ARG002
     ):
         DeferredCredential.cache_ = set()
+
+        LocalConfigManager._instance = None
+        filepath = tmp_path / "local.yaml"
+        filepath.write_text(example_config_nocache_yaml)
+
         credential = AzureSdkCredential(skip_confirmation=False)
         with pytest.raises(
             DataSafeHavenCachedCredentialError,
@@ -47,6 +99,113 @@ class TestAzureSdkCredential:
             credential.get_credential()
         out, _ = capsys.readouterr()
         assert "Please authenticate with Azure: run 'az login'" in out
+
+    def test_confirm_credentials_interactive_file_cache(
+        self,
+        tmp_path,
+        example_config_cache_yaml,
+        mock_confirm_yes,
+        mock_azureclicredential_get_token,  # noqa: ARG002
+        capsys,
+        mock_local_config_path,  # noqa: ARG002
+    ):
+
+        filepath = tmp_path / "local.yaml"
+        filepath.write_text(example_config_cache_yaml)
+
+        clear_local_config(mock_confirm_yes)
+
+        # First call, the credentials need confirmation
+        with freeze_time("2026-05-02 12:00:00"):
+            credential = AzureSdkCredential(skip_confirmation=False)
+            credential.get_credential()
+            out, _ = capsys.readouterr()
+            assert "You are logged into the Azure CLI as" in out
+            # Check that confirmation was requested
+            mock_confirm_yes.assert_called_once()
+
+        clear_local_config(mock_confirm_yes)
+
+        # Call after 1 hour with two hour caching time, no confirmation
+        with freeze_time("2026-05-02 13:00:00"):
+            credential = AzureSdkCredential(skip_confirmation=False)
+            credential.get_credential()
+            out, _ = capsys.readouterr()
+            assert "You are logged into the Azure CLI as" in out
+            # Check that confirmation was not requested
+            mock_confirm_yes.assert_not_called()
+
+        clear_local_config(mock_confirm_yes)
+
+        # Call after 3 hours with two hour caching time, need confirmation
+        with freeze_time("2026-05-02 15:00:00"):
+            credential = AzureSdkCredential(skip_confirmation=False)
+            credential.get_credential()
+            out, _ = capsys.readouterr()
+            assert "You are logged into the Azure CLI as" in out
+            # Check that confirmation was requested
+            mock_confirm_yes.assert_called_once()
+
+    def test_confirm_credentials_interactive_clear_file_cache(
+        self,
+        tmp_path,
+        example_config_cache_yaml,
+        mock_confirm_yes,
+        mock_azureclicredential_get_token,  # noqa: ARG002
+        capsys,
+        mock_local_config_path,  # noqa: ARG002
+    ):
+
+        filepath = tmp_path / "local.yaml"
+        filepath.write_text(example_config_cache_yaml)
+
+        clear_local_config(mock_confirm_yes)
+
+        # First call, the credentials need confirmation
+        with freeze_time("2026-05-02 12:00:00"):
+            credential = AzureSdkCredential(skip_confirmation=False)
+            credential.get_credential()
+            out, _ = capsys.readouterr()
+            assert "You are logged into the Azure CLI as" in out
+            # Test that confirmation was requested
+            mock_confirm_yes.assert_called_once()
+
+        clear_local_config(mock_confirm_yes)
+
+        # Call after 1 hour with two hour caching time, no confirmation
+        with freeze_time("2026-05-02 13:00:00"):
+            credential = AzureSdkCredential(skip_confirmation=False)
+            credential.get_credential()
+            out, _ = capsys.readouterr()
+            assert "You are logged into the Azure CLI as" in out
+            # Check that confirmation was not requested
+            mock_confirm_yes.assert_not_called()
+
+        LocalConfigManager.getinstance().accountconfirm.clear_confirm(
+            AzureSdkCredential.name
+        )
+        clear_local_config(mock_confirm_yes)
+
+        # Call after 1 hour with the cache cleared, need confirmation
+        with freeze_time("2026-05-02 13:00:00"):
+            credential = AzureSdkCredential(skip_confirmation=False)
+            credential.get_credential()
+            out, _ = capsys.readouterr()
+            assert "You are logged into the Azure CLI as" in out
+            # Check that confirmation was not requested
+            mock_confirm_yes.assert_not_called()
+
+        LocalConfigManager.getinstance().accountconfirm.clear_confirm_all()
+        clear_local_config(mock_confirm_yes)
+
+        # Call after another hour with everything cleared, need confirmation
+        with freeze_time("2026-05-02 14:00:00"):
+            credential = AzureSdkCredential(skip_confirmation=False)
+            credential.get_credential()
+            out, _ = capsys.readouterr()
+            assert "You are logged into the Azure CLI as" in out
+            # Check that confirmation was not requested
+            mock_confirm_yes.assert_not_called()
 
     def test_confirm_credentials_interactive_cache(
         self,
