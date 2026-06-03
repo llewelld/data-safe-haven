@@ -10,6 +10,8 @@ from data_safe_haven.infrastructure.common import (
 )
 from data_safe_haven.infrastructure.components import (
     OperationalInsightsWorkspace,
+    PostgresqlDatabaseComponent,
+    PostgresqlDatabaseProps,
 )
 from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
 
@@ -36,7 +38,6 @@ class SREUserServicesProps:
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         gitea_database_password: Input[str],
-        gitea_mirror_database_password: Input[str],
         hedgedoc_database_password: Input[str],
         ldap_server_hostname: Input[str],
         ldap_server_port: Input[int],
@@ -60,13 +61,14 @@ class SREUserServicesProps:
         subnet_databases: Input[network.GetSubnetResult],
         subnet_software_repositories: Input[network.GetSubnetResult] | None,
         subnet_software_repositories_support: Input[network.GetSubnetResult] | None,
+        db_server_shared_password: Input[str],
+        db_server_shared_username: Input[str] | None = None,
     ) -> None:
         self.database_service_admin_password = database_service_admin_password
         self.databases = databases
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.gitea_database_password = gitea_database_password
-        self.gitea_mirror_database_password = gitea_mirror_database_password
         self.hedgedoc_database_password = hedgedoc_database_password
         self.ldap_server_hostname = ldap_server_hostname
         self.ldap_server_port = ldap_server_port
@@ -113,6 +115,11 @@ class SREUserServicesProps:
                 subnet_software_repositories_support
             )
 
+        self.db_server_shared_password = db_server_shared_password
+        self.db_server_shared_username = (
+            db_server_shared_username if db_server_shared_username else "postgresadmin"
+        )
+
 
 class SREUserServicesComponent(ComponentResource):
     """Deploy user services with Pulumi"""
@@ -128,6 +135,23 @@ class SREUserServicesComponent(ComponentResource):
         super().__init__("dsh:sre:UserServicesComponent", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
         child_tags = {"component": "user services"} | (tags if tags else {})
+
+        # Deploy the shared PostgreSQL database
+        self.db_server_shared = PostgresqlDatabaseComponent(
+            f"{self._name}_db_server_shared",
+            PostgresqlDatabaseProps(
+                database_names=[],
+                database_password=props.db_server_shared_password,
+                database_resource_group_name=props.resource_group_name,
+                database_server_name=f"{stack_name}-db-server-shared",
+                database_subnet_id=props.subnet_containers_support_id,
+                database_username=props.db_server_shared_username,
+                disable_secure_transport=False,
+                location=props.location,
+            ),
+            opts=child_opts,
+            tags=child_tags,
+        )
 
         # Deploy the Gitea server
         self.gitea_server = SREGiteaServerComponent(
@@ -161,8 +185,6 @@ class SREUserServicesComponent(ComponentResource):
                 "gitea_mirror_monitor",
                 stack_name,
                 SREGiteaMirrorManagerProps(
-                    database_subnet_id=props.subnet_containers_support_id,
-                    database_password=props.gitea_mirror_database_password,
                     dns_server_ip=props.dns_server_ip,
                     dockerhub_credentials=props.dockerhub_credentials,
                     gitea_workspace_dns_record=self.gitea_server.dns_record_name,
@@ -176,6 +198,10 @@ class SREUserServicesComponent(ComponentResource):
                     storage_account_name=props.storage_account_name,
                     workspace_username=self.gitea_server.workspace_username,
                     workspace_password=self.gitea_server.workspace_password,
+                    db_server_shared=self.db_server_shared,
+                    db_server_shared_username=props.db_server_shared_username,
+                    db_server_shared_password=props.db_server_shared_password,
+                    db_server_shared_resource_group_name=props.resource_group_name,
                 ),
                 opts=child_opts,
                 tags=child_tags,
