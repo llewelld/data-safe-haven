@@ -390,7 +390,6 @@ class DeclarativeSRE:
                 resource_group_name=resource_group.name,
                 repository_data=self.config.user_services.gitea_mirror,
                 software_packages=self.config.sre.software_packages,
-                software_repositories_database_password=data.password_nexus_database_admin,
                 sre_fqdn=networking.sre_fqdn,
                 nexus_persistent_quota_gb=self.config.user_services.nexus.persistent_quota_gb,
                 storage_account_key=data.storage_account_data_configuration_key,
