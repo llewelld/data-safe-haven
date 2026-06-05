@@ -379,8 +379,6 @@ class DeclarativeSRE:
                 databases=self.config.sre.databases,
                 dns_server_ip=dns.ip_address,
                 dockerhub_credentials=dockerhub_credentials,
-                gitea_database_password=data.password_gitea_database_admin,
-                hedgedoc_database_password=data.password_hedgedoc_database_admin,
                 ldap_server_hostname=identity.hostname,
                 ldap_server_port=identity.server_port,
                 ldap_user_filter=ldap_user_filter,
