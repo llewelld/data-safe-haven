@@ -61,6 +61,11 @@ runcmd:
   - ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
   - systemctl reload-or-restart systemd-resolved
 
+  # Wait while port 53 is released
+  # ---------------------------
+  - echo ">=== Wait for port 53 to be released... ===<"
+  - sleep 8
+
   # Run the adguardhome service
   # ---------------------------
   - echo ">=== Run the adguardhome service... ===<"
