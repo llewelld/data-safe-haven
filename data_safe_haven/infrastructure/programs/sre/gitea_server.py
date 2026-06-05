@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, storage
+from pulumi_azure_native import containerinstance, dbforpostgresql, storage
 from pulumi_random import RandomPassword
 
 from data_safe_haven.infrastructure.common import (
@@ -15,7 +15,6 @@ from data_safe_haven.infrastructure.components import (
     LocalDnsRecordProps,
     OperationalInsightsWorkspace,
     PostgresqlDatabaseComponent,
-    PostgresqlDatabaseProps,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.utility import FileReader
@@ -27,8 +26,6 @@ class SREGiteaServerProps:
     def __init__(
         self,
         containers_subnet_id: Input[str],
-        database_password: Input[str],
-        database_subnet_id: Input[str],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         ldap_server_hostname: Input[str],
@@ -42,15 +39,12 @@ class SREGiteaServerProps:
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
-        database_username: Input[str] | None = None,
+        db_server_shared: Input[PostgresqlDatabaseComponent],
+        db_server_shared_username: Input[str],
+        db_server_shared_password: Input[str],
+        db_server_shared_resource_group_name: Input[str],
     ) -> None:
         self.containers_subnet_id = containers_subnet_id
-        self.database_password = database_password
-        self.database_subnet_id = database_subnet_id
-        self.database_username = (
-            database_username if database_username else "postgresadmin"
-        )
-
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.ldap_server_hostname = ldap_server_hostname
@@ -64,6 +58,10 @@ class SREGiteaServerProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
+        self.db_server_shared = db_server_shared
+        self.db_server_shared_username = db_server_shared_username
+        self.db_server_shared_password = db_server_shared_password
+        self.db_server_shared_resource_group_name = db_server_shared_resource_group_name
 
 
 class SREGiteaServerComponent(ComponentResource):
@@ -195,22 +193,17 @@ class SREGiteaServerComponent(ComponentResource):
             ),
         )
 
-        # Define a PostgreSQL server and default database
+        # Add a database to the shared PostgreSQL server
         db_gitea_repository_name = "gitea"
-        db_server_gitea = PostgresqlDatabaseComponent(
+        dbforpostgresql.Database(
             f"{self._name}_db_gitea",
-            PostgresqlDatabaseProps(
-                database_names=[db_gitea_repository_name],
-                database_password=props.database_password,
-                database_resource_group_name=props.resource_group_name,
-                database_server_name=f"{stack_name}-db-server-gitea",
-                database_subnet_id=props.database_subnet_id,
-                database_username=props.database_username,
-                disable_secure_transport=False,
-                location=props.location,
+            charset="UTF8",
+            database_name=db_gitea_repository_name,
+            resource_group_name=props.db_server_shared_resource_group_name,
+            server_name=props.db_server_shared.db_server.name,
+            opts=ResourceOptions.merge(
+                child_opts, ResourceOptions(parent=props.db_server_shared)
             ),
-            opts=child_opts,
-            tags=child_tags,
         )
 
         self.dns_record_name = "gitea"
@@ -262,18 +255,18 @@ class SREGiteaServerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__database__HOST",
-                            value=db_server_gitea.private_ip_address,
+                            value=props.db_server_shared.private_ip_address,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__database__NAME", value=db_gitea_repository_name
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__database__USER",
-                            value=props.database_username,
+                            value=props.db_server_shared_username,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__database__PASSWD",
-                            secure_value=props.database_password,
+                            secure_value=props.db_server_shared_password,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__database__SSL_MODE", value="require"

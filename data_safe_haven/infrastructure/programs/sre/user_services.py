@@ -37,8 +37,6 @@ class SREUserServicesProps:
         databases: list[DatabaseSystem],  # this must *not* be passed as an Input[T]
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
-        gitea_database_password: Input[str],
-        hedgedoc_database_password: Input[str],
         ldap_server_hostname: Input[str],
         ldap_server_port: Input[int],
         ldap_username_attribute: Input[str],
@@ -68,8 +66,6 @@ class SREUserServicesProps:
         self.databases = databases
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
-        self.gitea_database_password = gitea_database_password
-        self.hedgedoc_database_password = hedgedoc_database_password
         self.ldap_server_hostname = ldap_server_hostname
         self.ldap_server_port = ldap_server_port
         self.ldap_username_attribute = ldap_username_attribute
@@ -159,8 +155,6 @@ class SREUserServicesComponent(ComponentResource):
             stack_name,
             SREGiteaServerProps(
                 containers_subnet_id=props.subnet_containers_id,
-                database_subnet_id=props.subnet_containers_support_id,
-                database_password=props.gitea_database_password,
                 dns_server_ip=props.dns_server_ip,
                 dockerhub_credentials=props.dockerhub_credentials,
                 ldap_server_hostname=props.ldap_server_hostname,
@@ -174,6 +168,10 @@ class SREUserServicesComponent(ComponentResource):
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
+                db_server_shared=self.db_server_shared,
+                db_server_shared_username=props.db_server_shared_username,
+                db_server_shared_password=props.db_server_shared_password,
+                db_server_shared_resource_group_name=props.resource_group_name,
             ),
             opts=child_opts,
             tags=child_tags,
@@ -213,8 +211,6 @@ class SREUserServicesComponent(ComponentResource):
             stack_name,
             SREHedgeDocServerProps(
                 containers_subnet_id=props.subnet_containers_id,
-                database_password=props.hedgedoc_database_password,
-                database_subnet_id=props.subnet_containers_support_id,
                 dns_server_ip=props.dns_server_ip,
                 dockerhub_credentials=props.dockerhub_credentials,
                 ldap_server_hostname=props.ldap_server_hostname,
@@ -228,6 +224,10 @@ class SREUserServicesComponent(ComponentResource):
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
+                db_server_shared=self.db_server_shared,
+                db_server_shared_username=props.db_server_shared_username,
+                db_server_shared_password=props.db_server_shared_password,
+                db_server_shared_resource_group_name=props.resource_group_name,
             ),
             opts=child_opts,
             tags=child_tags,
