@@ -27,6 +27,8 @@ class SREHedgeDocServerProps:
     def __init__(
         self,
         containers_subnet_id: Input[str],
+        db_server_shared: Input[PostgresqlDatabaseComponent],
+        db_server_shared_password: Input[str],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         ldap_server_hostname: Input[str],
@@ -40,12 +42,10 @@ class SREHedgeDocServerProps:
         sre_fqdn: Input[str],
         storage_account_key: Input[str],
         storage_account_name: Input[str],
-        db_server_shared: Input[PostgresqlDatabaseComponent],
-        db_server_shared_username: Input[str],
-        db_server_shared_password: Input[str],
-        db_server_shared_resource_group_name: Input[str],
     ) -> None:
         self.containers_subnet_id = containers_subnet_id
+        self.db_server_shared = db_server_shared
+        self.db_server_shared_password = db_server_shared_password
         self.resource_group_name = resource_group_name
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
@@ -60,10 +60,6 @@ class SREHedgeDocServerProps:
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
-        self.db_server_shared = db_server_shared
-        self.db_server_shared_username = db_server_shared_username
-        self.db_server_shared_password = db_server_shared_password
-        self.db_server_shared_resource_group_name = db_server_shared_resource_group_name
 
 
 class SREHedgeDocServerComponent(ComponentResource):
@@ -118,11 +114,11 @@ class SREHedgeDocServerComponent(ComponentResource):
 
         # Add a database to the shared PostgreSQL server
         db_hedgedoc_documents_name = "hedgedoc"
-        dbforpostgresql.Database(
+        db_hedgedoc_documents = dbforpostgresql.Database(
             f"{self._name}_db_hedgedoc",
             charset="UTF8",
             database_name=db_hedgedoc_documents_name,
-            resource_group_name=props.db_server_shared_resource_group_name,
+            resource_group_name=props.db_server_shared.database_resource_group_name,
             server_name=props.db_server_shared.db_server.name,
             opts=ResourceOptions.merge(
                 child_opts, ResourceOptions(parent=props.db_server_shared)
@@ -191,7 +187,7 @@ class SREHedgeDocServerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="CMD_DB_USERNAME",
-                            value=props.db_server_shared_username,
+                            value=props.db_server_shared.db_server.administrator_login,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="CMD_DOMAIN",
@@ -313,6 +309,7 @@ class SREHedgeDocServerComponent(ComponentResource):
                 ResourceOptions(
                     delete_before_replace=True,
                     depends_on=[
+                        db_hedgedoc_documents,
                         file_share_hedgedoc_caddy_caddyfile,
                         props.log_analytics_workspace.workspace,
                     ],

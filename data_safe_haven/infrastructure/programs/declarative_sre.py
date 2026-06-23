@@ -377,6 +377,7 @@ class DeclarativeSRE:
             SREUserServicesProps(
                 database_service_admin_password=data.password_database_service_admin,
                 databases=self.config.sre.databases,
+                db_server_shared_password=data.password_shared_database_admin,
                 dns_server_ip=dns.ip_address,
                 dockerhub_credentials=dockerhub_credentials,
                 ldap_server_hostname=identity.hostname,
@@ -401,7 +402,6 @@ class DeclarativeSRE:
                 subnet_databases=networking.subnet_user_services_databases,
                 subnet_software_repositories=networking.subnet_user_services_software_repositories,
                 subnet_software_repositories_support=networking.subnet_user_services_software_repositories_support,
-                db_server_shared_password=data.password_shared_database_admin,
             ),
             tags=self.tags,
         )

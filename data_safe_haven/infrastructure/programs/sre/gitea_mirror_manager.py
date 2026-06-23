@@ -27,6 +27,8 @@ class SREGiteaMirrorManagerProps:
 
     def __init__(
         self,
+        db_server_shared: Input[PostgresqlDatabaseComponent],
+        db_server_shared_password: Input[str],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         gitea_workspace_dns_record: str,
@@ -40,11 +42,9 @@ class SREGiteaMirrorManagerProps:
         storage_account_name: Input[str],
         workspace_username: str,
         workspace_password: Input[str],
-        db_server_shared: Input[PostgresqlDatabaseComponent],
-        db_server_shared_username: Input[str],
-        db_server_shared_password: Input[str],
-        db_server_shared_resource_group_name: Input[str],
     ) -> None:
+        self.db_server_shared = db_server_shared
+        self.db_server_shared_password = db_server_shared_password
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.gitea_workspace_dns_record = gitea_workspace_dns_record
@@ -58,10 +58,6 @@ class SREGiteaMirrorManagerProps:
         self.storage_account_name = storage_account_name
         self.workspace_username = workspace_username
         self.workspace_password = workspace_password
-        self.db_server_shared = db_server_shared
-        self.db_server_shared_username = db_server_shared_username
-        self.db_server_shared_password = db_server_shared_password
-        self.db_server_shared_resource_group_name = db_server_shared_resource_group_name
 
 
 class SREGiteaMirrorManagerComponent(ComponentResource):
@@ -160,11 +156,11 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
 
         # Add a database to the shared PostgreSQL server
         db_gitea_repository_name = "giteamirror"
-        dbforpostgresql.Database(
+        db_gitea_repository = dbforpostgresql.Database(
             f"{self._name}_db_{db_gitea_repository_name}",
             charset="UTF8",
             database_name=db_gitea_repository_name,
-            resource_group_name=props.db_server_shared_resource_group_name,
+            resource_group_name=props.db_server_shared.database_resource_group_name,
             server_name=props.db_server_shared.db_server.name,
             opts=ResourceOptions.merge(
                 child_opts, ResourceOptions(parent=props.db_server_shared)
@@ -257,7 +253,7 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__database__USER",
-                            value=props.db_server_shared_username,
+                            value=props.db_server_shared.db_server.administrator_login,
                         ),
                         containerinstance.EnvironmentVariableArgs(
                             name="GITEA__database__PASSWD",
@@ -369,6 +365,7 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
                 ResourceOptions(
                     delete_before_replace=True,
                     depends_on=[
+                        db_gitea_repository,
                         file_share_gitea_gitea_entrypoint_sh,
                         file_share_gitea_gitea_configure_sh,
                         props.log_analytics_workspace.workspace,

@@ -35,6 +35,7 @@ class SREUserServicesProps:
         self,
         database_service_admin_password: Input[str],
         databases: list[DatabaseSystem],  # this must *not* be passed as an Input[T]
+        db_server_shared_password: Input[str],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         ldap_server_hostname: Input[str],
@@ -59,11 +60,11 @@ class SREUserServicesProps:
         subnet_databases: Input[network.GetSubnetResult],
         subnet_software_repositories: Input[network.GetSubnetResult] | None,
         subnet_software_repositories_support: Input[network.GetSubnetResult] | None,
-        db_server_shared_password: Input[str],
         db_server_shared_username: Input[str] | None = None,
     ) -> None:
         self.database_service_admin_password = database_service_admin_password
         self.databases = databases
+        self.db_server_shared_password = db_server_shared_password
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.ldap_server_hostname = ldap_server_hostname
@@ -93,6 +94,9 @@ class SREUserServicesProps:
         self.subnet_databases_id = Output.from_input(subnet_databases).apply(
             get_id_from_subnet
         )
+        self.db_server_shared_username = (
+            db_server_shared_username if db_server_shared_username else "postgresadmin"
+        )
 
         self.subnet_gitea_mirrors_id: Output[str] | None = None
         if subnet_gitea_mirrors is not None:
@@ -110,11 +114,6 @@ class SREUserServicesProps:
             self.subnet_software_repositories_support = (
                 subnet_software_repositories_support
             )
-
-        self.db_server_shared_password = db_server_shared_password
-        self.db_server_shared_username = (
-            db_server_shared_username if db_server_shared_username else "postgresadmin"
-        )
 
 
 class SREUserServicesComponent(ComponentResource):
@@ -155,6 +154,8 @@ class SREUserServicesComponent(ComponentResource):
             stack_name,
             SREGiteaServerProps(
                 containers_subnet_id=props.subnet_containers_id,
+                db_server_shared=self.db_server_shared,
+                db_server_shared_password=props.db_server_shared_password,
                 dns_server_ip=props.dns_server_ip,
                 dockerhub_credentials=props.dockerhub_credentials,
                 ldap_server_hostname=props.ldap_server_hostname,
@@ -168,10 +169,6 @@ class SREUserServicesComponent(ComponentResource):
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
-                db_server_shared=self.db_server_shared,
-                db_server_shared_username=props.db_server_shared_username,
-                db_server_shared_password=props.db_server_shared_password,
-                db_server_shared_resource_group_name=props.resource_group_name,
             ),
             opts=child_opts,
             tags=child_tags,
@@ -183,6 +180,8 @@ class SREUserServicesComponent(ComponentResource):
                 "gitea_mirror_monitor",
                 stack_name,
                 SREGiteaMirrorManagerProps(
+                    db_server_shared=self.db_server_shared,
+                    db_server_shared_password=props.db_server_shared_password,
                     dns_server_ip=props.dns_server_ip,
                     dockerhub_credentials=props.dockerhub_credentials,
                     gitea_workspace_dns_record=self.gitea_server.dns_record_name,
@@ -196,10 +195,6 @@ class SREUserServicesComponent(ComponentResource):
                     storage_account_name=props.storage_account_name,
                     workspace_username=self.gitea_server.workspace_username,
                     workspace_password=self.gitea_server.workspace_password,
-                    db_server_shared=self.db_server_shared,
-                    db_server_shared_username=props.db_server_shared_username,
-                    db_server_shared_password=props.db_server_shared_password,
-                    db_server_shared_resource_group_name=props.resource_group_name,
                 ),
                 opts=child_opts,
                 tags=child_tags,
@@ -211,6 +206,8 @@ class SREUserServicesComponent(ComponentResource):
             stack_name,
             SREHedgeDocServerProps(
                 containers_subnet_id=props.subnet_containers_id,
+                db_server_shared=self.db_server_shared,
+                db_server_shared_password=props.db_server_shared_password,
                 dns_server_ip=props.dns_server_ip,
                 dockerhub_credentials=props.dockerhub_credentials,
                 ldap_server_hostname=props.ldap_server_hostname,
@@ -224,10 +221,6 @@ class SREUserServicesComponent(ComponentResource):
                 sre_fqdn=props.sre_fqdn,
                 storage_account_key=props.storage_account_key,
                 storage_account_name=props.storage_account_name,
-                db_server_shared=self.db_server_shared,
-                db_server_shared_username=props.db_server_shared_username,
-                db_server_shared_password=props.db_server_shared_password,
-                db_server_shared_resource_group_name=props.resource_group_name,
             ),
             opts=child_opts,
             tags=child_tags,

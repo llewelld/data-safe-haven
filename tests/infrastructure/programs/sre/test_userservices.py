@@ -32,7 +32,7 @@ from data_safe_haven.types import (
 )
 
 
-class DataSafeHavenMocks(pulumi.runtime.Mocks):
+class DSHUserServiceMocks(pulumi.runtime.Mocks):
     """Configuration for Pulumi mocks"""
 
     def new_resource(
@@ -99,7 +99,7 @@ def pulumi_config_require_side_effect(key: str) -> str:
 
 
 # Set the Pulumi mocks for testing
-mocks = DataSafeHavenMocks()
+mocks = DSHUserServiceMocks()
 pulumi.runtime.set_mocks(
     mocks,
     preview=False,
@@ -124,6 +124,7 @@ def user_services_props(
     return SREUserServicesProps(
         database_service_admin_password="db_password",
         databases=[DatabaseSystem.POSTGRESQL],
+        db_server_shared_password="shared-db-password",
         dns_server_ip=dns.ip_address,
         dockerhub_credentials=dockerhub_credentials,
         ldap_server_hostname="identity.none",
@@ -148,7 +149,6 @@ def user_services_props(
         subnet_databases=networking.subnet_user_services_databases,
         subnet_software_repositories=networking.subnet_user_services_software_repositories,
         subnet_software_repositories_support=networking.subnet_user_services_software_repositories_support,
-        db_server_shared_password="shared-db-password",
         db_server_shared_username="shared_db-username",
     )
 
@@ -170,13 +170,6 @@ def user_services_component(
 
 # The test suite
 class TestSREUserServicesProps:
-    @pulumi.runtime.test  # type: ignore
-    def test_user_service_props_creation(
-        self, user_services_props: SREUserServicesProps
-    ) -> None:
-        """Basic test to ensure properties are being created correctly"""
-        assert isinstance(user_services_props, SREUserServicesProps)
-
     @pulumi.runtime.test  # type: ignore
     def test_user_service_creation(
         self, user_services_component: SREUserServicesComponent
