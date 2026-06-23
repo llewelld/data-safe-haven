@@ -167,3 +167,4 @@ class PostgresqlDatabaseComponent(ComponentResource):
         self.private_ip_address = get_ip_addresses_from_private_endpoint(
             private_endpoint
         ).apply(lambda ips: ips[0])
+        self.database_resource_group_name = props.database_resource_group_name
