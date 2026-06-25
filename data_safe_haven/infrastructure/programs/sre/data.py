@@ -277,14 +277,16 @@ class SREDataComponent(ComponentResource):
         )
 
         # Secret: Shared database password.
+        # NOTE: Special characters cause Nexus connection to fail.
+        # See: https://dba.stackexchange.com/questions/286254/maximum-length-or-special-character-restrictions-for-postgresql-13-user-password
         password_shared_database_admin = pulumi_random.RandomPassword(
             f"{self._name}_password_shared_database_admin",
             length=20,
-            special=True,
+            special=False,
             opts=ResourceOptions.merge(child_opts, ResourceOptions(parent=key_vault)),
         )
 
-        keyvault.Secret(
+        kvs_password_shared_database_admin = keyvault.Secret(
             f"{self._name}_kvs_password_shared_database_admin",
             properties=keyvault.SecretPropertiesArgs(
                 value=password_shared_database_admin.result
@@ -313,30 +315,6 @@ class SREDataComponent(ComponentResource):
             vault_name=key_vault.name,
             opts=ResourceOptions.merge(
                 child_opts, ResourceOptions(parent=password_nexus_admin)
-            ),
-            tags=child_tags,
-        )
-
-        # Secret: Nexus database admin password
-        # NOTE: Special characters cause connection to fail.
-        # See: https://dba.stackexchange.com/questions/286254/maximum-length-or-special-character-restrictions-for-postgresql-13-user-password
-        password_nexus_database_admin = pulumi_random.RandomPassword(
-            f"{self._name}_password_nexus_database_admin",
-            length=20,
-            special=False,
-            opts=ResourceOptions.merge(child_opts, ResourceOptions(parent=key_vault)),
-        )
-
-        kvs_password_nexus_database_admin = keyvault.Secret(
-            f"{self._name}_kvs_password_nexus_database_admin",
-            properties=keyvault.SecretPropertiesArgs(
-                value=password_nexus_database_admin.result
-            ),
-            resource_group_name=props.resource_group_name,
-            secret_name="password-nexus-database-admin",
-            vault_name=key_vault.name,
-            opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=password_nexus_database_admin)
             ),
             tags=child_tags,
         )
@@ -809,9 +787,6 @@ class SREDataComponent(ComponentResource):
         self.password_shared_database_admin = Output.secret(
             password_shared_database_admin.result
         )
-        self.password_nexus_database_admin = Output.secret(
-            password_nexus_database_admin.result
-        )
         self.password_user_database_admin = Output.secret(
             password_user_database_admin.result
         )
@@ -820,7 +795,7 @@ class SREDataComponent(ComponentResource):
         # Register exports
         self.exports = {
             "key_vault_name": key_vault.name,
-            "password_nexus_database_admin_secret": kvs_password_nexus_database_admin.name,
+            "password_nexus_database_admin_secret": kvs_password_shared_database_admin.name,
             "password_user_database_admin_secret": kvs_password_user_database_admin.name,
             "storage_account_data_configuration_name": storage_account_data_configuration.name,
         }

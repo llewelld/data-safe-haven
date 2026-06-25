@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
-from pulumi_azure_native import containerinstance, network, storage
+from pulumi_azure_native import containerinstance, dbforpostgresql, network, storage
 
 from data_safe_haven.external import AzureIPv4Range
 from data_safe_haven.infrastructure.common import (
@@ -18,12 +18,10 @@ from data_safe_haven.infrastructure.components import (
     LocalDnsRecordProps,
     OperationalInsightsWorkspace,
     PostgresqlDatabaseComponent,
-    PostgresqlDatabaseProps,
 )
 from data_safe_haven.resources import resources_path
 from data_safe_haven.types import (
     Ports,
-    PostgreSqlExtension,
     SoftwarePackageCategory,
 )
 from data_safe_haven.utility import FileReader
@@ -34,7 +32,6 @@ class SRESoftwareRepositoriesProps:
 
     def __init__(
         self,
-        database_password: Input[str],
         dns_server_ip: Input[str],
         dockerhub_credentials: DockerHubCredentials,
         location: Input[str],
@@ -48,12 +45,11 @@ class SRESoftwareRepositoriesProps:
         storage_account_name: Input[str],
         subnet_software_repositories_id: Input[str],
         subnet_software_repositories_support: Input[network.Subnet] | None,
-        database_username: Input[str] | None = "postgresadmin",
+        db_server_shared: Input[PostgresqlDatabaseComponent],
+        db_server_shared_username: Input[str],
+        db_server_shared_password: Input[str],
+        db_server_shared_resource_group_name: Input[str],
     ) -> None:
-        self.database_password = database_password
-        self.database_username = (
-            database_username if database_username else "postgresadmin"
-        )
         self.dns_server_ip = dns_server_ip
         self.dockerhub_credentials = dockerhub_credentials
         self.location = location
@@ -71,6 +67,10 @@ class SRESoftwareRepositoriesProps:
         self.storage_account_name = storage_account_name
         self.subnet_software_repositories_id = subnet_software_repositories_id
         self.subnet_software_repositories_support = subnet_software_repositories_support
+        self.db_server_shared = db_server_shared
+        self.db_server_shared_username = db_server_shared_username
+        self.db_server_shared_password = db_server_shared_password
+        self.db_server_shared_resource_group_name = db_server_shared_resource_group_name
 
 
 class SRESoftwareRepositoriesComponent(ComponentResource):
@@ -233,7 +233,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                             ),
                             containerinstance.EnvironmentVariableArgs(
                                 name="NEXUS_DATASTORE_NEXUS_PASSWORD",
-                                secure_value=props.database_password,
+                                secure_value=props.db_server_shared_password,
                             ),
                         ],
                         ports=[],
@@ -376,28 +376,17 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 tags=child_tags,
             )
 
-            # Define a PostgreSQL server for Nexus
+            # Add a database to the shared PostgreSQL server
             db_software_repository_name: str = "nexus"
-            db_server_software_repositories: PostgresqlDatabaseComponent = (
-                PostgresqlDatabaseComponent(
-                    f"{self._name}_db_nexus",
-                    PostgresqlDatabaseProps(
-                        azure_extensions=PostgreSqlExtension.PG_TRGM,  # Extension required by Nexus.
-                        database_names=[db_software_repository_name],
-                        database_password=props.database_password,
-                        database_resource_group_name=props.resource_group_name,
-                        database_server_name=f"{stack_name}-db-server-software-repositories",
-                        database_subnet_id=props.subnet_software_repositories_support.id,
-                        database_username=props.database_username,
-                        disable_secure_transport=False,
-                        location=props.location,
-                    ),
-                    opts=ResourceOptions.merge(
-                        child_opts,
-                        ResourceOptions(replace_with=[self.container_group]),
-                    ),
-                    tags=child_tags,
-                )
+            dbforpostgresql.Database(
+                f"{self._name}_db_nexus",
+                charset="UTF8",
+                database_name=db_software_repository_name,
+                resource_group_name=props.db_server_shared_resource_group_name,
+                server_name=props.db_server_shared.db_server.name,
+                opts=ResourceOptions.merge(
+                    child_opts, ResourceOptions(parent=props.db_server_shared)
+                ),
             )
 
             # Register the container group in the SRE DNS zone
@@ -421,7 +410,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
             # Register Nexus exports
             self.exports = {
                 "connection_db_name": db_software_repository_name,
-                "connection_db_server_name": db_server_software_repositories.db_server.name,
+                "connection_db_server_name": props.db_server_shared.db_server.name,
                 "container_group_name": self.container_group.name,
                 "resource_group_name": props.resource_group_name,
             }

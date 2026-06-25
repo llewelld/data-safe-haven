@@ -13,7 +13,11 @@ from data_safe_haven.infrastructure.components import (
     PostgresqlDatabaseComponent,
     PostgresqlDatabaseProps,
 )
-from data_safe_haven.types import DatabaseSystem, SoftwarePackageCategory
+from data_safe_haven.types import (
+    DatabaseSystem,
+    PostgreSqlExtension,
+    SoftwarePackageCategory,
+)
 
 from .database_servers import SREDatabaseServerComponent, SREDatabaseServerProps
 from .gitea_mirror_manager import (
@@ -53,7 +57,6 @@ class SREUserServicesProps:
         repository_data: ConfigSubsectionGiteaMirror,
         storage_account_key: Input[str],
         storage_account_name: Input[str],
-        software_repositories_database_password: Input[str],
         subnet_containers: Input[network.GetSubnetResult],
         subnet_containers_support: Input[network.GetSubnetResult],
         subnet_gitea_mirrors: Input[network.GetSubnetResult],
@@ -79,9 +82,6 @@ class SREUserServicesProps:
         self.resource_group_name = resource_group_name
         self.nexus_persistent_quota_gb = nexus_persistent_quota_gb
         self.software_packages = software_packages
-        self.software_repositories_database_password = Output.secret(
-            software_repositories_database_password
-        )
         self.sre_fqdn = sre_fqdn
         self.storage_account_key = storage_account_key
         self.storage_account_name = storage_account_name
@@ -135,6 +135,7 @@ class SREUserServicesComponent(ComponentResource):
         self.db_server_shared = PostgresqlDatabaseComponent(
             f"{self._name}_db_server_shared",
             PostgresqlDatabaseProps(
+                azure_extensions=PostgreSqlExtension.PG_TRGM,  # Extension required by Nexus.
                 database_names=[],
                 database_password=props.db_server_shared_password,
                 database_resource_group_name=props.resource_group_name,
@@ -235,7 +236,6 @@ class SREUserServicesComponent(ComponentResource):
                 "sre_software_repositories",
                 stack_name,
                 SRESoftwareRepositoriesProps(
-                    database_password=props.software_repositories_database_password,
                     dns_server_ip=props.dns_server_ip,
                     dockerhub_credentials=props.dockerhub_credentials,
                     location=props.location,
@@ -249,6 +249,10 @@ class SREUserServicesComponent(ComponentResource):
                     storage_account_name=props.storage_account_name,
                     subnet_software_repositories_id=props.subnet_software_repositories_id,
                     subnet_software_repositories_support=props.subnet_software_repositories_support,
+                    db_server_shared=self.db_server_shared,
+                    db_server_shared_username=props.db_server_shared_username,
+                    db_server_shared_password=props.db_server_shared_password,
+                    db_server_shared_resource_group_name=props.resource_group_name,
                 ),
                 opts=child_opts,
                 tags=child_tags,
