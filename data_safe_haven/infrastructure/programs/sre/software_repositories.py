@@ -195,7 +195,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                 container_group_name=self.container_group_name,
                 containers=[
                     containerinstance.ContainerArgs(
-                        image="caddy:2.11",
+                        image="caddy:2.11.4",
                         name="caddy"[:63],
                         ports=[
                             containerinstance.ContainerPortArgs(
@@ -218,7 +218,7 @@ class SRESoftwareRepositoriesComponent(ComponentResource):
                         ],
                     ),
                     containerinstance.ContainerArgs(
-                        image="sonatype/nexus3:3.87.1",  # Version 3.38.0 currently fails deployment. Keeping previous version.
+                        image="sonatype/nexus3:3.93.2",  # Version 3.38.0 currently fails deployment. Keeping previous version.
                         name="nexus"[:63],
                         environment_variables=[
                             containerinstance.EnvironmentVariableArgs(
