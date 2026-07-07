@@ -22,9 +22,9 @@ Grace;Hopper;+18005550100;grace@nasa.gov;US
 :::
 ::::
 
-```{code} shell
+:::{code} shell
 $ dsh users add PATH_TO_MY_CSV_FILE
-```
+:::
 
 ## List available users
 
@@ -34,9 +34,9 @@ $ dsh users add PATH_TO_MY_CSV_FILE
     1. Browse to **{menuselection}`Manage --> Members`** from the secondary menu on the left side
 - You can do this at the command line by running `dsh users list`:
 
-    ```{code} shell
+    :::{code} shell
     $ dsh users list YOUR_SRE_NAME
-    ```
+    :::
 
     which will give output like the following
 
@@ -56,9 +56,9 @@ $ dsh users add PATH_TO_MY_CSV_FILE
 1. You can do this directly in your Entra tenant by adding them to the **Data Safe Haven SRE _YOUR\_SRE\_NAME_ Users** group, following the instructions [here](https://learn.microsoft.com/en-us/entra/fundamentals/groups-view-azure-portal#add-a-group-member).
 1. Alternatively, you can add multiple users from the command line using {typer}`dsh users register`:
 
-    ```{code} shell
+    :::{code} shell
     $ dsh users register YOUR_SRE_NAME -u USERNAME_1 -u USERNAME_2
-    ```
+    :::
 
     where you must specify the usernames for each user you want to add to this SRE.
 

@@ -16,12 +16,12 @@ When you set up your Data Safe Haven, you should think carefully about the secur
 The Data Safe Haven supports five sensitivity tiers out-of-the-box.
 A summary of the technical controls imposed at each tier by the Data Safe Haven codebase follows below.
 
-```{hint}
+:::{hint}
 The tiers used in the Data Safe Haven codebase are based on ideas from our [design choices](https://arxiv.org/abs/1908.08737) preprint.
 The preprint goes into further detail about the different tiers and outlines one possible classification scheme.
 
 Note that your organisation may classify projects differently and require different technical and non-technical controls.
-```
+:::
 
 (policy_tier_0)=
 
@@ -53,9 +53,9 @@ Non-technical restrictions related to information governance procedures may also
 
 Non-technical restrictions related to information governance procedures may also be applied according to your organisation's needs.
 
-```{admonition} Organisational networks
+:::{admonition} Organisational networks
 At the Turing connections to Tier 2 environments are only permitted from **Organisational** networks managed by the Turing or one of its organisational partners.
-```
+:::
 
 (policy_tier_3)=
 
@@ -67,18 +67,18 @@ At the Turing connections to Tier 2 environments are only permitted from **Organ
 
 Non-technical restrictions related to information governance procedures may also be applied according to your organisation's needs.
 
-```{admonition} Restricted networks
+:::{admonition} Restricted networks
 At the Turing connections to Tier 3 environments are only permitted from **Restricted** networks that are only accessible by known researchers.
-```
+:::
 
-```{admonition} Physical spaces
+:::{admonition} Physical spaces
 At the Turing connections to Tier 3 environments are only permitted from medium security spaces.
 Such spaces control the possibility of unauthorised viewing by requiring card access or other means of restricting entry to only known researchers (such as the signing in of guests on a known list) and screen adaptations or desk partitions are used in open-plan spaces if there is a high risk of unauthorised people viewing the user's screen.
-```
+:::
 
-```{admonition} Managed devices
+:::{admonition} Managed devices
 At the Turing connections to Tier 3 environments are also only permitted from managed devices (i.e. where the user is not an administrator) that have antivirus software installed and regular software updates applied.
-```
+:::
 
 (policy_tier_4)=
 
@@ -86,8 +86,8 @@ At the Turing connections to Tier 3 environments are also only permitted from ma
 
 The Data Safe Haven does not currently support environments suitable for the Tier 4 sensitivity level.
 
-```{caution}
+:::{caution}
 The Turing has not yet worked with any projects at the Tier 4 sensitivity level and so has only done some limited thinking on what controls would be appropriate for such projects.
 
 However, it is likely that such additional controls would at minimum include stronger restrictions on the physical spaces from which Tier 4 environments could be accessed.
-```
+:::

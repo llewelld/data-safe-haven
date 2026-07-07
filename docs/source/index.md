@@ -13,10 +13,10 @@ reference/index.md
 contributing/index.md
 :::
 
-```{image} _static/scriberia_diagram.jpg
+:::{image} _static/scriberia_diagram.jpg
 :alt: Data Safe Haven cartoon by Scriberia for The Alan Turing Institute
 :align: center
-```
+:::
 
 Many of the important questions we want to answer for society require the use of sensitive data.
 In order to effectively answer these questions, we need productive, secure environments to analyse that data.
@@ -57,7 +57,7 @@ This documentation is released under the [CC BY 4.0 Licence](https://creativecom
 
 ### Disclaimer
 
-```{warning}
+:::{warning}
 The Alan Turing Institute and its group companies ("we", "us", the "Turing") make no
 representations, warranties, or guarantees, express or implied, regarding the information contained
 on this site, including but not limited to information about the use or deployment of the Data
@@ -76,4 +76,4 @@ no guarantees regarding the safety, security or suitability of any instance(s) o
 the Data Safe Haven. The Turing assumes no responsibility for updating any of the content on this
 site; however, the underlying code and related materials may change from time to time with updates
 and it is the user's responsibility to keep abreast of these updates.
-```
+:::

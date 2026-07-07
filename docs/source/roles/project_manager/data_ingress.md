@@ -13,9 +13,9 @@ There are three methods of transferring data to the Data Safe Haven (in order of
 
 Ensure that the {ref}`role_data_provider_representative` and the {ref}`role_system_manager` discuss the most appropriate method to bring data into the environment.
 
-```{danger}
+:::{danger}
 Under no circumstance should sensitive data be sent via email, even if encrypted.
-```
+:::
 
 ## Data ingress for a running project
 
@@ -23,8 +23,8 @@ If the project team need further data ingress after the project has started, ens
 They should reclassify the project.
 If the new security tier is higher than the one in which work has already started then the data ingress **is not permitted**.
 
-```{warning}
+:::{warning}
 If ingress of new data would change the classification of a project, we suggest determining the updated classification and deploying a new environment for it.
-```
+:::
 
 At the end of this process they should have classified the project into one of the Data Safe Haven security tiers.

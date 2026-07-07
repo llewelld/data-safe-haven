@@ -2,10 +2,10 @@
 
 # Security evaluation checklist
 
-```{caution}
+:::{caution}
 This security checklist is used by the Alan Turing Institute to evaluate compliance with our default controls.
 Organisations are responsible for making their own decisions about the suitability of any of our default controls and should treat this checklist as an example, not a template to follow.
-```
+:::
 
 In this check list we aim to evaluate our deployment against the {ref}`security configuration <design_turing_security_configuration>` that we apply at the Alan Turing Institute.
 A copy of this template in Markdown format is {download}`available for download <security_checklist/security_checklist_template.md>`.
@@ -16,10 +16,12 @@ The security checklist currently focuses on checks that can evaluate these secur
 Ensure you have met the [](#prerequisites).
 Work your way through the actions described in each section, taking care to notice each time you see a {{camera}} or a {{white_check_mark}} and the word Verify.
 
-```{note}
+:::{note}
+
 - {{camera}} Where you see the camera icon, there should be accompanying screenshot(s) of evidence for this item in the checklist (you may wish to save your own equivalent screenshots as evidence)
 - {{white_check_mark}} This indicates a checklist item for which a screenshot is either not appropriate or difficult
-```
+
+:::
 
 You can use {download}`this template Markdown file <./security_checklist/security_checklist_template.md>` to complete the checklist.
 
@@ -77,34 +79,34 @@ Do not register this user with any SRE yet.
 - Click "Forgotten my password".
 - Reset password.
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
  <details><summary> user can reset their own password</summary>
 
-```{image} security_checklist/sspr.png
+:::{image} security_checklist/sspr.png
 :align: center
-```
-```{image} security_checklist/sspr_success.png
+:::
+:::{image} security_checklist/sspr_success.png
 :align: center
-```
+:::
 
 </details>
-````
+::::
 
 #### Check: Non-registered users cannot connect to any SRE workspace
 
 Attempt to login to the remote desktop web client as the research user.
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
  <details><summary>user can authenticate but cannot see any workspaces</summary>
 
-```{image} security_checklist/no_valid_workspaces.png
+:::{image} security_checklist/no_valid_workspaces.png
 :align: center
-```
+:::
 
 </details>
-````
+::::
 
 #### Check: Registered users can see SRE workspaces
 
@@ -112,16 +114,16 @@ Check that the research user can authenticate using MFA and is granted access to
 
 - Login to the remote desktop web client as the research user.
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 <details><summary>user can authenticate and can see workspaces</summary>
 
-```{image} security_checklist/valid_workspaces.png
+:::{image} security_checklist/valid_workspaces.png
 :align: center
-```
+:::
 
 </details>
-````
+::::
 
 #### Check: Authenticated user can access workspaces
 
@@ -130,16 +132,16 @@ Check that the research user can access a workspace.
 - Login to the remote desktop web client as the research user.
 - Select a workspace and login as the research user.
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 <details><summary>you can connect to any workspace</summary>
 
-```{image} security_checklist/workspace_xfce_initial.png
+:::{image} security_checklist/workspace_xfce_initial.png
 :align: center
-```
+:::
 
 </details>
-````
+::::
 
 ## 2. Isolated Network
 
@@ -160,32 +162,32 @@ Check that the research user can access a workspace.
 - Connect to an SRE workspace by using the web client.
 - Attempt to access the internet using a browser and CLI tools.
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 
 <details><summary>browsing to the service fails</i></summary>
 
-```{image} security_checklist/no_internet_browser.png
+:::{image} security_checklist/no_internet_browser.png
 :align: center
-```
+:::
 
 </details>
 
 <details><summary>you cannot access the service using curl</summary>
 
-```{image} security_checklist/no_internet_curl.png
+:::{image} security_checklist/no_internet_curl.png
 :align: center
-```
+:::
 
 </details>
 
 <details><summary>you cannot look up the IP address for the service using nslookup</summary>
 
-```{image} security_checklist/no_nslookup.png
+:::{image} security_checklist/no_nslookup.png
 :align: center
-```
+:::
 </details>
-````
+::::
 
 ## 3. User devices
 
@@ -205,43 +207,43 @@ Check that the research user can access a workspace.
 
 - Connect to the environment using an allowed IP address and credentials
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: connection succeeds
-```
+:::
 
 - Connect to the environment from an IP address that is not allowed but with correct credentials.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: connection fails
-```
+:::
 
 #### User devices ({ref}`policy_tier_3`)
 
 All managed devices should be provided by a known IT team at an approved organisation.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: the IT team of the approved organisation take responsibility for managing the device.
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: the user does not have administrator permissions on the device.
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: allowed IP addresses are exclusive to managed devices.
-```
+:::
 
 - Connect to the environment using an allowed IP address and credentials
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: connection succeeds
-```
+:::
 
 - Connect to the environment from an IP address that is not allowed but with correct credentials.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: connection fails
-```
+:::
 
 #### Network rules ({ref}`policy_tier_2` and above):
 
@@ -249,20 +251,20 @@ There are network rules permitting access to the portal from allowed IP addresse
 
 - In the Azure portal navigate to the Guacamole application gateway NSG for this SRE `shm-<SHM ID>-sre-<SRE ID>-nsg-application-gateway`.
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 
 <details><summary>the NSG has network rules allowing Inbound access from allowed IP addresses only</summary>
 
-```{image} security_checklist/nsg_inbound_access.png
+:::{image} security_checklist/nsg_inbound_access.png
 :align: center
-```
+:::
 </details>
-````
+::::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: all other NSGs have an inbound `Deny All` rule and no higher priority rule allowing inbound connections from outside the Virtual Network.
-```
+:::
 
 ## 4. Physical security
 
@@ -285,25 +287,25 @@ Connection from outside the secure physical space is not possible.
 
 - Attempt to connect to the {ref}`policy_tier_3` SRE web client from home using a managed device and the correct VPN connection and credentials.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: connection fails.
-```
+:::
 
 Connection from within the secure physical space is possible.
 
 - Attempt to connect from research office using a managed device and the correct VPN connection and credentials.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: connection succeeds.
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: check the network IP ranges corresponding to the research spaces and compare against the IPs accepted by the firewall.
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: confirm in person that physical measures such as screen adaptions or desk partitions are present if risk of visual eavesdropping is high.
-```
+:::
 
 ## 5. Remote connections
 
@@ -321,35 +323,35 @@ Connection from within the secure physical space is possible.
 
 - Attempt to login as the research user via SSH with `ssh <user.name>@<SRE ID>.<safe haven domain>` (e.g. `ssh -v -o ConnectTimeout=10 ada.lovelace@sandbox.turingsafehaven.ac.uk`).
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 
 <details><summary>SSH login by fully-qualified domain name fails</summary>
 
-```{image} security_checklist/no_ssh_fqdn.png
+:::{image} security_checklist/no_ssh_fqdn.png
 :align: center
-```
+:::
 </details>
-````
+::::
 
 - Find the public IP address for the remote desktop web client.
     - {{pear}} This will be given by the resource `shm-<SHM ID>-sre-<SRE ID>-public-ip`.
 - Attempt to login as the research user via `SSH` with `ssh <user.name>@<public IP>` (_e.g._ `ssh ada.lovelace@8.8.8.8`).
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 
 <details><summary>SSH login by public IP address fails</summary>
 
-```{image} security_checklist/no_ssh_ip.png
+:::{image} security_checklist/no_ssh_ip.png
 :align: center
-```
+:::
 </details>
-````
+::::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: the remote desktop web client application gateway (`shm-<SHM ID>-sre-<SRE ID>-ag-entrypoint`), and the firewall, are the only SRE resources with public IP addresses.
-```
+:::
 
 ## 6. Copy-and-paste
 
@@ -370,16 +372,16 @@ Connection from within the secure physical space is possible.
 - Connect to a workspace as the research user via the remote desktop web client.
 - Open a text editor or terminal on the SRD and attempt to paste the text to it.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: paste fails
-```
+:::
 
 - Write some text in a text editor or terminal of the workspace and copy it.
 - Attempt to paste the text on your local device.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: paste fails
-```
+:::
 
 ## 7. Data ingress
 
@@ -409,49 +411,49 @@ To minimise the risk of unauthorised access to the dataset while the ingress vol
 - Use the IP address of your own device in place of that of the data provider.
 - Generate an upload token with only Write and List permissions.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: the upload token is successfully created.
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: you are able to send this token using a secure mechanism.
-```
+:::
 
 #### Ensure that data ingress works only for connections from the accepted IP address range
 
 - As the {ref}`role_data_provider_representative`, ensure you're working from a device that has an allowed IP address.
 - Using the upload token with write-only permissions and limited time period that you set up in the previous step, follow the ingress instructions for the {ref}`data provider <role_data_provider_representative>`.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: writing succeeds by uploading a file
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: attempting to open or download any of the files results in the following error: `Failed to start transfer: Insufficient credentials.` under the `Activities` pane at the bottom of the MS Azure Storage Explorer window.
-```
+:::
 
 - Switch to a device without an allowed IP address (or change your IP with a VPN)
 - Attempt to write to the ingress volume via the test device
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: the access token fails.
-```
+:::
 
 #### Check that the upload fails if the token has expired
 
 - Create a write-only token with short duration
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: you can connect and write with the token during the duration
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: you cannot connect and write with the token after the duration has expired
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: the data ingress process works by uploading different kinds of files, e.g. data, images, scripts (if appropriate).
-```
+:::
 
 ## 8. Data egress
 
@@ -471,25 +473,25 @@ To minimise the risk of unauthorised access to the dataset while the ingress vol
 - Login to an SRD as the research user via the remote desktop web client
 - Open up a file explorer and search for the various storage volumes
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: the `/mnt/output` volume exists and can be read and written to.
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: the permissions of other storage volumes match that described in the [user guide](../roles/researcher/using_the_sre.md#-sharing-files-inside-the-sre).
-```
+:::
 
 #### Confirm that {ref}`role_system_manager` can see and download files from output
 
 - As the {ref}`role_system_manager`, follow the instructions in the [project manager documentation](../roles/project_manager/data_egress.md#data-egress-process) on how to access files set for egress with `Azure Storage Explorer`.
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: you can see the files written to the `/mnt/output` storage volume.
-```
+:::
 
-```{attention}
+:::{attention}
 {{white_check_mark}} Verify that: a written file can be taken out of the environment via download
-```
+:::
 
 ## 9. Software package repositories
 
@@ -510,55 +512,55 @@ To minimise the risk of unauthorised access to the dataset while the ingress vol
 - Connect to a Tier 2 workspace as the research user via remote desktop web client.
 - Attempt to install a package on the allowed list that is not included out-of-the-box (for example, try `python -m venv ./venv && source ./venv/bin/activate && pip install pytz`)
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 
 <details><summary>you can install the package</summary>
 
-```{image} security_checklist/pypi_t2_allowed.png
+:::{image} security_checklist/pypi_t2_allowed.png
 :align: center
-```
+:::
 </details>
-````
+::::
 
 - Then attempt to install any package that is not on the allowed list (for example, try `pip install -q awscli`)
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 
 <details><summary>you can install the package</summary>
 
-```{image} security_checklist/pypi_t2_disallowed.png
+:::{image} security_checklist/pypi_t2_disallowed.png
 :align: center
-```
+:::
 </details>
-````
+::::
 
 #### {ref}`policy_tier_3`: Download a package on the allow list and one not on the allow list
 
 - Connect to a Tier 3 workspace as the research user via remote desktop web client.
 - Attempt to install a package on the allowed list that is not included out-of-the-box (for example, try `python -m venv ./venv && source ./venv/bin/activate && pip install pytz`).
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 
 <details><summary>you can install the package</summary>
 
-```{image} security_checklist/pypi_t3_allowed.png
+:::{image} security_checklist/pypi_t3_allowed.png
 :align: center
-```
+:::
 </details>
-````
+::::
 
 - Then attempt to download a package that is not included in the allowed list (for example, try `pip install awscli`).
 
-````{attention}
+::::{attention}
 {{camera}} <b>Verify that:</b>
 
 <details><summary>you cannot install the package</summary>
 
-```{image} security_checklist/pypi_t3_disallowed.png
+:::{image} security_checklist/pypi_t3_disallowed.png
 :align: center
-```
+:::
 </details>
-````
+::::

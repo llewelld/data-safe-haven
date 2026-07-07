@@ -50,6 +50,6 @@ We hope it will be useful in other contexts but you need to consider what altera
 We also hope that you will contribute any improvements back to the main project.
 You are responsible for verifying the Data Safe Haven is appropriate for your purposes and effectively supports your own information governance policies and processes.
 
-```{warning}
+:::{warning}
 The Data Safe Haven is not a managed service offered by the Alan Turing Institute. It is a set of instructions enabling you to set up your own secure environment.
-```
+:::

@@ -9,16 +9,16 @@ The first stage of any project involves identifying the different stakeholders.
 The {ref}`role_data_provider_representative` represents the organisation providing the data.
 Ensure that you have identified the **data owner** - the organisation who owns the dataset(s) being used.
 
-```{hint}
+:::{hint}
 Usually the **data provider** is also the **data owner**, but not in cases where they have purchased or loaned the data.
-```
+:::
 
 Ensure that the **data owner** has given this project permission to use the data.
 You can do this by checking with the **data controller** - an individual or group at the **data owner**.
 
-```{hint}
+:::{hint}
 There may be additional **data owner stakeholders** working at the **data owner** who can provide input to discussions around data sharing and data classification.
-```
+:::
 
 Next you should identify the {ref}`role_investigator` - the lead researcher with overall responsibility for the project.
 Finally, you should identify a referee, who will be able to provide an independent evaluation of the project's classification.

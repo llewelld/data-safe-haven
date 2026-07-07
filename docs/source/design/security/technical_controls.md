@@ -42,14 +42,14 @@ Most of these controls can be relaxed or tightened by the {ref}`role_system_mana
 
 ## Tier-specific
 
-```{caution}
+:::{caution}
 {ref}`policy_tier_4` defaults are not discussed below as such environments are not currently supported by the Data Safe Haven.
-```
+:::
 
-```{important}
+:::{important}
 While {ref}`policy_tier_0` and {ref}`policy_tier_1` are discussed below, at the Alan Turing Institute we do not generally use our Data Safe Haven for {ref}`policy_tier_0` or {ref}`policy_tier_1` environments.
 While SREs can be configured as {ref}`policy_tier_0` or {ref}`policy_tier_1`, we generally favour supporting researchers to apply sensible controls on organisational devices and standard cloud resources for such lower sensitivity projects.
-```
+:::
 
 ### Inbound connections
 
@@ -59,9 +59,9 @@ Access to the gateway is only permitted from defined IP addresses associated wit
 - **{ref}`policy_tier_2`:** Access is restricted to a defined set of IP addresses. At the Alan Turing Institute we permit access only from institutionally managed networks, which will generally be accessible to {ref}`Researchers <role_researcher>` not authorised to access the Data Safe Haven and might also be accessible to non-Researchers.
 - **{ref}`policy_tier_0` and {ref}`policy_tier_1`:** Access is permitted from any IP address by default. At the Alan Turing Institute we do not generally use our Data Safe Haven for {ref}`policy_tier_0` or {ref}`policy_tier_1`. Organisations choosing to do so may wish to consider only allowing inbound internet access from a specific range of networks {ref}`Researchers <role_researcher>` are known to work from.
 
-```{caution}
+:::{caution}
 Having no restrictions on which IP addresses can connect to the gateway increases the risk of external attacks, many of which may be untargeted but might still result in a degradation of service.
-```
+:::
 
 ### Outbound connections
 
@@ -83,9 +83,9 @@ Having no restrictions on which IP addresses can connect to the gateway increase
 - **{ref}`policy_tier_2` and {ref}`policy_tier_3`:** Copy-and-paste and file transfer between the SRE and the {ref}`Researcher's <role_researcher>` device are disabled.
 - **{ref}`policy_tier_0` and {ref}`policy_tier_1`:** Copy and paste is enabled between the SRE and the {ref}`Researcher's <role_researcher>` device is enabled but file transfer is not possible for non administrators.
 
-```{note}
+:::{note}
 Note that this means that eg. password managers cannot be used to autofill a {ref}`Researcher's <role_researcher>` SRE login credentials.
-```
+:::
 
 ### Sign-off on bringing data into the environment:
 
