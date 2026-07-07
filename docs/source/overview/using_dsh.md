@@ -41,7 +41,7 @@ Every group deploying the Data Safe Haven will need to provide the rest includin
 
 The [Standard Architecture for Trusted Research Environments (SATRE)](https://satre-specification.readthedocs.io) project is a useful reference for TRE design.
 It features a comprehensive set of requirements, technical and non-technical, that a TRE operator should meet.
-An evaluation of the Data Safe Haven production instances at the Turing against SATRE can be found [here](https://satre-specification.readthedocs.io/en/stable/evaluations/alan_turing_institute.html).
+An evaluation of the Data Safe Haven production instances at the Turing against SATRE can be found [here](https://satre-specification.readthedocs.io/en/v1.1.1/evaluations/alan_turing_institute.html).
 
 ## Tiering
 
