@@ -6,6 +6,7 @@ from contextlib import suppress
 from importlib import metadata
 from typing import Any
 
+from packaging.version import InvalidVersion
 from pulumi import automation
 
 from data_safe_haven.config import (
@@ -23,6 +24,10 @@ from data_safe_haven.exceptions import (
 from data_safe_haven.external import AzureSdk, PulumiAccount
 from data_safe_haven.functions import get_key_vault_name, replace_separators
 from data_safe_haven.logging import get_console_handler, get_logger
+from data_safe_haven.upgrade import (
+    Upgrade,
+    UpgradeAbortedError,
+)
 
 from .programs import DeclarativeSRE
 
@@ -256,10 +261,11 @@ class ProjectManager:
             if force:
                 self.cancel()
             self.refresh(run_program)
+            self.upgrade(run_program=run_program)
             self.preview(disable_diff)
             self.update()
         except Exception as exc:
-            msg = "Pulumi deployment failed."
+            msg = f"Pulumi deployment failed: {exc}"
             raise DataSafeHavenPulumiError(msg) from exc
 
     def destroy(self) -> None:
@@ -415,6 +421,29 @@ class ProjectManager:
         except Exception as exc:
             msg = "Tearing down Pulumi infrastructure failed.."
             raise DataSafeHavenPulumiError(msg) from exc
+
+    def upgrade(self, *, run_program: bool = False) -> None:
+        """Check whether any upgrade steps are needed and check with the
+        user whether to apply them or not.
+        """
+        try:
+            upgrade = Upgrade(self)
+            proceed = upgrade.can_proceed()
+        except InvalidVersion as exc:
+            proceed = False
+            self.logger.error(f"{exc}")
+            self.logger.error("The version number of your SRE is malformed.")
+
+        changes = False
+        if proceed:
+            changes = upgrade.prepare()
+        else:
+            self.logger.error("Aborting deployment.")
+            raise UpgradeAbortedError
+
+        if changes:
+            self.logger.info("Performing refresh following changes.")
+            self.refresh(run_program)
 
     def update(self) -> None:
         """Update deployed infrastructure."""
