@@ -11,30 +11,30 @@ The easiest way to update an SRD is by redeploying it - it may be possible for y
 
 ## Programming languages / compilers
 
-```{include} snippets/software_languages.partial.md
+:::{include} snippets/software_languages.partial.md
 :relative-images:
-```
+:::
 
 ## Editors / IDEs
 
-```{include} snippets/software_editors.partial.md
+:::{include} snippets/software_editors.partial.md
 :relative-images:
-```
+:::
 
 ## Writing / presentation tools
 
-```{include} snippets/software_presentation.partial.md
+:::{include} snippets/software_presentation.partial.md
 :relative-images:
-```
+:::
 
 ## Database access tools
 
-```{include} snippets/software_database.partial.md
+:::{include} snippets/software_database.partial.md
 :relative-images:
-```
+:::
 
 ## Other useful software
 
-```{include} snippets/software_other.partial.md
+:::{include} snippets/software_other.partial.md
 :relative-images:
-```
+:::

@@ -5,9 +5,9 @@
 When working with sensitive data it is important to take utmost care with it.
 This will help you to ensure that the data integrity is maintained.
 
-```{attention}
+:::{attention}
 Ensure that you check what the expectations of your {ref}`role_data_provider_representative` are around data handling.
-```
+:::
 
 ## Classification
 

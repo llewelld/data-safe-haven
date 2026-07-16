@@ -24,10 +24,10 @@ The following steps show how to generate a temporary, write-only upload token th
     - Leave everything else as default and click **{guilabel}`Generate SAS token and URL`**
     - Copy the **Blob SAS URL**
 
-      ```{image} ingress_token_write_only.png
+      :::{image} ingress_token_write_only.png
       :alt: write-only SAS token
       :align: center
-      ```
+      :::
 
 - Send the **Blob SAS URL** to the data provider through a secure channel
 - The data provider should now be able to upload data
@@ -39,10 +39,10 @@ The following steps show how to generate a temporary, write-only upload token th
 
 ## Data egress
 
-```{important}
+:::{important}
 Assessment of output must be completed **before** an egress link is created.
 Outputs are potentially sensitive, and so an appropriate process must be applied to ensure that they are suitable for egress.
-```
+:::
 
 The {ref}`role_system_manager` creates a time-limited and IP restricted link to remove data from the environment.
 
@@ -64,10 +64,10 @@ The {ref}`role_system_manager` creates a time-limited and IP restricted link to 
     - Leave everything else as default and press **{guilabel}`Generate SAS token and URL`**
     - Copy the **Blob SAS URL**
 
-      ```{image} egress_token_read_only.png
+      :::{image} egress_token_read_only.png
       :alt: Read-only SAS token
       :align: center
-      ```
+      :::
 
 - Send the **Blob SAS URL** to the relevant person through a secure channel
 - The appropriate person should now be able to download data

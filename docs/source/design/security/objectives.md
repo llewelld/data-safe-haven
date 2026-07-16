@@ -4,15 +4,15 @@
 
 The diagram below shows an overview of the security objectives outlined in our [design choices](https://arxiv.org/abs/1908.08737) preprint.
 
-```{image} sample_security_controls.png
+:::{image} sample_security_controls.png
 :alt: Sample security controls
 :align: center
-```
+:::
 
-```{caution}
+:::{caution}
 The Alan Turing Institute does not yet operate any {ref}`policy_tier_4` environments and so our suggested default controls for {ref}`policy_tier_4` environments are still under development.
 Organisations are responsible for making their own decisions about the suitability of any of our default controls, but should be especially careful about doing so if considering using the Data Safe Haven for projects at the {ref}`policy_tier_4` sensitivity level.
-```
+:::
 
 ## Security considerations
 
