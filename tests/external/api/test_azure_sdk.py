@@ -4,7 +4,7 @@ from azure.mgmt.keyvault.models import DeletedVault
 from azure.mgmt.storage.models import StorageAccountListKeysResult
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.subscription.models import Subscription
-from pytest import fixture
+from pytest import CaptureFixture, fixture
 
 import data_safe_haven.external.api.azure_sdk
 from data_safe_haven.exceptions import (
@@ -14,6 +14,7 @@ from data_safe_haven.exceptions import (
     DataSafeHavenValueError,
 )
 from data_safe_haven.external import AzureSdk, GraphApi
+from data_safe_haven.infrastructure import SREProjectManager
 
 
 @fixture
@@ -404,3 +405,82 @@ class TestAzureSdk:
         sdk = AzureSdk("subscription name")
 
         assert sdk.storage_exists(storage_account_name) == exists
+
+    def test_get_resource(
+        self,
+        sre_project_manager: SREProjectManager,
+        mock_sre_project_manager_output: None,  # noqa: ARG002
+        mock_azuresdk_resource_manager_client: None,  # noqa: ARG002
+    ) -> None:
+        """Check that the AzureSdk code for getting a resource is acting
+        sensibly.
+        """
+        subscription_id = "35ebced1-4e7a-4c1f-b634-c0886937085d"
+        resource_group = sre_project_manager.output("sre_resource_group")
+        provider_namespace = "Provider"
+        resource_type = "ResourceType"
+        resource_name = "ResourceName"
+        resource_id = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/{provider_namespace}/{resource_type}/{resource_name}"
+        azure_sdk = AzureSdk(sre_project_manager.context.subscription_name)
+        resource = azure_sdk.get_resource(
+            resource_group, provider_namespace, resource_type, resource_name
+        )
+        assert resource.id == resource_id
+
+    def test_get_endpoint(
+        self,
+        sre_project_manager: SREProjectManager,
+        mock_sre_project_manager_output: None,  # noqa: ARG002
+        mock_azuresdk_resource_manager_client: None,  # noqa: ARG002
+    ) -> None:
+        """Check that the AzureSdk code for getting a private endpoint is acting
+        sensibly.
+        """
+        subscription_id = "35ebced1-4e7a-4c1f-b634-c0886937085d"
+        resource_group = sre_project_manager.output("sre_resource_group")
+        provider_namespace = "Microsoft.Network"
+        resource_type = "privateEndpoints"
+        resource_name = "endpoint"
+        resource_id = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/{provider_namespace}/{resource_type}/{resource_name}"
+        azure_sdk = AzureSdk(sre_project_manager.context.subscription_name)
+        resource = azure_sdk.get_private_endpoint(resource_group, resource_name)
+        assert resource.id == resource_id
+
+    def test_get_subnet(
+        self,
+        sre_project_manager: SREProjectManager,
+        mock_sre_project_manager_output: None,  # noqa: ARG002
+        mock_azuresdk_resource_manager_client: None,  # noqa: ARG002
+    ) -> None:
+        """Check that the AzureSdk code for getting a subnet is acting sensibly."""
+        subscription_id = "35ebced1-4e7a-4c1f-b634-c0886937085d"
+        resource_group = sre_project_manager.output("sre_resource_group")
+        provider_namespace = "Microsoft.Network"
+        resource_type = "virtualNetworks"
+        vnet_name = "vnet"
+        resource_name = "subnet"
+        resource_id = f"/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/{provider_namespace}/{resource_type}/{vnet_name}/subnets/{resource_name}"
+        azure_sdk = AzureSdk(sre_project_manager.context.subscription_name)
+        resource = azure_sdk.get_subnet(resource_group, vnet_name, resource_name)
+        assert resource.id == resource_id
+
+    def test_delete_resources(
+        self,
+        sre_project_manager: SREProjectManager,
+        capsys: CaptureFixture[str],
+        mock_azuresdk_resource_manager_client: None,  # noqa: ARG002
+    ) -> None:
+        """Check that the AzureSdk code for deleting a set of resources is
+        acting sensibly.
+        """
+        azure_sdk = AzureSdk(sre_project_manager.context.subscription_name)
+        azure_sdk.delete_resources(["first", "second", "third", "fourth", "fifth"])
+        captured = capsys.readouterr()
+        assert "Deleting 5 resources" in captured.out
+        assert "Operations remaining: 5" in captured.out
+        assert "Operations remaining: 4" in captured.out
+        assert "Operations remaining: 3" in captured.out
+        assert "Operations remaining: 2" in captured.out
+        assert "Operations remaining: 1" in captured.out
+        assert "Operations remaining: 6" not in captured.out
+        assert "All deletion operations completed" in captured.out

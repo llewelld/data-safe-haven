@@ -4,7 +4,7 @@ from pulumi.automation import (
     Stack,
     StackSettings,
 )
-from pytest import raises
+from pytest import CaptureFixture, raises
 
 from data_safe_haven.config import DSHPulumiProject
 from data_safe_haven.exceptions import (
@@ -13,6 +13,7 @@ from data_safe_haven.exceptions import (
 )
 from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.infrastructure.project_manager import ProjectManager
+from data_safe_haven.upgrade import UpgradeAbortedError
 
 
 class TestSREProjectManager:
@@ -161,3 +162,30 @@ class TestSREProjectManager:
         stack_config = sre_project_manager.pulumi_project.stack_config
         assert "data-safe-haven:new-key" in stack_config
         assert stack_config.get("data-safe-haven:new-key") == "hello"
+
+    def test_upgrade_path_accept(
+        self,
+        sre_project_manager: SREProjectManager,
+        mock_upgrade_accept: None,  # noqa: ARG002
+        capsys: CaptureFixture[str],
+    ) -> None:
+        """Test that the deployment upgrade path is giving the expected
+        outputs when the user accepts the request to perform an upgrade.
+        """
+        sre_project_manager.upgrade()
+        captured = capsys.readouterr()
+        assert "Performing refresh following changes." in captured.out
+
+    def test_upgrade_path_deny(
+        self,
+        sre_project_manager: SREProjectManager,
+        mock_upgrade_deny: None,  # noqa: ARG002
+    ) -> None:
+        """Test that the deployment upgrade path is giving the expected
+        outputs when the user rejects the request to perform an upgrade.
+        """
+        with raises(
+            UpgradeAbortedError,
+            match=r"Deployment aborted.",
+        ):
+            sre_project_manager.upgrade()

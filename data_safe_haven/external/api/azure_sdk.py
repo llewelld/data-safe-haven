@@ -571,7 +571,7 @@ class AzureSdk:
     def get_resource(
         self,
         resource_group_name: str,
-        provider_namesapce: str,
+        provider_namespace: str,
         resource_type: str,
         resource_name: str,
     ) -> GenericResource:
@@ -583,7 +583,7 @@ class AzureSdk:
         with ResourceManagementClient(
             self.credential(), self.subscription_id
         ) as resource_client:
-            azure_id = f"/subscriptions/{self.subscription_id}/resourceGroups/{resource_group_name}/providers/{provider_namesapce}/{resource_type}/{resource_name}"
+            azure_id = f"/subscriptions/{self.subscription_id}/resourceGroups/{resource_group_name}/providers/{provider_namespace}/{resource_type}/{resource_name}"
             resource = resource_client.resources.get_by_id(azure_id, "2026-01-01")
 
         return resource

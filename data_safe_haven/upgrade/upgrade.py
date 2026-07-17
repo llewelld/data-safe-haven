@@ -76,7 +76,7 @@ class Upgrade:
                 self.logger.info(
                     f"You're using DSH version {self.dsh_version} but your SRE was deployed with version {self.sre_version}. Deployment will therefore trigger an upgrade."
                 )
-                if self.dsh_version == Version("5.7.2"):
+                if self.dsh_version >= Version("5.7.2"):
                     self.logger.info(
                         f"Upgrading to version {self.dsh_version} requires reprovisioning of several databases. All of the data on the following databases will therefore be lost during the upgrade:"
                     )
@@ -87,7 +87,7 @@ class Upgrade:
                         "If you have non-duplicate data stored on any of these you should back them up before proceeding."
                     )
                 self.proceed = console.confirm(
-                    "Are you sure you which to proceed with the upgrade?",
+                    "Are you sure you wish to proceed with the upgrade?",
                     default_to_yes=False,
                 )
 
@@ -105,7 +105,7 @@ class Upgrade:
         if self.fresh_deployment:
             changes = False
         elif self.dsh_version > self.sre_version:
-            if self.dsh_version == Version("5.7.2"):
+            if self.dsh_version >= Version("5.7.2"):
                 changes = self.upgrade_to_5_7_2()
 
         return changes
