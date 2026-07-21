@@ -4,6 +4,8 @@ from subprocess import run
 
 import yaml
 from azure.core.credentials import AccessToken, TokenCredential
+from azure.mgmt.resource.resources.models import GenericResource
+from azure.mgmt.resource.resources.operations import ResourcesOperations
 from azure.mgmt.subscription.models import Subscription
 from pulumi.automation import ProjectSettings
 from pytest import FixtureRequest, MonkeyPatch, fixture
@@ -37,6 +39,7 @@ from data_safe_haven.external.api.credentials import (
 from data_safe_haven.infrastructure import SREProjectManager
 from data_safe_haven.infrastructure.project_manager import ProjectManager
 from data_safe_haven.logging import init_logging
+from data_safe_haven.upgrade import Upgrade
 
 
 def pytest_configure(config) -> None:
@@ -662,13 +665,101 @@ def sre_project_manager(
     context_no_secrets: Context,
     sre_config: SREConfig,
     pulumi_config_no_key: DSHPulumiConfig,
-    local_project_settings,  # noqa: ARG001
-    mock_azuresdk_get_subscription,  # noqa: ARG001
-    mock_azuresdk_get_credential,  # noqa: ARG001
-    offline_pulumi_account,  # noqa: ARG001
+    local_project_settings: None,  # noqa: ARG001
+    mock_azuresdk_get_subscription: None,  # noqa: ARG001
+    mock_azuresdk_get_credential: None,  # noqa: ARG001
+    offline_pulumi_account: None,  # noqa: ARG001
 ) -> SREProjectManager:
     return SREProjectManager(
         context=context_no_secrets,
         config=sre_config,
         pulumi_config=pulumi_config_no_key,
+    )
+
+
+@fixture
+def sre_project_manager_fresh(
+    mocker: MockerFixture,
+    context_no_secrets: Context,
+    sre_config: SREConfig,
+    pulumi_config_no_key: DSHPulumiConfig,
+    local_project_settings: None,  # noqa: ARG001
+    mock_azuresdk_get_subscription: None,  # noqa: ARG001
+    mock_azuresdk_get_credential: None,  # noqa: ARG001
+    offline_pulumi_account: None,  # noqa: ARG001
+) -> SREProjectManager:
+    manager = SREProjectManager(
+        context=context_no_secrets,
+        config=sre_config,
+        pulumi_config=pulumi_config_no_key,
+    )
+
+    mocker.patch.object(manager, "output", return_value=None)
+
+    return manager
+
+
+@fixture
+def mock_sre_project_manager_output(mocker: MockerFixture) -> None:
+    mocker.patch.object(SREProjectManager, "output", return_value="test_sre")
+
+
+@fixture
+def mock_azuresdk_resource_manager_client(mocker: MockerFixture) -> None:
+    def side_effect_get_by_id(azure_id: str, _sdk_version: str) -> GenericResource:
+        resource = GenericResource()
+        resource.id = azure_id
+        return resource
+
+    class Poller:
+        def __init__(self, name: str) -> None:
+            self.duration = hash(name) % 100
+
+        def wait(self, duration: int) -> None:
+            self.duration -= duration
+
+        def done(self) -> bool:
+            return self.duration <= 0
+
+    def side_effect_begin_delete_by_id(azure_id: str, sdk_version: str) -> Poller:
+        return Poller(azure_id + sdk_version)
+
+    mocker.patch.object(
+        ResourcesOperations, "get_by_id", side_effect=side_effect_get_by_id
+    )
+
+    mocker.patch.object(
+        ResourcesOperations,
+        "begin_delete_by_id",
+        side_effect=side_effect_begin_delete_by_id,
+    )
+
+
+@fixture
+def mock_upgrade_accept(mocker: MockerFixture):
+    mocker.patch.object(
+        Upgrade,
+        "can_proceed",
+        return_value=True,
+    )
+
+    mocker.patch.object(
+        Upgrade,
+        "prepare",
+        return_value=5,
+    )
+
+
+@fixture
+def mock_upgrade_deny(mocker: MockerFixture):
+    mocker.patch.object(
+        Upgrade,
+        "can_proceed",
+        return_value=False,
+    )
+
+    mocker.patch.object(
+        Upgrade,
+        "prepare",
+        return_value=5,
     )

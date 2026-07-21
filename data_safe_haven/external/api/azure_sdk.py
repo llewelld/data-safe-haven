@@ -38,7 +38,10 @@ from azure.mgmt.keyvault.models import (
 from azure.mgmt.msi import ManagedServiceIdentityClient
 from azure.mgmt.msi.models import Identity
 from azure.mgmt.resource.resources import ResourceManagementClient
-from azure.mgmt.resource.resources.models import ResourceGroup
+from azure.mgmt.resource.resources.models import (
+    GenericResource,
+    ResourceGroup,
+)
 from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.storage.models import (
     BlobContainer,
@@ -541,6 +544,111 @@ class AzureSdk:
         except AzureError as exc:
             msg = f"Failed to create managed identity {identity_name}."
             raise DataSafeHavenAzureError(msg) from exc
+
+    def get_version(
+        self,
+        resource_group_name: str,
+    ) -> str:
+        version = None
+
+        with ResourceManagementClient(
+            self.credential(), self.subscription_id
+        ) as resource_client:
+            resource_groups = [
+                rg
+                for rg in cast(
+                    list[ResourceGroup], resource_client.resource_groups.list()
+                )
+                if rg.name == resource_group_name
+            ]
+            try:
+                version = str(resource_groups[0].tags["version"])
+            except KeyError:
+                version = "0.0.0"
+
+        return version
+
+    def get_resource(
+        self,
+        resource_group_name: str,
+        provider_namespace: str,
+        resource_type: str,
+        resource_name: str,
+    ) -> GenericResource:
+        """Given the identity of a remote resource on Azure, access and return
+        details about it.
+        """
+        resource = None
+
+        with ResourceManagementClient(
+            self.credential(), self.subscription_id
+        ) as resource_client:
+            azure_id = f"/subscriptions/{self.subscription_id}/resourceGroups/{resource_group_name}/providers/{provider_namespace}/{resource_type}/{resource_name}"
+            resource = resource_client.resources.get_by_id(azure_id, "2026-01-01")
+
+        return resource
+
+    def get_private_endpoint(
+        self,
+        resource_group_name: str,
+        resource_name: str,
+    ) -> GenericResource:
+        """Given the identity of a private endpoing on Azure, access and return
+        details about it.
+        """
+        return self.get_resource(
+            resource_group_name, "Microsoft.Network", "privateEndpoints", resource_name
+        )
+
+    def get_subnet(
+        self,
+        resource_group_name: str,
+        vnet_name: str,
+        resource_name: str,
+    ) -> GenericResource:
+        """Given the identity of a subnet on Azure, access and return details
+        about it.
+        """
+        return self.get_resource(
+            resource_group_name,
+            "Microsoft.Network",
+            "virtualNetworks",
+            f"{vnet_name}/subnets/{resource_name}",
+        )
+
+    def delete_resources(self, resource_ids: list[str]) -> None:
+        """Delete a set of resources from Azure."""
+        with ResourceManagementClient(
+            self.credential(), self.subscription_id
+        ) as resource_client:
+            if len(resource_ids) > 0:
+                self.logger.info(f"Deleting {len(resource_ids)} resources:")
+                for index, resource_id in enumerate(resource_ids):
+                    self.logger.info(f"  {index + 1}. {resource_id}")
+            else:
+                self.logger.info("No resources to delete")
+
+            # Unfortunately Azure doesn't like parallel requests, generating
+            # ServerIsBusy exceptions, so we must delete the resources sequentially
+            for completed, resource_id in enumerate(resource_ids):
+                poller = resource_client.resources.begin_delete_by_id(
+                    resource_id, "2026-01-01"
+                )
+                spinners = ["    ", ".   ", "..  ", "... ", "...."]
+                done = False
+                output_delay = 10
+                count = 0
+                while not done:
+                    poller.wait(1.0)
+                    done = poller.done()
+                    if count % output_delay == 0:
+                        spinner = spinners[(count // output_delay) % len(spinners)]
+                        self.logger.info(
+                            f"\\[{spinner}] Operations remaining: {len(resource_ids) - completed}"
+                        )
+                    count += 1
+
+            self.logger.info("All deletion operations completed")
 
     def ensure_resource_group(
         self,

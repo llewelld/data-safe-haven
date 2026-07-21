@@ -276,66 +276,24 @@ class SREDataComponent(ComponentResource):
             tags=child_tags,
         )
 
-        # Secret: Gitea database admin password
-        password_gitea_database_admin = pulumi_random.RandomPassword(
-            f"{self._name}_password_gitea_database_admin",
-            length=20,
-            special=True,
-            opts=ResourceOptions.merge(child_opts, ResourceOptions(parent=key_vault)),
-        )
-        keyvault.Secret(
-            f"{self._name}_kvs_password_gitea_database_admin",
-            properties=keyvault.SecretPropertiesArgs(
-                value=password_gitea_database_admin.result
-            ),
-            resource_group_name=props.resource_group_name,
-            secret_name="password-gitea-database-admin",
-            vault_name=key_vault.name,
-            opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=password_gitea_database_admin)
-            ),
-            tags=child_tags,
-        )
-
-        # Secret: Gitea mirror database password.
-        password_gitea_mirror_database_admin = pulumi_random.RandomPassword(
-            f"{self._name}_password_gitea_mirror_database_admin",
+        # Secret: Shared database password.
+        password_shared_database_admin = pulumi_random.RandomPassword(
+            f"{self._name}_password_shared_database_admin",
             length=20,
             special=True,
             opts=ResourceOptions.merge(child_opts, ResourceOptions(parent=key_vault)),
         )
 
         keyvault.Secret(
-            f"{self._name}_kvs_password_gitea_mirror_database_admin",
+            f"{self._name}_kvs_password_shared_database_admin",
             properties=keyvault.SecretPropertiesArgs(
-                value=password_gitea_mirror_database_admin.result
+                value=password_shared_database_admin.result
             ),
             resource_group_name=props.resource_group_name,
-            secret_name="password-gitea-mirror-database-admin",
+            secret_name="password-shared-database-admin",
             vault_name=key_vault.name,
             opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=password_gitea_mirror_database_admin)
-            ),
-            tags=child_tags,
-        )
-
-        # Secret: Hedgedoc database admin password
-        password_hedgedoc_database_admin = pulumi_random.RandomPassword(
-            f"{self._name}_password_hedgedoc_database_admin",
-            length=20,
-            special=True,
-            opts=ResourceOptions.merge(child_opts, ResourceOptions(parent=key_vault)),
-        )
-        keyvault.Secret(
-            f"{self._name}_kvs_password_hedgedoc_database_admin",
-            properties=keyvault.SecretPropertiesArgs(
-                value=password_hedgedoc_database_admin.result
-            ),
-            resource_group_name=props.resource_group_name,
-            secret_name="password-hedgedoc-database-admin",
-            vault_name=key_vault.name,
-            opts=ResourceOptions.merge(
-                child_opts, ResourceOptions(parent=password_hedgedoc_database_admin)
+                child_opts, ResourceOptions(parent=password_shared_database_admin)
             ),
             tags=child_tags,
         )
@@ -848,14 +806,8 @@ class SREDataComponent(ComponentResource):
                 lambda password: password.result
             )
         )
-        self.password_gitea_database_admin = Output.secret(
-            password_gitea_database_admin.result
-        )
-        self.password_gitea_mirror_database_admin = Output.secret(
-            password_gitea_mirror_database_admin.result
-        )
-        self.password_hedgedoc_database_admin = Output.secret(
-            password_hedgedoc_database_admin.result
+        self.password_shared_database_admin = Output.secret(
+            password_shared_database_admin.result
         )
         self.password_nexus_database_admin = Output.secret(
             password_nexus_database_admin.result
