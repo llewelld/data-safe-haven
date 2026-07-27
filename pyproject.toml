@@ -70,11 +70,11 @@ Source = "https://github.com/alan-turing-institute/data-safe-haven"
 [project.optional-dependencies]
 docs = [
   "emoji==2.15.0",
-  "myst-parser==5.0.0",
+  "myst-parser==5.1.0",
   "pydata-sphinx-theme==0.16.1",
   "sphinx-togglebutton==0.4.4",
   "sphinx>=7,<10",
-  "sphinxcontrib-typer==0.7.2",
+  "sphinxcontrib-typer==0.9.1",
 ]
 lint = [
   "ansible-dev-tools==26.1.0",

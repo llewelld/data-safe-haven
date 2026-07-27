@@ -905,7 +905,7 @@ class AzureSdk:
             if not isinstance(storage_keys, StorageAccountListKeysResult):
                 msg = f"No keys were retrieved for {msg_sa} in {msg_rg}."
                 raise DataSafeHavenAzureStorageError(msg)
-            keys = cast(list[StorageAccountKey], storage_keys.keys)
+            keys = cast(list[StorageAccountKey], storage_keys.get("keys"))
             if not keys or not isinstance(keys, list) or len(keys) == 0:
                 msg = f"List of keys was empty for {msg_sa} in {msg_rg}."
                 raise DataSafeHavenAzureStorageError(msg)
