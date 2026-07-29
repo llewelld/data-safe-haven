@@ -23,7 +23,7 @@ class TestRun:
     ):
         result = runner.invoke(pulumi_command_group, ["stack ls"])
         assert result.exit_code == 2
-        assert "Usage: run [OPTIONS] SRE_NAME COMMAND" in result.stderr
+        assert "Usage: run [OPTIONS] {sre_name} {command}" in result.stderr
 
     def test_run_sre_invalid_command(
         self,
