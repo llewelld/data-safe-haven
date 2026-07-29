@@ -108,11 +108,7 @@ class SREDnsServerComponent(ComponentResource):
             # https://learn.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
             # This server is aware of private DNS zones
             upstream_dns="168.63.129.16",
-        ).apply(
-            lambda mustache_config: adguard_adguardhome_yaml_reader.file_contents(
-                mustache_config
-            )
-        )
+        ).apply(adguard_adguardhome_yaml_reader.file_contents)
 
         # Define network security group
         nsg = network.NetworkSecurityGroup(

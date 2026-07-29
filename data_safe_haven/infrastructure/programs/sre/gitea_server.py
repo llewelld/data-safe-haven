@@ -153,11 +153,8 @@ class SREGiteaServerComponent(ComponentResource):
             ldap_user_search_base=props.ldap_user_search_base,
             workspace_email="workspace@example.com",
             workspace_username=self.workspace_username,
-        ).apply(
-            lambda mustache_values: gitea_configure_sh_reader.file_contents(
-                mustache_values
-            )
-        )
+        ).apply(gitea_configure_sh_reader.file_contents)
+
         file_share_gitea_gitea_configure_sh = FileShareFile(
             f"{self._name}_file_share_gitea_gitea_configure_sh",
             FileShareFileProps(

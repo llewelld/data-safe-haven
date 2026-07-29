@@ -54,7 +54,7 @@ class SREDnsServerVMProps:
             get_name_from_subnet
         )
         self.subnet_ip_addresses = Output.from_input(subnet_dns).apply(
-            lambda subnet: get_available_ips_from_subnet(subnet)
+            get_available_ips_from_subnet
         )
 
         self.virtual_network_name: Output[str] = Output.from_input(

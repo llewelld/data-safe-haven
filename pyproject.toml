@@ -255,6 +255,7 @@ ignore = [
   "PLR0912",  # ignore too-many-branches
   "PLR0913",  # ignore too-many-arguments
   "PLR0915",  # ignore too-many-statements
+  "PLR0917",  # ignore too-many-positional-arguments (from 0.16.0)
 ]
 
 [tool.ruff.lint.flake8-builtins]

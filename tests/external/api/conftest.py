@@ -116,7 +116,7 @@ def mock_devicecodecredential_new(mocker, authentication_record):
     mocker.patch.object(
         DeviceCodeCredential,
         "__new__",
-        lambda *args, **kwargs: MockDeviceCodeCredential(*args, **kwargs),
+        MockDeviceCodeCredential,
     )
 
 

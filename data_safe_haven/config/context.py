@@ -89,7 +89,7 @@ class Context(ContextBase, BaseModel, validate_assignment=True):
     def pulumi_encryption_key_version(self) -> str:
         """ID for the Pulumi encryption key"""
         key_id: str = self.pulumi_encryption_key.id
-        return key_id.split("/")[-1]
+        return key_id.rsplit("/", maxsplit=1)[-1]
 
     @property
     def pulumi_secrets_provider_url(self) -> str:

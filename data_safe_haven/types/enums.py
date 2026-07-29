@@ -1,4 +1,4 @@
-from enum import UNIQUE, Enum, verify
+from enum import UNIQUE, Enum, StrEnum, verify
 
 
 @verify(UNIQUE)
@@ -20,38 +20,38 @@ class AzureDnsZoneNames(tuple[str, ...], Enum):
 
 
 @verify(UNIQUE)
-class AzureSdkCredentialScope(str, Enum):
+class AzureSdkCredentialScope(StrEnum):
     DEFAULT = "https://management.azure.com/.default"
     GRAPH_API = "https://graph.microsoft.com/.default"
     KEY_VAULT = "https://vault.azure.net"
 
 
 @verify(UNIQUE)
-class AzureServiceTag(str, Enum):
+class AzureServiceTag(StrEnum):
     INTERNET = "Internet"
     AZURE_RESOURCE_MANAGER = "AzureResourceManager"
     AZURE_ACTIVE_DIRECTORY = "AzureActiveDirectory"
 
 
 @verify(UNIQUE)
-class DatabaseSystem(str, Enum):
+class DatabaseSystem(StrEnum):
     MICROSOFT_SQL_SERVER = "mssql"
     POSTGRESQL = "postgresql"
 
 
 @verify(UNIQUE)
-class EntraApplicationId(str, Enum):
+class EntraApplicationId(StrEnum):
     MICROSOFT_GRAPH = "00000003-0000-0000-c000-000000000000"
 
 
 @verify(UNIQUE)
-class EntraAppPermissionType(str, Enum):
+class EntraAppPermissionType(StrEnum):
     APPLICATION = "Role"
     DELEGATED = "Scope"
 
 
 @verify(UNIQUE)
-class EntraSignInAudienceType(str, Enum):
+class EntraSignInAudienceType(StrEnum):
     ANY_TENANT = "AzureADMultipleOrgs"
     ANY_TENANT_OR_PERSONAL = "AzureADandPersonalMicrosoftAccount"
     PERSONAL = "PersonalMicrosoftAccount"
@@ -218,7 +218,7 @@ class PermittedDomains(tuple[str, ...], Enum):
 
 
 @verify(UNIQUE)
-class Ports(str, Enum):
+class Ports(StrEnum):
     AZURE_MONITORING = "514"
     DNS = "53"
     HKP = "11371"
@@ -236,14 +236,14 @@ class Ports(str, Enum):
 
 
 @verify(UNIQUE)
-class SoftwarePackageCategory(str, Enum):
+class SoftwarePackageCategory(StrEnum):
     ANY = "any"
     PRE_APPROVED = "pre-approved"
     NONE = "none"
 
 
 @verify(UNIQUE)
-class AllowlistRepository(str, Enum):
+class AllowlistRepository(StrEnum):
     """Repositories for which allowlists are maintained."""
 
     CRAN = "cran"
@@ -251,5 +251,5 @@ class AllowlistRepository(str, Enum):
 
 
 @verify(UNIQUE)
-class PostgreSqlExtension(str, Enum):
+class PostgreSqlExtension(StrEnum):
     PG_TRGM = "PG_TRGM"
