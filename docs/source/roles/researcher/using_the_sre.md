@@ -481,7 +481,7 @@ Use your **{ref}`short-form username <roles_researcher_username>`** and **passwo
     :::
 
 - Your pull request is now ready to be approved and merged.
-- For more information, check the **Gitea** [pull requests documentation](https://docs.gitea.com/next/usage/pull-request).
+- For more information, check the **Gitea** [pull requests documentation](https://docs.gitea.com/usage/issues-prs/pull-request/).
 
 ::::
 
