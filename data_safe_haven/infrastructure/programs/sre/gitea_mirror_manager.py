@@ -116,11 +116,7 @@ class SREGiteaMirrorManagerComponent(ComponentResource):
             admin_username="dshadmin",
             mirror_email="mirror@example.com",
             mirror_username=mirror_username,
-        ).apply(
-            lambda mustache_values: gitea_configure_sh_reader.file_contents(
-                mustache_values
-            )
-        )
+        ).apply(gitea_configure_sh_reader.file_contents)
 
         file_share_gitea_gitea_configure_sh = FileShareFile(
             f"{self._name}_file_share_gitea_gitea_configure_sh",

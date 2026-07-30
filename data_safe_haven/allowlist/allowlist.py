@@ -48,7 +48,7 @@ class Allowlist:
             allowlist.allowlist = share_file
             return allowlist
         except DataSafeHavenAzureStorageError as exc:
-            msg = f"Storage account '{cls.storage_account_name}' does not exist."
+            msg = f"Storage account '{allowlist.storage_account_name}' does not exist."
             raise DataSafeHavenAzureStorageError(msg) from exc
 
     @classmethod

@@ -38,8 +38,8 @@
 # - websocket-client==1.9.0
 # - emoji==2.15.0
 # - myst-parser==5.1.0
-# - pydata-sphinx-theme==0.16.1
-# - sphinx-togglebutton==0.4.4
+# - pydata-sphinx-theme==0.20.0
+# - sphinx-togglebutton==0.4.5
 # - sphinx<10,>=7
 # - sphinxcontrib-typer==0.9.1
 #
@@ -194,6 +194,7 @@ isodate==0.7.2
 jinja2==3.1.6
     # via
     #   myst-parser
+    #   pydata-sphinx-theme
     #   sphinx
 josepy==2.2.0
     # via acme
@@ -289,7 +290,7 @@ pydantic==2.13.4
     # via hatch.envs.docs
 pydantic-core==2.46.4
     # via pydantic
-pydata-sphinx-theme==0.16.1
+pydata-sphinx-theme==0.20.0
     # via hatch.envs.docs
 pygments==2.20.0
     # via
@@ -318,6 +319,7 @@ requests==2.34.2
     #   azure-core
     #   msal
     #   msrest
+    #   pydata-sphinx-theme
     #   requests-oauthlib
     #   sphinx
 requests-oauthlib==2.0.0
@@ -349,7 +351,7 @@ sphinx==9.1.0
     #   pydata-sphinx-theme
     #   sphinx-togglebutton
     #   sphinxcontrib-typer
-sphinx-togglebutton==0.4.4
+sphinx-togglebutton==0.4.5
     # via hatch.envs.docs
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
@@ -395,7 +397,6 @@ typing-extensions==4.16.0
     #   psycopg
     #   pydantic
     #   pydantic-core
-    #   pydata-sphinx-theme
     #   pyopenssl
     #   typing-inspection
 typing-inspection==0.4.2
