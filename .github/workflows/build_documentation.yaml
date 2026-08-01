@@ -63,7 +63,7 @@ jobs:
           ls -l ./docs/build/html/**/*.html
 
       - name: Link Checker
-        uses: lycheeverse/lychee-action@v2.8.0
+        uses: lycheeverse/lychee-action@v2.9.0
         with:
           lycheeVersion: v0.22.0 # To avoid a bug in 0.21 where no file are found, should be revised as the action is updated
           args: --verbose --no-progress --extensions 'html' './docs/build/html/'
