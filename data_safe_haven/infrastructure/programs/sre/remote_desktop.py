@@ -168,7 +168,7 @@ class SRERemoteDesktopComponent(ComponentResource):
             container_group_name=f"{stack_name}-container-group-remote-desktop",
             containers=[
                 containerinstance.ContainerArgs(
-                    image="caddy:2.11",
+                    image="caddy:2.11.4",
                     name="caddy"[:63],
                     ports=[
                         containerinstance.ContainerPortArgs(
@@ -288,7 +288,7 @@ class SRERemoteDesktopComponent(ComponentResource):
                     ),
                 ),
                 containerinstance.ContainerArgs(
-                    image="ghcr.io/alan-turing-institute/guacamole-user-sync:v0.7.0",
+                    image="ghcr.io/alan-turing-institute/guacamole-user-sync:v0.8.1",
                     name="guacamole-user-sync"[:63],
                     environment_variables=[
                         containerinstance.EnvironmentVariableArgs(
